@@ -3,6 +3,37 @@ ms3.panel.Product = function (config) {
   ms3.panel.Product.superclass.constructor.call(this, config)
 }
 Ext.extend(ms3.panel.Product, MODx.panel.Resource, {
+  /**
+   * Intercept save to first save Vue product data fields
+   * Returns true to continue with standard save, false to prevent it
+   */
+  beforeSave: function (fn, scope) {
+    // Call Vue saveProductData if available (for product data fields)
+    if (typeof window.MS3_saveProductData === 'function') {
+      // Block default save, wait for Vue save to complete
+      window.MS3_saveProductData().then(() => {
+        // Vue save completed, now trigger standard ExtJS save
+        ms3.panel.Product.superclass.beforeSave.call(this, fn, scope)
+        // Trigger actual submit
+        this.getForm().submit({
+          success: function (form, action) {
+            fn.call(scope, true)
+          },
+          failure: function (form, action) {
+            fn.call(scope, false)
+          },
+        })
+      }).catch(error => {
+        console.error('[ProductPanel] Vue save failed:', error)
+        // Still proceed with standard save even if Vue save fails
+        ms3.panel.Product.superclass.beforeSave.call(this, fn, scope)
+      })
+      return false // Prevent immediate save, we'll trigger it manually
+    }
+    // No Vue save, proceed normally
+    return ms3.panel.Product.superclass.beforeSave.call(this, fn, scope)
+  },
+
   getFields: function (config) {
     const fields = []
     const originals = MODx.panel.Resource.prototype.getFields.call(this, config)

@@ -9,6 +9,9 @@ import ProductCategoriesTab from './ProductCategoriesTab.vue'
 import ProductLinksTab from './ProductLinksTab.vue'
 import ProductOptionsTab from './ProductOptionsTab.vue'
 
+// Reference to ProductDataFields component instance
+const productDataFieldsRef = ref(null)
+
 const props = defineProps({
   productId: {
     type: Number,
@@ -277,10 +280,22 @@ function registerPluginTab(tabData) {
   return true
 }
 
-// Expose register method for plugin registry
+/**
+ * Save product data - calls ProductDataFields.saveProductData()
+ */
+async function saveProductData() {
+  if (productDataFieldsRef.value && typeof productDataFieldsRef.value.saveProductData === 'function') {
+    return await productDataFieldsRef.value.saveProductData()
+  }
+  console.warn('[ProductTabs] ProductDataFields not mounted or saveProductData not available')
+  return Promise.resolve({ ok: false, message: 'Product data component not ready' })
+}
+
+// Expose methods for plugin registry and external calls
 defineExpose({
   registerPluginTab,
   getActiveTab: () => parseInt(activeTab.value, 10),
+  saveProductData,
 })
 
 /** Restore active tab from localStorage so first render shows correct tab (no flash). */
@@ -326,9 +341,16 @@ onBeforeUnmount(() => {
       <TabPanels>
         <TabPanel v-for="(tab, idx) in tabConfig" :key="tab.key" :value="String(idx)">
           <!-- Built-in Vue tabs -->
+          <!-- ProductDataFields needs a ref for external save calls -->
           <component
             :is="builtInVueComponents[tab.component]"
-            v-if="tab.type === 'vue' && builtInVueComponents[tab.component]"
+            v-if="tab.type === 'vue' && tab.component === 'ProductDataFields'"
+            ref="productDataFieldsRef"
+            v-bind="builtInVueTabProps(tab)"
+          />
+          <component
+            :is="builtInVueComponents[tab.component]"
+            v-else-if="tab.type === 'vue' && builtInVueComponents[tab.component]"
             v-bind="builtInVueTabProps(tab)"
           />
 
