@@ -180,7 +180,10 @@ class msProductUpdateManagerController extends msResourceUpdateController
                 $tmp = $this->resourceArray[$k];
                 $this->resourceArray[$k] = [];
                 foreach ($tmp as $v2) {
-                    if (!empty($v2)) {
+                    // 0 и '0' — валидные значения свойства (#884). empty() считает
+                    // их пустыми, из-за чего сохранение карточки теряло значение:
+                    // отбрасываем только null и пустую строку.
+                    if ($v2 !== null && $v2 !== '') {
                         $this->resourceArray[$k][] = ['value' => $v2];
                     }
                 }
