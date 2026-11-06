@@ -205,7 +205,9 @@ class CustomerAddressController
         }
 
         if ($hasChanges) {
-            $addressHash = $this->generateAddressHash($input);
+            // Merge current address data with input so hash is based on the full record
+            $mergedData = array_merge($address->toArray(), $input);
+            $addressHash = $this->generateAddressHash($mergedData);
             $address->set('hash', $addressHash);
             $address->set('updatedon', date('Y-m-d H:i:s'));
 
