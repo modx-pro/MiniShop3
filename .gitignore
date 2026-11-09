@@ -62,6 +62,9 @@ tmpclaude-*
 # Cursor
 .cursor/
 
+# Local OpenCode agents/skills for manual QA (not part of the Extra)
+.opencode/
+
 # PHPStan analysis trees (phpstan.neon + baseline are tracked)
 .phpstan-deps/
 
