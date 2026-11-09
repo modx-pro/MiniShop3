@@ -118,6 +118,24 @@ class TokenMiddleware implements MiddlewareInterface
                 return null;
             }
 
+            // Lazy anonymous token (#1000): issued into session + cookie by a
+            // snippet, not yet in DB. Persist that very token on its first
+            // protected API hit instead of rejecting it. Only well-formed
+            // tokens (bin2hex(32) = 64 hex chars) are eligible; forged or
+            // revoked tokens still fall through to 401 below.
+            if ($resolved['reason'] === 'missing' && !$isPublic && preg_match('/\A[0-9a-f]{64}\z/i', $token)) {
+                $persisted = $tokenService->ensureTokenPersisted(
+                    $token,
+                    (int)($_SESSION['ms3']['customer_id'] ?? 0)
+                );
+                if ($persisted !== null) {
+                    $tokenService->syncSessionFromToken($persisted);
+                    $_REQUEST['ms3_token'] = $token;
+
+                    return null;
+                }
+            }
+
             $this->clearClientTokenState();
 
             if ($resolved['reason'] === 'expired') {
