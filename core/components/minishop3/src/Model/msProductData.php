@@ -182,14 +182,14 @@ class msProductData extends xPDOSimpleObject
      *
      * @return bool|modMediaSource|null|object
      */
-    public function initializeMediaSource($ctx = '')
+    public function initializeMediaSource($ctx = '', bool $ensureContainer = false)
     {
         if (empty($ctx)) {
             $product = $this->getOne('Product');
             $ctx = $product->get('context_key');
         }
 
-        return $this->getProductImageService()->initializeMediaSource($this, $ctx);
+        return $this->getProductImageService()->initializeMediaSource($this, $ctx, $ensureContainer);
     }
 
     /**
