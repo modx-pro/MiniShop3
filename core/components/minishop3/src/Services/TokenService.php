@@ -65,6 +65,23 @@ class TokenService
                 ];
             }
 
+            // First real API action with a lazy session token: persist that
+            // very token (#1000) instead of minting a different one (which
+            // would orphan the draft created under the lazy token).
+            if ($resolved['reason'] === 'missing' && empty($_SESSION['ms3']['customer_id'])) {
+                $customerId = (int)($_SESSION['ms3']['customer_id'] ?? 0);
+                $persisted = $this->ensureTokenPersisted($existingToken, $customerId, $ttl);
+                if ($persisted !== null) {
+                    $expires = (int) strtotime((string) $persisted->get('expires_at'));
+
+                    return [
+                        'token' => $existingToken,
+                        'expires' => $expires,
+                        'lifetime' => max(0, $expires - time()) * 1000,
+                    ];
+                }
+            }
+
             $this->discardStaleCustomerSession();
         }
 
@@ -88,6 +105,102 @@ class TokenService
             'expires' => $expires,
             'lifetime' => max(0, $expires - time()) * 1000,
         ];
+    }
+
+    /**
+     * Get or create an anonymous token held only in session + cookie (#1000).
+     *
+     * No DB row is written until the first real cart/order action persists
+     * the token via {@see ensureTokenPersisted()}. Search crawlers that only
+     * render snippets therefore no longer fill `ms3_customer_tokens`.
+     *
+     * An already persisted token behaves exactly as before (DB-validated).
+     */
+    public function getOrCreateSessionToken(): string
+    {
+        SessionHelper::ensureActive();
+
+        $sessionToken = $this->getCustomerToken();
+        if ($sessionToken !== null && $sessionToken !== '') {
+            CookieHelper::setTokenCookie($this->modx, $sessionToken);
+
+            return $sessionToken;
+        }
+
+        $cookieToken = CookieHelper::getTokenFromCookie();
+        if (!empty($cookieToken)) {
+            if (!isset($_SESSION['ms3'])) {
+                $_SESSION['ms3'] = [];
+            }
+            $ttl = (int)$this->modx->getOption('ms3_customer_token_ttl', null, 86400);
+            $_SESSION['ms3']['customer_token'] = $cookieToken;
+            $_SESSION['ms3']['customer_token_expires'] = time() + $ttl;
+            if (!isset($_SESSION['ms3']['customer_id'])) {
+                $_SESSION['ms3']['customer_id'] = 0;
+            }
+            CookieHelper::setTokenCookie($this->modx, $cookieToken);
+
+            return $cookieToken;
+        }
+
+        $token = bin2hex(random_bytes(32));
+        $ttl = (int)$this->modx->getOption('ms3_customer_token_ttl', null, 86400);
+        if (!isset($_SESSION['ms3'])) {
+            $_SESSION['ms3'] = [];
+        }
+        $_SESSION['ms3']['customer_token'] = $token;
+        $_SESSION['ms3']['customer_token_expires'] = time() + $ttl;
+        $_SESSION['ms3']['customer_id'] = 0;
+        CookieHelper::setTokenCookie($this->modx, $token);
+
+        return $token;
+    }
+
+    /**
+     * Persist a session-only token on its first real use (#1000).
+     *
+     * Returns the existing DB row when the token is already persisted,
+     * otherwise creates it with the caller-supplied token string.
+     * A forged token that was never issued by the server must not be
+     * persisted here — callers (TokenMiddleware) check session ownership first.
+     */
+    public function ensureTokenPersisted(string $token, int $customerId = 0, ?int $ttl = null): ?msCustomerToken
+    {
+        if ($token === '') {
+            return null;
+        }
+
+        if ($ttl === null) {
+            $ttl = (int)$this->modx->getOption('ms3_customer_token_ttl', null, 86400);
+        }
+
+        $existing = $this->modx->getObject(msCustomerToken::class, [
+            'token' => $token,
+            'type' => msCustomerToken::TYPE_API,
+        ]);
+        if ($existing instanceof msCustomerToken) {
+            return $existing;
+        }
+
+        $tokenObj = $this->modx->newObject(msCustomerToken::class);
+        $tokenObj->set('customer_id', $customerId);
+        $tokenObj->set('token', $token);
+        $tokenObj->set('type', msCustomerToken::TYPE_API);
+        $tokenObj->set('expires_at', date('Y-m-d H:i:s', time() + $ttl));
+        $tokenObj->set('created_at', date('Y-m-d H:i:s'));
+
+        if (!$tokenObj->save()) {
+            $this->modx->log(
+                modX::LOG_LEVEL_ERROR,
+                '[TokenService] Failed to persist session token'
+            );
+
+            return null;
+        }
+
+        $this->syncSessionFromToken($tokenObj);
+
+        return $tokenObj;
     }
 
     /**
@@ -184,32 +297,42 @@ class TokenService
     }
 
     /**
-     * Resolve existing token or create new one
+     * Resolve existing token or create a session-only (lazy) one
      *
      * Resolution chain:
-     * 1. Session token → if valid, return
-     * 2. Cookie token → verify in DB (msCustomerToken type=api), restore session, return
-     * 3. Generate new token → set cookie + session, return
+     * 1. Session/cookie token that exists in DB → return it
+     * 2. Session/cookie token that was minted lazily and is not in DB yet → return it as is
+     * 3. Otherwise mint a new session-only token (no DB write until first API action)
      *
-     * Expired cookie tokens are discarded (not auto-renewed) and a new token is created.
+     * #1000: anonymous visitors (including crawlers) that only render
+     * snippets no longer fill `ms3_customer_tokens`. The token is held in
+     * session + cookie and persisted by TokenMiddleware / generateCustomerToken
+     * on the first protected API call.
      *
      * @return string Token string
      */
     public function resolveOrCreateToken(): string
     {
-        // 1. Check session (re-validate against DB — do not trust session TTL alone)
         $sessionToken = $this->getCustomerToken();
         if ($sessionToken) {
             $resolved = $this->resolveApiToken($sessionToken);
             if ($resolved['reason'] === 'ok') {
                 CookieHelper::setTokenCookie($this->modx, $sessionToken);
+
+                return $sessionToken;
+            }
+
+            // Session-only lazy token (never persisted) — keep it.
+            // A revoked persisted token has a DB expiry in session and is discarded below.
+            if ($resolved['reason'] === 'missing' && empty($_SESSION['ms3']['customer_id'])) {
+                CookieHelper::setTokenCookie($this->modx, $sessionToken);
+
                 return $sessionToken;
             }
 
             $this->discardStaleCustomerSession();
         }
 
-        // 2. Check cookie
         $cookieToken = CookieHelper::getTokenFromCookie();
         if (!empty($cookieToken)) {
             $resolved = $this->resolveApiToken($cookieToken);
@@ -233,15 +356,28 @@ class TokenService
                 return $cookieToken;
             }
 
-            if ($resolved['reason'] === 'expired' || $resolved['reason'] === 'missing') {
+            // Cookie token from a lazy session that has not been persisted yet.
+            if ($resolved['reason'] === 'missing') {
+                if (!isset($_SESSION['ms3'])) {
+                    $_SESSION['ms3'] = [];
+                }
+                $ttl = (int)$this->modx->getOption('ms3_customer_token_ttl', null, 86400);
+                $_SESSION['ms3']['customer_token'] = $cookieToken;
+                $_SESSION['ms3']['customer_token_expires'] = time() + $ttl;
+                if (empty($_SESSION['ms3']['customer_id'])) {
+                    $_SESSION['ms3']['customer_id'] = 0;
+                }
+                CookieHelper::setTokenCookie($this->modx, $cookieToken);
+
+                return $cookieToken;
+            }
+
+            if ($resolved['reason'] === 'expired') {
                 CookieHelper::clearTokenCookie($this->modx);
             }
         }
 
-        // 3. Generate new token
-        $result = $this->generateCustomerToken();
-
-        return $result['token'];
+        return $this->getOrCreateSessionToken();
     }
 
     /**
