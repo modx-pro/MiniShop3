@@ -38,12 +38,12 @@ final class OrderInventoryReconcileTest extends TestCase
 
         $coordinator->reconcile($order, [7 => 2]);
         self::assertSame(8.0, $inventory->getAvailable(new InventoryKey(7)));
-        self::assertSame(InventoryReservationState::RESERVED, $store->findReservation(40, 7)['state']);
-        self::assertSame(2.0, $store->findReservation(40, 7)['qty']);
+        self::assertSame(InventoryReservationState::RESERVED, $store->findReservation(40, new InventoryKey(7))['state']);
+        self::assertSame(2.0, $store->findReservation(40, new InventoryKey(7))['qty']);
 
         $coordinator->reconcile($order, [7 => 5]);
         self::assertSame(5.0, $inventory->getAvailable(new InventoryKey(7)));
-        self::assertSame(5.0, $store->findReservation(40, 7)['qty']);
+        self::assertSame(5.0, $store->findReservation(40, new InventoryKey(7))['qty']);
 
         $coordinator->reconcile($order, [7 => 1, 8 => 2]);
         self::assertSame(9.0, $inventory->getAvailable(new InventoryKey(7)));
@@ -51,8 +51,8 @@ final class OrderInventoryReconcileTest extends TestCase
 
         $coordinator->reconcile($order, [8 => 2]);
         self::assertSame(10.0, $inventory->getAvailable(new InventoryKey(7)));
-        self::assertSame(InventoryReservationState::RELEASED, $store->findReservation(40, 7)['state']);
-        self::assertSame(2.0, $store->findReservation(40, 8)['qty']);
+        self::assertSame(InventoryReservationState::RELEASED, $store->findReservation(40, new InventoryKey(7))['state']);
+        self::assertSame(2.0, $store->findReservation(40, new InventoryKey(8))['qty']);
     }
 
     public function testTwoVariantsShareOneProductHold(): void
@@ -65,14 +65,14 @@ final class OrderInventoryReconcileTest extends TestCase
         $coordinator->reconcile($this->order(2), [7 => 5]);
 
         self::assertSame(5.0, $inventory->getAvailable(new InventoryKey(7)));
-        self::assertSame(5.0, $store->findReservation(40, 7)['qty']);
+        self::assertSame(5.0, $store->findReservation(40, new InventoryKey(7))['qty']);
     }
 
     public function testCommittedOrderKeepsCommittedState(): void
     {
         $store = new InMemoryInventoryStockStore();
         $store->seedStock(7, 8);
-        $store->saveReservation(40, 7, 2, InventoryReservationState::COMMITTED);
+        $store->saveReservation(40, new InventoryKey(7), 2, InventoryReservationState::COMMITTED);
         $inventory = new ProductStockInventory($store);
         $coordinator = new OrderInventoryCoordinator($this->modx(), $inventory);
         $order = $this->order(2);
@@ -80,8 +80,8 @@ final class OrderInventoryReconcileTest extends TestCase
         $coordinator->reconcile($order, [7 => 5]);
 
         self::assertSame(5.0, $inventory->getAvailable(new InventoryKey(7)));
-        self::assertSame(InventoryReservationState::COMMITTED, $store->findReservation(40, 7)['state']);
-        self::assertSame(5.0, $store->findReservation(40, 7)['qty']);
+        self::assertSame(InventoryReservationState::COMMITTED, $store->findReservation(40, new InventoryKey(7))['state']);
+        self::assertSame(5.0, $store->findReservation(40, new InventoryKey(7))['qty']);
     }
 
     public function testPaidAndSentCreateCommittedRows(): void
@@ -92,12 +92,12 @@ final class OrderInventoryReconcileTest extends TestCase
         $coordinator = new OrderInventoryCoordinator($this->modx(), $inventory);
 
         $coordinator->reconcile($this->order(3), [7 => 2]);
-        self::assertSame(InventoryReservationState::COMMITTED, $store->findReservation(40, 7)['state']);
+        self::assertSame(InventoryReservationState::COMMITTED, $store->findReservation(40, new InventoryKey(7))['state']);
 
-        $store->deleteReservation(40, 7);
+        $store->deleteReservation(40, new InventoryKey(7));
         $store->seedStock(7, 10);
         $coordinator->reconcile($this->order(4), [7 => 1]);
-        self::assertSame(InventoryReservationState::COMMITTED, $store->findReservation(40, 7)['state']);
+        self::assertSame(InventoryReservationState::COMMITTED, $store->findReservation(40, new InventoryKey(7))['state']);
         self::assertSame(9.0, $inventory->getAvailable(new InventoryKey(7)));
     }
 
@@ -105,14 +105,14 @@ final class OrderInventoryReconcileTest extends TestCase
     {
         $store = new InMemoryInventoryStockStore();
         $store->seedStock(7, 10);
-        $store->saveReservation(40, 7, 2, InventoryReservationState::RESERVED);
+        $store->saveReservation(40, new InventoryKey(7), 2, InventoryReservationState::RESERVED);
         $inventory = new ProductStockInventory($store);
         $coordinator = new OrderInventoryCoordinator($this->modx(), $inventory);
 
         self::assertSame([], $coordinator->reconcile($this->order(1), [7 => 9]));
         self::assertSame([], $coordinator->reconcile($this->order(5), [7 => 9]));
         self::assertSame(10.0, $inventory->getAvailable(new InventoryKey(7)));
-        self::assertSame(2.0, $store->findReservation(40, 7)['qty']);
+        self::assertSame(2.0, $store->findReservation(40, new InventoryKey(7))['qty']);
     }
 
     public function testShortageWithoutForceLeavesStockUntouched(): void
@@ -130,7 +130,7 @@ final class OrderInventoryReconcileTest extends TestCase
             self::assertSame(1.0, $exception->getPlaceholders()['available']);
             self::assertSame(5.0, $exception->getPlaceholders()['required']);
             self::assertSame(1.0, $inventory->getAvailable(new InventoryKey(7)));
-            self::assertNull($store->findReservation(40, 7));
+            self::assertNull($store->findReservation(40, new InventoryKey(7)));
         }
     }
 
@@ -144,7 +144,7 @@ final class OrderInventoryReconcileTest extends TestCase
         $overrides = $coordinator->reconcile($this->order(2), [7 => 5], true);
 
         self::assertSame(-4.0, $inventory->getAvailable(new InventoryKey(7)));
-        self::assertSame(5.0, $store->findReservation(40, 7)['qty']);
+        self::assertSame(5.0, $store->findReservation(40, new InventoryKey(7))['qty']);
         self::assertSame([
             ['product_id' => 7, 'available' => 1.0, 'required' => 5.0],
         ], $overrides);
@@ -166,9 +166,9 @@ final class OrderInventoryReconcileTest extends TestCase
             self::assertSame(0.0, $inventory->getAvailable(new InventoryKey(8)));
             self::assertSame(
                 InventoryReservationState::RELEASED,
-                $store->findReservation(40, 7)['state']
+                $store->findReservation(40, new InventoryKey(7))['state']
             );
-            self::assertNull($store->findReservation(40, 8));
+            self::assertNull($store->findReservation(40, new InventoryKey(8)));
         }
     }
 
@@ -184,7 +184,7 @@ final class OrderInventoryReconcileTest extends TestCase
         $coordinator->reconcile($order, [], true);
 
         self::assertSame(10.0, $inventory->getAvailable(new InventoryKey(7)));
-        self::assertSame(InventoryReservationState::RELEASED, $store->findReservation(40, 7)['state']);
+        self::assertSame(InventoryReservationState::RELEASED, $store->findReservation(40, new InventoryKey(7))['state']);
     }
 
     public function testNonAdjustableInventoryIsRejectedWhenTheOrderHoldsStock(): void
@@ -216,8 +216,8 @@ final class OrderInventoryReconcileTest extends TestCase
 
         $coordinator->applyStatusChange($order, 3);
         self::assertSame(5.0, $inventory->getAvailable(new InventoryKey(7)));
-        self::assertSame(InventoryReservationState::COMMITTED, $store->findReservation(40, 7)['state']);
-        self::assertSame(5.0, $store->findReservation(40, 7)['qty']);
+        self::assertSame(InventoryReservationState::COMMITTED, $store->findReservation(40, new InventoryKey(7))['state']);
+        self::assertSame(5.0, $store->findReservation(40, new InventoryKey(7))['qty']);
 
         $store = new InMemoryInventoryStockStore();
         $store->seedStock(7, 10);
@@ -231,7 +231,7 @@ final class OrderInventoryReconcileTest extends TestCase
         $coordinator->applyStatusChange($order, 5);
 
         self::assertSame(10.0, $inventory->getAvailable(new InventoryKey(7)));
-        self::assertSame(InventoryReservationState::RELEASED, $store->findReservation(40, 7)['state']);
+        self::assertSame(InventoryReservationState::RELEASED, $store->findReservation(40, new InventoryKey(7))['state']);
     }
 
     public function testAdjustEmitsBeforeThenAfter(): void
@@ -254,8 +254,8 @@ final class OrderInventoryReconcileTest extends TestCase
 
         $inventory->adjust(new InventoryKey(7), 2, new InventoryContext(40, 'order', InventoryReservationState::RESERVED));
 
-        self::assertSame(3.0, $store->getAvailable(7));
-        self::assertSame(2.0, $store->findReservation(40, 7)['qty']);
+        self::assertSame(3.0, $store->getAvailable(new InventoryKey(7)));
+        self::assertSame(2.0, $store->findReservation(40, new InventoryKey(7))['qty']);
     }
 
     public function testSilentAdjustIgnoresACancellingPlugin(): void
@@ -272,8 +272,8 @@ final class OrderInventoryReconcileTest extends TestCase
             false
         );
 
-        self::assertSame(3.0, $store->getAvailable(7));
-        self::assertSame(2.0, $store->findReservation(40, 7)['qty']);
+        self::assertSame(3.0, $store->getAvailable(new InventoryKey(7)));
+        self::assertSame(2.0, $store->findReservation(40, new InventoryKey(7))['qty']);
     }
 
     public function testRuntimeFailureRollsTheEarlierProductBack(): void
@@ -290,9 +290,9 @@ final class OrderInventoryReconcileTest extends TestCase
         } catch (\RuntimeException) {
         }
 
-        self::assertSame(10.0, $inner->getAvailable(7));
-        self::assertSame('released', $inner->findReservation(40, 7)['state']);
-        self::assertSame(10.0, $inner->getAvailable(8));
+        self::assertSame(10.0, $inner->getAvailable(new InventoryKey(7)));
+        self::assertSame('released', $inner->findReservation(40, new InventoryKey(7))['state']);
+        self::assertSame(10.0, $inner->getAvailable(new InventoryKey(8)));
     }
 
     private function modx(): modX
@@ -445,28 +445,28 @@ final class ThrowingInventoryStockStore implements InventoryStockStoreInterface
     ) {
     }
 
-    public function getAvailable(int $productId): float
+    public function getAvailable(InventoryKey $key): float
     {
-        return $this->inner->getAvailable($productId);
+        return $this->inner->getAvailable($key);
     }
 
-    public function tryDecrement(int $productId, float $qty): bool
+    public function tryDecrement(InventoryKey $key, float $qty): bool
     {
-        if ($productId === $this->failingProductId) {
+        if ($key->productId === $this->failingProductId) {
             throw new \RuntimeException('store failed');
         }
 
-        return $this->inner->tryDecrement($productId, $qty);
+        return $this->inner->tryDecrement($key, $qty);
     }
 
-    public function decrement(int $productId, float $qty): bool
+    public function decrement(InventoryKey $key, float $qty): bool
     {
-        return $this->inner->decrement($productId, $qty);
+        return $this->inner->decrement($key, $qty);
     }
 
-    public function increment(int $productId, float $qty): void
+    public function increment(InventoryKey $key, float $qty): void
     {
-        $this->inner->increment($productId, $qty);
+        $this->inner->increment($key, $qty);
     }
 
     public function listReservations(int $orderId): array
@@ -474,39 +474,39 @@ final class ThrowingInventoryStockStore implements InventoryStockStoreInterface
         return $this->inner->listReservations($orderId);
     }
 
-    public function findReservation(int $orderId, int $productId): ?array
+    public function findReservation(int $orderId, InventoryKey $key): ?array
     {
-        return $this->inner->findReservation($orderId, $productId);
+        return $this->inner->findReservation($orderId, $key);
     }
 
-    public function lockReservation(int $orderId, int $productId): ?array
+    public function lockReservation(int $orderId, InventoryKey $key): ?array
     {
-        return $this->inner->lockReservation($orderId, $productId);
+        return $this->inner->lockReservation($orderId, $key);
     }
 
-    public function saveReservation(int $orderId, int $productId, float $qty, string $state): void
+    public function saveReservation(int $orderId, InventoryKey $key, float $qty, string $state): void
     {
-        $this->inner->saveReservation($orderId, $productId, $qty, $state);
+        $this->inner->saveReservation($orderId, $key, $qty, $state);
     }
 
-    public function insertReservation(int $orderId, int $productId, float $qty, string $state): bool
+    public function insertReservation(int $orderId, InventoryKey $key, float $qty, string $state): bool
     {
-        return $this->inner->insertReservation($orderId, $productId, $qty, $state);
+        return $this->inner->insertReservation($orderId, $key, $qty, $state);
     }
 
     public function transitionReservation(
         int $orderId,
-        int $productId,
+        InventoryKey $key,
         string $fromState,
         string $toState,
         ?float $qty = null
     ): bool {
-        return $this->inner->transitionReservation($orderId, $productId, $fromState, $toState, $qty);
+        return $this->inner->transitionReservation($orderId, $key, $fromState, $toState, $qty);
     }
 
-    public function deleteReservation(int $orderId, int $productId): void
+    public function deleteReservation(int $orderId, InventoryKey $key): void
     {
-        $this->inner->deleteReservation($orderId, $productId);
+        $this->inner->deleteReservation($orderId, $key);
     }
 
     public function runInTransaction(callable $work): void
