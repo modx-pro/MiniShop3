@@ -5,23 +5,31 @@ namespace MiniShop3\Services\Inventory;
 /**
  * Persistence for available stock and per-order reservation ledger.
  *
- * @phpstan-type ReservationRow array{order_id: int, product_id: int, qty: float, state: string}
+ * Stock methods receive the whole {@see InventoryKey}; the core PDO store
+ * reads/writes `ms3_products.stock` by product id and ignores the variant
+ * part (variant stock lives in addons — see ProductStockInventory).
+ *
+ * Ledger methods are keyed by (order_id, InventoryKey): the `variant_key`
+ * column distinguishes SKU-level holds of the same product. '' (empty
+ * string in storage) means product-level, i.e. variantKey = null.
+ *
+ * @phpstan-type ReservationRow array{order_id: int, product_id: int, variant_key: ?string, qty: float, state: string}
  */
 interface InventoryStockStoreInterface
 {
-    public function getAvailable(int $productId): float;
+    public function getAvailable(InventoryKey $key): float;
 
     /**
      * Atomic decrement. Returns false when stock is insufficient or the product row is missing.
      */
-    public function tryDecrement(int $productId, float $qty): bool;
+    public function tryDecrement(InventoryKey $key, float $qty): bool;
 
     /**
      * Decrement even when stock would become negative. False only when the product row is missing.
      */
-    public function decrement(int $productId, float $qty): bool;
+    public function decrement(InventoryKey $key, float $qty): bool;
 
-    public function increment(int $productId, float $qty): void;
+    public function increment(InventoryKey $key, float $qty): void;
 
     /**
      * @return list<ReservationRow>
@@ -31,21 +39,21 @@ interface InventoryStockStoreInterface
     /**
      * @return ReservationRow|null
      */
-    public function findReservation(int $orderId, int $productId): ?array;
+    public function findReservation(int $orderId, InventoryKey $key): ?array;
 
     /**
      * Same as findReservation, but locks the row for the open transaction.
      *
      * @return ReservationRow|null
      */
-    public function lockReservation(int $orderId, int $productId): ?array;
+    public function lockReservation(int $orderId, InventoryKey $key): ?array;
 
-    public function saveReservation(int $orderId, int $productId, float $qty, string $state): void;
+    public function saveReservation(int $orderId, InventoryKey $key, float $qty, string $state): void;
 
     /**
-     * Insert a new ledger row. False when (order_id, product_id) already exists.
+     * Insert a new ledger row. False when (order_id, key) already exists.
      */
-    public function insertReservation(int $orderId, int $productId, float $qty, string $state): bool;
+    public function insertReservation(int $orderId, InventoryKey $key, float $qty, string $state): bool;
 
     /**
      * Move the ledger row from $fromState to $toState.
@@ -53,13 +61,13 @@ interface InventoryStockStoreInterface
      */
     public function transitionReservation(
         int $orderId,
-        int $productId,
+        InventoryKey $key,
         string $fromState,
         string $toState,
         ?float $qty = null
     ): bool;
 
-    public function deleteReservation(int $orderId, int $productId): void;
+    public function deleteReservation(int $orderId, InventoryKey $key): void;
 
     /**
      * Run $work in a DB transaction.

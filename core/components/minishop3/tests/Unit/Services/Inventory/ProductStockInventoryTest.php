@@ -113,40 +113,40 @@ final class ProductStockInventoryTest extends TestCase
     {
         $inner = new InMemoryInventoryStockStore();
         $inner->seedStock(10, 4.0);
-        $inner->saveReservation(100, 10, 1.0, 'reserved');
+        $inner->saveReservation(100, new \MiniShop3\Services\Inventory\InventoryKey(10), 1.0, 'reserved');
         $store = new class ($inner) implements \MiniShop3\Services\Inventory\InventoryStockStoreInterface {
             public function __construct(private readonly InMemoryInventoryStockStore $inner)
             {
             }
 
-            public function getAvailable(int $productId): float
+            public function getAvailable(\MiniShop3\Services\Inventory\InventoryKey $key): float
             {
-                return $this->inner->getAvailable($productId);
+                return $this->inner->getAvailable($key);
             }
 
-            public function tryDecrement(int $productId, float $qty): bool
+            public function tryDecrement(\MiniShop3\Services\Inventory\InventoryKey $key, float $qty): bool
             {
-                return $this->inner->tryDecrement($productId, $qty);
+                return $this->inner->tryDecrement($key, $qty);
             }
 
-            public function decrement(int $productId, float $qty): bool
+            public function decrement(\MiniShop3\Services\Inventory\InventoryKey $key, float $qty): bool
             {
-                return $this->inner->decrement($productId, $qty);
+                return $this->inner->decrement($key, $qty);
             }
 
-            public function increment(int $productId, float $qty): void
+            public function increment(\MiniShop3\Services\Inventory\InventoryKey $key, float $qty): void
             {
-                $this->inner->increment($productId, $qty);
+                $this->inner->increment($key, $qty);
             }
 
-            public function findReservation(int $orderId, int $productId): ?array
+            public function findReservation(int $orderId, \MiniShop3\Services\Inventory\InventoryKey $key): ?array
             {
-                return $this->inner->findReservation($orderId, $productId);
+                return $this->inner->findReservation($orderId, $key);
             }
 
-            public function lockReservation(int $orderId, int $productId): ?array
+            public function lockReservation(int $orderId, \MiniShop3\Services\Inventory\InventoryKey $key): ?array
             {
-                return $this->inner->lockReservation($orderId, $productId);
+                return $this->inner->lockReservation($orderId, $key);
             }
 
             public function listReservations(int $orderId): array
@@ -154,19 +154,19 @@ final class ProductStockInventoryTest extends TestCase
                 return $this->inner->listReservations($orderId);
             }
 
-            public function saveReservation(int $orderId, int $productId, float $qty, string $state): void
+            public function saveReservation(int $orderId, \MiniShop3\Services\Inventory\InventoryKey $key, float $qty, string $state): void
             {
-                $this->inner->saveReservation($orderId, $productId, $qty, $state);
+                $this->inner->saveReservation($orderId, $key, $qty, $state);
             }
 
-            public function insertReservation(int $orderId, int $productId, float $qty, string $state): bool
+            public function insertReservation(int $orderId, \MiniShop3\Services\Inventory\InventoryKey $key, float $qty, string $state): bool
             {
-                return $this->inner->insertReservation($orderId, $productId, $qty, $state);
+                return $this->inner->insertReservation($orderId, $key, $qty, $state);
             }
 
             public function transitionReservation(
                 int $orderId,
-                int $productId,
+                 \MiniShop3\Services\Inventory\InventoryKey $key,
                 string $fromState,
                 string $toState,
                 ?float $qty = null
@@ -174,9 +174,9 @@ final class ProductStockInventoryTest extends TestCase
                 return false;
             }
 
-            public function deleteReservation(int $orderId, int $productId): void
+            public function deleteReservation(int $orderId, \MiniShop3\Services\Inventory\InventoryKey $key): void
             {
-                $this->inner->deleteReservation($orderId, $productId);
+                $this->inner->deleteReservation($orderId, $key);
             }
 
             public function runInTransaction(callable $work): void
