@@ -208,9 +208,9 @@ $_lang['setting_ms3_weight_unit_desc'] = 'Обозначение единицы 
 
 // Customer Authentication & Registration
 $_lang['setting_ms3_customer_login_page_id'] = 'ID страницы входа';
-$_lang['setting_ms3_customer_login_page_id_desc'] = 'ID страницы с формой входа клиента. Используется для редиректа неавторизованных пользователей.';
+$_lang['setting_ms3_customer_login_page_id_desc'] = 'ID страницы с формой входа клиента. Используется для редиректа неавторизованных пользователей. 0 — страница не выбрана: ссылка на вход не выводится, после выхода клиент попадает на главную.';
 $_lang['setting_ms3_customer_register_page_id'] = 'ID страницы регистрации';
-$_lang['setting_ms3_customer_register_page_id_desc'] = 'ID страницы с формой регистрации клиента.';
+$_lang['setting_ms3_customer_register_page_id_desc'] = 'ID страницы с формой регистрации клиента. 0 — страница не выбрана: ссылка на регистрацию не выводится.';
 $_lang['setting_ms3_customer_auto_register_on_order'] = 'Автоматическая регистрация при оформлении заказа';
 $_lang['setting_ms3_customer_auto_register_on_order_desc'] = 'Автоматически регистрировать клиента с паролем при оформлении заказа, если такого email нет в системе. Пароль генерируется автоматически и отправляется на email.';
 $_lang['setting_ms3_customer_auto_login_on_order'] = 'Автоматический вход после заказа';
