@@ -106,6 +106,7 @@ class msProductUpdateManagerController extends msResourceUpdateController
             'show_options' => (bool)$this->getOption('ms3_product_tab_options', null, true),
             'show_links' => (bool)$this->getOption('ms3_product_tab_links', null, true),
             'show_categories' => (bool)$this->getOption('ms3_product_tab_categories', null, true),
+            'show_seo' => (bool)$this->getOption('ms3_product_tab_seo', null, true),
             'default_thumb' => $this->ms3->config['defaultThumb'],
             'main_fields' => $product_main_fields,
             'extra_fields' => $product_extra_fields,
