@@ -466,9 +466,9 @@ class msProduct extends modResource
     /**
      * @return bool|\modMediaSource|null|object
      */
-    public function initializeMediaSource()
+    public function initializeMediaSource(bool $ensureContainer = false)
     {
-        return $this->loadData()->initializeMediaSource(parent::get('context_key'));
+        return $this->loadData()->initializeMediaSource(parent::get('context_key'), $ensureContainer);
     }
 
     /**

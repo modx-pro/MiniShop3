@@ -56,13 +56,20 @@ class ProductImageService
      * Initialize media source for product
      *
      * Finds and initializes the product image source,
-     * can be either standard file source or custom
+     * can be either standard file source or custom.
+     *
+     * The container is created only when `$ensureContainer` is true.
+     * Read paths (ms_gallery snippet, thumbnail listing) must pass false:
+     * `createContainer()` is a write and on MODX 3.2 logs `directory_create`
+     * on every call (Flysystem `fileExists()` on a directory is false), which
+     * flooded `modx_manager_log` with 1.6M rows (#998, modxcms/revolution#17129).
+     * Write paths (gallery upload) pass true or create the container explicitly.
      *
      * @param msProductData $productData
      * @param string $contextKey Context key (web, mgr etc.)
      * @return bool|modMediaSource|null
      */
-    public function initializeMediaSource(msProductData $productData, string $contextKey = 'web')
+    public function initializeMediaSource(msProductData $productData, string $contextKey = 'web', bool $ensureContainer = false)
     {
         $productId = $productData->get('id');
 
@@ -82,7 +89,9 @@ class ProductImageService
             return false;
         }
 
-        $source->createContainer($productId . '/', '/');
+        if ($ensureContainer) {
+            $source->createContainer($productId . '/', '/');
+        }
 
         return $source;
     }
