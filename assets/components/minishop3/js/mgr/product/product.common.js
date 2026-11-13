@@ -3,6 +3,45 @@ ms3.panel.Product = function (config) {
   ms3.panel.Product.superclass.constructor.call(this, config)
 }
 Ext.extend(ms3.panel.Product, MODx.panel.Resource, {
+  /**
+   * Save Vue product data BEFORE the ExtJS form is submitted.
+   *
+   * `beforeSave` does not exist in MODX — the real hook is the `submit()`
+   * method of `MODx.FormPanel` (`fireEvent('beforeSubmit') && fm.submit(...)`).
+   * `beforeSubmit` is synchronous, so the async Vue save cannot run inside it:
+   * cancel the first submit, save the Vue tab, then re-submit.
+   *
+   * Guard flag avoids the second pass intercepting itself.
+   * On Vue failure the standard save still proceeds (no silent data loss).
+   */
+  submit: function (o) {
+    if (this.__ms3ProductDataSaving) {
+      return ms3.panel.Product.superclass.submit.call(this, o)
+    }
+    if (typeof window.MS3_saveProductData === 'function') {
+      this.__ms3ProductDataSaving = true
+      const self = this
+      const proceed = function () {
+        self.__ms3ProductDataSaving = false
+        ms3.panel.Product.superclass.submit.call(self, o)
+      }
+      window.MS3_saveProductData().then(
+        function (result) {
+          if (result && result.ok === false) {
+            console.warn('[ProductPanel] Vue product data not saved:', result.message || result)
+          }
+          proceed()
+        },
+        function (error) {
+          console.error('[ProductPanel] Vue product data save failed:', error)
+          proceed()
+        },
+      )
+      return false
+    }
+    return ms3.panel.Product.superclass.submit.call(this, o)
+  },
+
   getFields: function (config) {
     const fields = []
     const originals = MODx.panel.Resource.prototype.getFields.call(this, config)
