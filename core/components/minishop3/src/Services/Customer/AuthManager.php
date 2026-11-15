@@ -615,15 +615,16 @@ class AuthManager
     private function deleteExpiredTokensBatch(string $now, int $batchSize): int
     {
         $batchSize = max(1, $batchSize);
-        $table = $this->modx->getTableName(msCustomerToken::class);
-        if (!is_string($table) || $table === '' || !preg_match('/^[A-Za-z0-9_]+$/', $table)) {
+        // xPDO returns names with backtick quoting — strip them for validation
+        $table = trim((string) $this->modx->getTableName(msCustomerToken::class), '\x60"[] ');
+        if ($table === '' || !preg_match('/^[A-Za-z0-9_]+$/', $table)) {
             return $this->deleteExpiredTokensObjects($now, $batchSize);
         }
-        // LIMIT cannot be bound; $batchSize is an int we validated.
+        // LIMIT cannot be bound; $batchSize is a validated int.
         $sql = "DELETE FROM `{$table}` WHERE expires_at < ? LIMIT {$batchSize}";
+        $stmt = $this->modx->pdo->prepare($sql);
         $total = 0;
         do {
-            $stmt = $this->modx->pdo->prepare($sql);
             $stmt->execute([$now]);
             $deleted = $stmt->rowCount();
             $total += $deleted;
