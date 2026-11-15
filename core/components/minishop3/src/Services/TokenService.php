@@ -115,6 +115,10 @@ class TokenService
      * render snippets therefore no longer fill `ms3_customer_tokens`.
      *
      * An already persisted token behaves exactly as before (DB-validated).
+     *
+     * A cookie is never adopted into the session without DB validation.
+     * The lazy token is minted server-side only; the cookie remains a hint
+     * that must be validated via DB (as on beta).
      */
     public function getOrCreateSessionToken(): string
     {
@@ -127,22 +131,8 @@ class TokenService
             return $sessionToken;
         }
 
-        $cookieToken = CookieHelper::getTokenFromCookie();
-        if (!empty($cookieToken)) {
-            if (!isset($_SESSION['ms3'])) {
-                $_SESSION['ms3'] = [];
-            }
-            $ttl = (int)$this->modx->getOption('ms3_customer_token_ttl', null, 86400);
-            $_SESSION['ms3']['customer_token'] = $cookieToken;
-            $_SESSION['ms3']['customer_token_expires'] = time() + $ttl;
-            if (!isset($_SESSION['ms3']['customer_id'])) {
-                $_SESSION['ms3']['customer_id'] = 0;
-            }
-            CookieHelper::setTokenCookie($this->modx, $cookieToken);
-
-            return $cookieToken;
-        }
-
+        // Do not adopt cookie into session without DB validation.
+        // Mint a new server-side lazy token.
         $token = bin2hex(random_bytes(32));
         $ttl = (int)$this->modx->getOption('ms3_customer_token_ttl', null, 86400);
         if (!isset($_SESSION['ms3'])) {
@@ -161,12 +151,26 @@ class TokenService
      *
      * Returns the existing DB row when the token is already persisted,
      * otherwise creates it with the caller-supplied token string.
-     * A forged token that was never issued by the server must not be
-     * persisted here — callers (TokenMiddleware) check session ownership first.
+     *
+     * Security: only tokens that were issued by the server (present in
+     * $_SESSION['ms3']['customer_token']) are persisted. A forged token
+     * that was never issued must not be persisted.
+     *
+     * @return msCustomerToken|null
      */
     public function ensureTokenPersisted(string $token, int $customerId = 0, ?int $ttl = null): ?msCustomerToken
     {
         if ($token === '') {
+            return null;
+        }
+
+        // Defense-in-depth: reject tokens not issued by the server.
+        $sessionToken = $_SESSION['ms3']['customer_token'] ?? '';
+        if (empty($sessionToken) || !hash_equals($sessionToken, $token)) {
+            $this->modx->log(
+                modX::LOG_LEVEL_ERROR,
+                '[TokenService] ensureTokenPersisted: rejected forged token (session mismatch)'
+            );
             return null;
         }
 
