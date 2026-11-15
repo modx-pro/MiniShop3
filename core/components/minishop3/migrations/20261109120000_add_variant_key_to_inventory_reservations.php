@@ -57,5 +57,13 @@ final class AddVariantKeyToInventoryReservations extends AbstractMigration
         if ($table->hasColumn('variant_key')) {
             $table->removeColumn('variant_key')->save();
         }
+
+        // Restore the original order_product index
+        if (!$table->hasIndexByName('order_product')) {
+            $table->addIndex(['order_id', 'product_id'], [
+                'unique' => true,
+                'name' => 'order_product',
+            ])->save();
+        }
     }
 }
