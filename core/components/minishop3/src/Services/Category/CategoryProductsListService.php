@@ -58,9 +58,9 @@ final class CategoryProductsListService
             ? $this->treeService()->productParentIds($categoryId, true)
             : [$categoryId];
 
-        $c = $this->buildProductListQuery($scopeCategoryIds, $params, $optionSpecs, $relationSpecs);
+        $c = $this->buildProductListQuery($scopeCategoryIds, $params, $optionSpecs, $relationSpecs, $dataColumns);
 
-        $countQuery = $this->buildProductListQuery($scopeCategoryIds, $params, $optionSpecs, $relationSpecs);
+        $countQuery = $this->buildProductListQuery($scopeCategoryIds, $params, $optionSpecs, $relationSpecs, $dataColumns);
         $countQuery->select('COUNT(DISTINCT msProduct.id)');
         $total = $this->executeGridQuery($countQuery, 'count')
             ? (int) $countQuery->stmt->fetchColumn()
@@ -191,15 +191,17 @@ final class CategoryProductsListService
     }
 
     /**
-     * @param list<int>               $scopeCategoryIds
-     * @param list<OptionColumnSpec>  $optionSpecs
+     * @param list<int>                $scopeCategoryIds
+     * @param list<OptionColumnSpec>   $optionSpecs
      * @param list<RelationColumnSpec> $relationSpecs
+     * @param array<string, string>    $dataColumns Extra msProductData columns (name => phptype)
      */
     private function buildProductListQuery(
         array $scopeCategoryIds,
         array $params,
         array $optionSpecs,
         array $relationSpecs,
+        array $dataColumns,
     ): xPDOQuery {
         $query = trim((string) ($params['query'] ?? ''));
         $c = $this->modx->newQuery(msProduct::class);
