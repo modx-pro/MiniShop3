@@ -2,6 +2,7 @@
 
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msOrder;
+use MiniShop3\Services\Delivery\DeliveryPublicFields;
 use MiniShop3\Services\Payment\PaymentLinkResolver;
 use MiniShop3\Services\Payment\PaymentPublicFields;
 use MiniShop3\Model\msOrderProduct;
@@ -250,8 +251,11 @@ foreach ($rows as $product) {
 
 try {
     $payment = $msOrder->getOne('Payment');
+    // Order array: strip internal fields token and idempotency_key (#909)
+    $orderArray = $msOrder->toArray();
+    unset($orderArray['token'], $orderArray['idempotency_key']);
     $pls = array_merge($scriptProperties, [
-        'order' => $msOrder->toArray(),
+        'order' => $orderArray,
         'products' => $products,
     //    'user' => ($tmp = $msOrder->getOne('User'))
     //        ? array_merge($tmp->getOne('Profile')->toArray(), $tmp->toArray())
@@ -259,9 +263,9 @@ try {
         'address' => ($tmp = $msOrder->getOne('Address'))
             ? $tmp->toArray()
             : [],
-        'delivery' => ($tmp = $msOrder->getOne('Delivery'))
-            ? $tmp->toArray()
-            : [],
+        // Delivery fields via allowlist — properties holds integration keys
+        // and class/validation_rules are internals (#909).
+        'delivery' => DeliveryPublicFields::fromEntityOrEmpty($msOrder->getOne('Delivery')),
         'payment' => PaymentPublicFields::fromEntityOrEmpty($payment),
         'shipments' => $ms3->shipmentPublicForOrder((int) $id),
         'total' => [
