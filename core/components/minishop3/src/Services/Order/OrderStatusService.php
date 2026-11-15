@@ -530,9 +530,10 @@ class OrderStatusService implements OrderStatusChanger
                 $recipient['phone'] = $phone;
                 $hasContact = true;
             }
-            $extended = $customer->get('extended');
-            if (is_array($extended) && !empty($extended['telegram_chat_id'])) {
-                $recipient['telegram_chat_id'] = $extended['telegram_chat_id'];
+            // Guest customers have no modUserProfile, therefore we read the native field.
+            $telegramChatId = $customer->get('telegram_chat_id');
+            if (!empty($telegramChatId)) {
+                $recipient['telegram_chat_id'] = $telegramChatId;
                 $hasContact = true;
             }
         }
