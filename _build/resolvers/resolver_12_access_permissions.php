@@ -24,10 +24,10 @@ use xPDO\Transport\xPDOTransport;
  * привязывает политику к шаблону, но никому её не назначает.
  *
  * Здесь то же самое, только политика достаётся не одной штатной группе, а
- * всем, у кого уже есть доступ к контексту mgr: на боевых сайтах
- * администраторы нередко сидят в своей группе, а не в Administrator. Кому
- * входить в админку — решает владелец сайта; мы лишь добавляем магазин
- * тем, кто уже внутри. Чужие политики при этом не меняются.
+ * всем, чья политика в mgr даёт право `frames` (вход в менеджер — как это
+ * определяет сам MODX, #1002). Служебные группы с узкими политиками
+ * (API-пользователи, всего 1–2 права) в менеджер не входят и политику
+ * магазина не получают. Чужие политики при этом не меняются.
  *
  * @var xPDOTransport $transport
  * @var array<string, mixed> $options
@@ -55,6 +55,10 @@ $policyId = (int) $policy->get('id');
 /**
  * Группы с доступом в админку. Ту же политику второй раз не выдаём, иначе
  * обновление плодило бы дубли.
+ *
+ * «Работают в админке» = одна из политик группы в mgr даёт `frames` (#1002).
+ * Группа с правилом mgr, но без `frames` (сервисные/API-пользователи) в
+ * менеджер не входит — ей политика магазина не нужна и не выдаётся.
  */
 $groupIds = [];
 $query = $modx->newQuery(modAccessContext::class);
@@ -67,7 +71,20 @@ $query->where([
 foreach ($modx->getIterator(modAccessContext::class, $query) as $access) {
     /** @var modAccessContext $access */
     $groupId = (int) $access->get('principal');
-    if ($groupId > 0 && !in_array($groupId, $groupIds, true)) {
+    if ($groupId <= 0) {
+        continue;
+    }
+
+    $groupPolicy = $access->getOne('Policy');
+    $policyData = $groupPolicy instanceof modAccessPolicy ? $groupPolicy->get('data') : null;
+    if (is_string($policyData)) {
+        $policyData = json_decode($policyData, true);
+    }
+    if (!is_array($policyData) || empty($policyData['frames'])) {
+        continue;
+    }
+
+    if (!in_array($groupId, $groupIds, true)) {
         $groupIds[] = $groupId;
     }
 }
