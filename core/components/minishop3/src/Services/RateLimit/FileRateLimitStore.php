@@ -26,20 +26,48 @@ class FileRateLimitStore implements RateLimitStoreInterface
 
     public function increment(string $key, int $windowSeconds): array
     {
-        $attempts = $this->readAttempts($key) + 1;
-        $resetAt = $this->readResetTime($key);
+        $attemptsFile = $this->filePath($key, 'attempts');
+        $resetFile = $this->filePath($key, 'reset');
 
-        if ($attempts === 1) {
-            $resetAt = time() + $windowSeconds;
+        // Ensure directory exists
+        $dir = dirname($attemptsFile);
+        if (!is_dir($dir)) {
+            mkdir($dir, 0755, true);
         }
 
-        $this->writeAttempts($key, $attempts);
-        $this->writeResetTime($key, $resetAt);
+        $fp = fopen($attemptsFile, 'c+');
+        if ($fp === false) {
+            // Fallback: non-atomic increment
+            return ['attempts' => 1, 'reset_at' => time() + $windowSeconds];
+        }
 
-        return [
-            'attempts' => $attempts,
-            'reset_at' => $resetAt,
-        ];
+        try {
+            // Exclusive lock for atomic read-modify-write
+            flock($fp, LOCK_EX);
+
+            // Read current attempts
+            $contents = fread($fp, 32);
+            $attempts = $contents === '' ? 0 : (int) $contents;
+            $attempts++;
+
+            // Reset position and write new value
+            ftruncate($fp, 0);
+            rewind($fp);
+            fwrite($fp, (string) $attempts);
+            fflush($fp);
+
+            // Read/write reset time
+            $resetAt = time() + $windowSeconds;
+            file_put_contents($resetFile, (string) $resetAt);
+
+            return [
+                'attempts' => $attempts,
+                'reset_at' => $resetAt,
+            ];
+        } finally {
+            flock($fp, LOCK_UN);
+            fclose($fp);
+        }
     }
 
     public function reset(string $key): void
@@ -68,15 +96,7 @@ class FileRateLimitStore implements RateLimitStoreInterface
         return (int) file_get_contents($file);
     }
 
-    private function writeAttempts(string $key, int $attempts): void
-    {
-        file_put_contents($this->filePath($key, 'attempts'), (string) $attempts);
-    }
 
-    private function writeResetTime(string $key, int $resetAt): void
-    {
-        file_put_contents($this->filePath($key, 'reset'), (string) $resetAt);
-    }
 
     private function filePath(string $key, string $type): string
     {
