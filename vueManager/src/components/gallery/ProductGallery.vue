@@ -35,6 +35,7 @@ const {
   isLoading,
   fetchGalleryList,
   sortFiles,
+  sortFilesByName,
   deleteFiles,
   deleteAll,
   regenerateThumbs,
@@ -320,6 +321,23 @@ function onDeleteAll() {
 }
 
 /**
+ * Handle sort by name
+ */
+async function onSortByName() {
+  try {
+    await sortFilesByName(props.productId)
+    await loadImages()
+  } catch (error) {
+    toast.add({
+      severity: 'error',
+      summary: _('ms3_gallery_errors'),
+      detail: error.message,
+      life: 5000,
+    })
+  }
+}
+
+/**
  * Handle media source change
  */
 function onChangeSource(sourceId) {
@@ -413,6 +431,7 @@ onMounted(() => {
       @regenerate-all="onRegenerateAll"
       @delete-all="onDeleteAll"
       @search="onSearch"
+      @sort-by-name="onSortByName"
     />
 
     <GalleryUploader
