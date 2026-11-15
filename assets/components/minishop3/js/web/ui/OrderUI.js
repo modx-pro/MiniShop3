@@ -32,10 +32,11 @@ class OrderUI {
       this.initForm(form, initialized)
     })
 
-    // Also initialize any form with ms3_action pointing to order endpoints
-    // This catches forms marked only with .ms3_form (without data-ms3-form="order" or .ms3_order_form)
-    document.querySelectorAll(`${this.selectors.form}[ms3_action^="order/"]`).forEach(form => {
-      if (!initialized.has(form)) {
+    // Also initialize any form whose hidden ms3_action field points to an order endpoint.
+    // This catches forms marked only with .ms3_form (without data-ms3-form="order" or .ms3_order_form).
+    document.querySelectorAll(this.selectors.form).forEach(form => {
+      const action = form.querySelector('[name="ms3_action"]')?.value || ''
+      if (action.startsWith('order/') && !initialized.has(form)) {
         this.initForm(form, initialized)
       }
     })
