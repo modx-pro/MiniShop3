@@ -317,9 +317,22 @@ class OrderInventoryCoordinator
     /**
      * Resolve the stock identity for one order line.
      *
-     * An addon sets the variant via event `msOnInventoryResolveKey`
-     * (params: orderProduct, product_id, options, order; result:
-     * returnedValues['variantKey'] — a SKU string or options hash).
+     * An addon sets the variant via event `msOnInventoryResolveKey`.
+     *
+     * @event msOnInventoryResolveKey
+     * @param array $params {
+     *     @var object $orderProduct Order line
+     *     @var int $product_id Product ID
+     *     @var array<string, mixed>|null $options Product options
+     *     @var msOrder $order Order
+     *     @var string|null $variantKey Current resolved key (null by default)
+     * }
+     * @param array $returnedValues {
+     *     @var string $variantKey A stable, deterministic SKU string or options hash.
+     *     The same orderProduct must always resolve to the same variantKey.
+     *     Keys longer than 128 characters are hashed automatically.
+     * }
+     *
      * Without subscribers the key is product-level (variantKey = null).
      */
     private function resolveKey(object $line, msOrder $order): ?InventoryKey
@@ -344,7 +357,12 @@ class OrderInventoryCoordinator
                 'order' => $order,
                 'variantKey' => null,
             ]);
-        } catch (\Throwable) {
+        } catch (\Throwable $e) {
+            // Log the error; fallback to product‑level key
+            $this->modx->log(
+                \MODX\Revolution\modX::LOG_LEVEL_WARN,
+                '[ms3] msOnInventoryResolveKey failed: ' . $e->getMessage()
+            );
             return new InventoryKey($productId);
         }
         $variant = $event['returnedValues']['variantKey'] ?? null;

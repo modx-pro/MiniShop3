@@ -8,6 +8,8 @@ namespace MiniShop3\Services\Inventory;
  *
  * Without addons, variantKey is null and accounting is by product, exactly
  * as before (#1001). Empty string is normalized to null.
+ * Strings exceeding 128 characters are automatically hashed (xxh128) to
+ * fit the VARCHAR(128) ledger column.
  */
 final class InventoryKey
 {
@@ -21,6 +23,10 @@ final class InventoryKey
             throw new \InvalidArgumentException('InventoryKey productId must be positive');
         }
         $variantKey = trim((string) ($variantKey ?? ''));
+        // Limit variantKey length to fit VARCHAR(128) column; hash long keys
+        if ($variantKey !== '' && strlen($variantKey) > 128) {
+            $variantKey = hash('xxh128', $variantKey);
+        }
         $this->variantKey = $variantKey === '' ? null : $variantKey;
     }
 
