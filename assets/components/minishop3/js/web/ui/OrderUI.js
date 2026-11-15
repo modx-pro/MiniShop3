@@ -244,8 +244,13 @@ class OrderUI {
       if (!response.success && response.message) {
         this.message.error(response.message)
 
-        if (response.errors && Array.isArray(response.errors)) {
-          this.highlightErrors(response.errors)
+        // Check response.errors first (legacy/third-party), then response.data (current API for BUSINESS_RULE)
+        const errorFields = (response.errors && Array.isArray(response.errors))
+          ? response.errors
+          : (response.data && Array.isArray(response.data) ? response.data : null)
+
+        if (errorFields) {
+          this.highlightErrors(errorFields)
         }
       }
 
