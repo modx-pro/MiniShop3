@@ -74,6 +74,34 @@ final class TokenServiceLazyIssueTest extends TestCase
         self::assertSame(1, $modx->store->count);
     }
 
+    /**
+     * Security regression: forged 64-hex token without session must not be persisted.
+     *
+     * An attacker cannot choose an arbitrary token and have the server persist it.
+     * Only tokens minted by the server (present in $_SESSION['ms3']['customer_token'])
+     * are eligible for lazy persistence.
+     */
+    public function testForgedTokenWithoutSessionIsRejectedAndNotPersisted(): void
+    {
+        $modx = $this->makeModx(new LazyTokenRowStore());
+        $service = new TokenService($modx);
+
+        // Simulate a forged token: 64-hex string not issued by the server
+        $forgedToken = bin2hex(random_bytes(32));
+
+        // Ensure session has no token (or a different one)
+        $_SESSION['ms3']['customer_token'] = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+        $_SESSION['ms3']['customer_token_expires'] = time() + 86400;
+        $_SESSION['ms3']['customer_id'] = 0;
+
+        // Attempt to persist the forged token (this is what TokenMiddleware does)
+        $persisted = $service->ensureTokenPersisted($forgedToken, 0);
+
+        // Must NOT persist: the token was never issued by the server
+        self::assertNull($persisted, 'Forged token must not be persisted');
+        self::assertSame(0, $modx->store->count, 'No DB rows should be created for forged token');
+    }
+
     private function makeModx(LazyTokenRowStore $store): modX
     {
         return new class ($store) extends modX {

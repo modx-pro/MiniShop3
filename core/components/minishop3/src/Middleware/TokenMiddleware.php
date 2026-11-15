@@ -94,6 +94,7 @@ class TokenMiddleware implements MiddlewareInterface
 
         /** @var TokenService $tokenService */
         $tokenService = $this->modx->services->get('ms3_token_service');
+        $sessionToken = $_SESSION['ms3']['customer_token'] ?? '';
 
         // Hydrate request token from session cache (still validated below).
         if (
@@ -112,10 +113,13 @@ class TokenMiddleware implements MiddlewareInterface
             $resolved = $tokenService->resolveApiToken($token);
 
             if ($resolved['reason'] === 'ok') {
-                $tokenService->syncSessionFromToken($resolved['token']);
-                $_REQUEST['ms3_token'] = $token;
+                $sessionToken = $_SESSION['ms3']['customer_token'] ?? '';
+                if (!empty($sessionToken) && hash_equals($sessionToken, $token)) {
+                    $tokenService->syncSessionFromToken($resolved['token']);
+                    $_REQUEST['ms3_token'] = $token;
 
-                return null;
+                    return null;
+                }
             }
 
             // Lazy anonymous token (#1000): issued into session + cookie by a
@@ -123,7 +127,12 @@ class TokenMiddleware implements MiddlewareInterface
             // protected API hit instead of rejecting it. Only well-formed
             // tokens (bin2hex(32) = 64 hex chars) are eligible; forged or
             // revoked tokens still fall through to 401 below.
-            if ($resolved['reason'] === 'missing' && !$isPublic && preg_match('/\A[0-9a-f]{64}\z/i', $token)) {
+            if (
+                $resolved['reason'] === 'missing'
+                && !$isPublic
+                && !empty($sessionToken)
+                && hash_equals($sessionToken, $token)
+            ) {
                 $persisted = $tokenService->ensureTokenPersisted(
                     $token,
                     (int)($_SESSION['ms3']['customer_id'] ?? 0)
