@@ -131,7 +131,8 @@ class Import extends Processor
 
         require_once $schedulerPath . 'model/scheduler/scheduler.class.php';
         $scheduler = new \Scheduler($this->modx);
-        $task = $scheduler->getTask('MiniShop3', 'ms3_csv_import');
+        // Use lowercase 'minishop3' to match resolver_07_scheduler.php (#904)
+        $task = $scheduler->getTask('minishop3', 'ms3_csv_import');
 
         if (!$task) {
             $task = $this->createImportTask();
@@ -158,8 +159,10 @@ class Import extends Processor
         $task = $this->modx->newObject('sFileTask');
         $task->fromArray([
             'class_key' => 'sFileTask',
-            'content' => '/elements/tasks/csvImport.php',
-            'namespace' => 'MiniShop3',
+            // Path without leading slash to match resolver_07_scheduler.php
+            'content' => 'elements/tasks/csvImport.php',
+            // Lowercase namespace to match resolver_07_scheduler.php (#904)
+            'namespace' => 'minishop3',
             'reference' => 'ms3_csv_import',
             'description' => 'MiniShop3 CSV import'
         ]);
