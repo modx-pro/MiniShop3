@@ -651,7 +651,8 @@ class AuthManager
     /**
      * Handle failed login attempt
      *
-     * Increments failed attempts counter, blocks customer when limit exceeded
+     * Increments failed attempts counter atomically via SQL UPDATE (#926),
+     * blocks customer when limit exceeded.
      *
      * @param msCustomer $customer
      * @return void
@@ -660,7 +661,12 @@ class AuthManager
     {
         if (CustomerAccess::isLockoutExpired($customer)) {
             CustomerAccess::liftTimedLockout($customer);
-            $customer->set('failed_login_attempts', 0);
+            // Reset counter atomically via SQL
+            $table = $this->modx->getTableName(msCustomer::class);
+            $sql = "UPDATE {$table}
+                     SET failed_login_attempts = 0, is_blocked = 0, blocked_until = NULL
+                     WHERE id = {$customer->id}";
+            $this->modx->exec($sql);
         }
 
         // Permanent manager block must keep empty blocked_until so ForgotPassword
@@ -672,24 +678,28 @@ class AuthManager
         $maxAttempts = (int)$this->modx->getOption('ms3_customer_max_login_attempts', null, 5);
         $blockDuration = (int)$this->modx->getOption('ms3_customer_block_duration', null, 3600);
 
-        $attempts = $customer->get('failed_login_attempts') + 1;
-        $customer->set('failed_login_attempts', $attempts);
+        // Atomic update via SQL
+        $table = $this->modx->getTableName(msCustomer::class);
+        $blockedUntil = date('Y-m-d H:i:s', time() + $blockDuration);
+        $sql = "UPDATE {$table}
+                SET
+                    failed_login_attempts = failed_login_attempts + 1,
+                    is_blocked = CASE WHEN failed_login_attempts + 1 >= {$maxAttempts} THEN 1 ELSE is_blocked END,
+                    blocked_until = CASE WHEN failed_login_attempts + 1 >= {$maxAttempts} THEN '{$blockedUntil}' ELSE blocked_until END
+                WHERE id = {$customer->id}";
+        $this->modx->exec($sql);
 
-        if ($attempts >= $maxAttempts) {
-            $blockedUntil = date('Y-m-d H:i:s', time() + $blockDuration);
-            $customer->set('is_blocked', true);
-            $customer->set('blocked_until', $blockedUntil);
-
-            $this->modx->log(
-                modX::LOG_LEVEL_WARN,
-                "[AuthManager] Customer #{$customer->id} blocked until {$blockedUntil} due to {$attempts} failed attempts"
-            );
+        // Re-fetch customer to get updated values
+        $customer = $this->modx->getObject(msCustomer::class, $customer->id);
+        if (!$customer) {
+            return;
         }
 
-        if (!$customer->save()) {
+        $attempts = (int)$customer->get('failed_login_attempts');
+        if ($attempts >= $maxAttempts) {
             $this->modx->log(
-                modX::LOG_LEVEL_ERROR,
-                "[AuthManager] Failed to persist failed_login_attempts for customer #{$customer->id}"
+                modX::LOG_LEVEL_WARN,
+                "[AuthManager] Customer #{$customer->id} blocked due to {$attempts} failed attempts"
             );
         }
     }
