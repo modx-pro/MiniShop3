@@ -94,10 +94,16 @@ class Create extends CreateProcessor
             $this->setProperty('options', $options);
         }
 
-        if (!empty($properties['vendor_id'])) {
-            $vendor_id = Utils::getVendorId($this->modx, $properties['vendor_id']);
-            if ($vendor_id) {
-                $this->setProperty('vendor_id', $vendor_id);
+        if (array_key_exists('vendor_id', $properties)) {
+            $raw = $properties['vendor_id'];
+            // If the incoming value is empty ("", "0" or 0) – clear the vendor
+            if ($raw === '' || $raw === '0' || $raw === 0) {
+                $this->setProperty('vendor_id', 0);
+            } else {
+                $vendor_id = Utils::getVendorId($this->modx, $raw);
+                if ($vendor_id) {
+                    $this->setProperty('vendor_id', $vendor_id);
+                }
             }
         }
 
