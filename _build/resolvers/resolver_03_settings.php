@@ -78,12 +78,16 @@ if ($transport->xpdo) {
                 }
             }
 
+            // ms3_order_address_fields: add default fields only if not edited manually (#883)
             $setting = $modx->getObject(modSystemSetting::class, ['key' => 'ms3_order_address_fields']);
             if ($setting) {
-                $fields = explode(',', $setting->get('value'));
-                $fields = array_unique(array_merge($fields, ['entrance', 'floor', 'text_address']));
-                $setting->set('value', implode(',', $fields));
-                $setting->save();
+                // If the setting was manually edited, preserve user changes
+                if (!$setting->get('editedon')) {
+                    $fields = explode(',', $setting->get('value'));
+                    $fields = array_unique(array_merge($fields, ['entrance', 'floor', 'text_address']));
+                    $setting->set('value', implode(',', $fields));
+                    $setting->save();
+                }
             }
 
             $chunks_descriptions = [
@@ -117,23 +121,26 @@ if ($transport->xpdo) {
                 }
             }
 
-            // Update msOrderTotal snippet default properties
+            // msOrderTotal snippet: set default properties only if not edited manually (#883)
             /** @var modSnippet $snippet */
             $snippet = $modx->getObject(modSnippet::class, ['name' => 'msOrderTotal']);
             if ($snippet) {
-                $properties = $snippet->get('properties') ?: [];
-                $properties['tpl'] = [
-                    'name' => 'tpl',
-                    'type' => 'textfield',
-                    'value' => 'tpl.msOrderTotal',
-                ];
-                $properties['return'] = [
-                    'name' => 'return',
-                    'type' => 'textfield',
-                    'value' => 'tpl',
-                ];
-                $snippet->set('properties', $properties);
-                $snippet->save();
+                // If the snippet was manually edited, preserve user changes
+                if (!$snippet->get('editedon')) {
+                    $properties = $snippet->get('properties') ?: [];
+                    $properties['tpl'] = [
+                        'name' => 'tpl',
+                        'type' => 'textfield',
+                        'value' => 'tpl.msOrderTotal',
+                    ];
+                    $properties['return'] = [
+                        'name' => 'return',
+                        'type' => 'textfield',
+                        'value' => 'tpl',
+                    ];
+                    $snippet->set('properties', $properties);
+                    $snippet->save();
+                }
             }
             break;
 
