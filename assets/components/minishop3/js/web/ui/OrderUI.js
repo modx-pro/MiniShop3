@@ -25,8 +25,20 @@ class OrderUI {
    * Initialize UI handlers
    */
   init () {
+    const initialized = new Set()
+
+    // Initialize forms by explicit order form selector
     document.querySelectorAll(this.selectors.formOrder).forEach(form => {
-      this.initForm(form)
+      this.initForm(form, initialized)
+    })
+
+    // Also initialize any form whose hidden ms3_action field points to an order endpoint.
+    // This catches forms marked only with .ms3_form (without data-ms3-form="order" or .ms3_order_form).
+    document.querySelectorAll(this.selectors.form).forEach(form => {
+      const action = form.querySelector('[name="ms3_action"]')?.value || ''
+      if (action.startsWith('order/') && !initialized.has(form)) {
+        this.initForm(form, initialized)
+      }
     })
 
     // Listen for cart updates to recalculate delivery cost
@@ -40,8 +52,12 @@ class OrderUI {
    * Initialize single form
    *
    * @param {HTMLFormElement} form - Order form
+   * @param {Set} [initialized] - Set of already-initialized forms (for deduplication)
    */
-  initForm (form) {
+  initForm (form, initialized) {
+    if (initialized) {
+      initialized.add(form)
+    }
     const inputs = form.querySelectorAll('input, textarea, select')
 
     inputs.forEach(input => {
