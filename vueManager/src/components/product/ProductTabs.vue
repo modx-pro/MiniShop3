@@ -5,6 +5,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import ProductGallery from '../gallery/ProductGallery.vue'
 import ProductDataFields from '../ProductDataFields.vue'
+import SeoFieldsTab from '../seo/SeoFieldsTab.vue'
 import ProductCategoriesTab from './ProductCategoriesTab.vue'
 import ProductLinksTab from './ProductLinksTab.vue'
 import ProductOptionsTab from './ProductOptionsTab.vue'
@@ -31,6 +32,7 @@ const builtInVueComponents = {
   ProductCategoriesTab,
   ProductLinksTab,
   ProductOptionsTab,
+  SeoFieldsTab,
 }
 
 function builtInVueTabProps(tab) {
@@ -49,6 +51,8 @@ function builtInVueTabProps(tab) {
       return { productId: props.productId }
     case 'ProductOptionsTab':
       return { optionFields: props.config.option_fields || [] }
+    case 'SeoFieldsTab':
+      return { resourceId: props.productId, resourceBase: 'product-data' }
     default:
       return {}
   }
@@ -76,6 +80,7 @@ const showGallery = computed(() => props.config.show_gallery !== false)
 const showCategories = computed(() => props.config.show_categories !== false)
 const showLinks = computed(() => props.config.show_links !== false)
 const showOptions = computed(() => props.config.show_options !== false && hasOptions.value)
+const showSeo = computed(() => props.config.show_seo !== false)
 const hasOptions = computed(() => {
   return props.config.option_fields && props.config.option_fields.length > 0
 })
@@ -129,6 +134,16 @@ const tabConfig = computed(() => {
       type: 'vue',
       component: 'ProductOptionsTab',
       position: 4,
+    })
+  }
+
+  if (showSeo.value) {
+    tabs.push({
+      key: 'seo',
+      title: _('ms3_tab_product_seo'),
+      type: 'vue',
+      component: 'SeoFieldsTab',
+      position: 5,
     })
   }
 
