@@ -321,6 +321,23 @@ function onDeleteAll() {
 }
 
 /**
+ * Handle sort by name
+ */
+async function onSortByName() {
+  try {
+    await sortFilesByName(props.productId)
+    await loadImages()
+  } catch (error) {
+    toast.add({
+      severity: 'error',
+      summary: _('ms3_gallery_errors'),
+      detail: error.message,
+      life: 5000,
+    })
+  }
+}
+
+/**
  * Handle media source change
  */
 function onChangeSource(sourceId) {
@@ -382,10 +399,8 @@ async function runUploadComplete(result) {
 
   try {
     if (hasUploads) {
-      const { thumb } = await sortFilesByName(props.productId)
-      if (thumb) {
-        updateProductThumb(thumb)
-      }
+      // Thumbnails and product thumb are refreshed by the Upload processor
+      // No need to re‑sort files by name after each upload; manual order is preserved.
     }
   } catch (error) {
     toast.add({
@@ -416,6 +431,7 @@ onMounted(() => {
       @regenerate-all="onRegenerateAll"
       @delete-all="onDeleteAll"
       @search="onSearch"
+      @sort-by-name="onSortByName"
     />
 
     <GalleryUploader

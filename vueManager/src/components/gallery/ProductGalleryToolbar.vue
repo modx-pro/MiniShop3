@@ -22,7 +22,7 @@ const props = defineProps({
   },
 })
 
-const emit = defineEmits(['change-source', 'regenerate-all', 'delete-all', 'search'])
+const emit = defineEmits(['change-source', 'regenerate-all', 'delete-all', 'search', 'sort-by-name'])
 
 const bulkMenu = ref(null)
 const localSearch = ref(props.searchQuery)
@@ -57,6 +57,11 @@ const menuItems = ref([
     label: _('ms3_gallery_file_generate_all'),
     icon: 'pi pi-refresh',
     command: () => emit('regenerate-all'),
+  },
+  {
+    label: _('ms3_gallery_sort_by_name'),
+    icon: 'pi pi-sort-alpha-down',
+    command: () => emit('sort-by-name'),
   },
   {
     separator: true,
