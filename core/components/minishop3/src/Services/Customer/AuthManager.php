@@ -199,10 +199,17 @@ class AuthManager
 
         $previousTokenObj = null;
         if ($previousToken !== '') {
+            // Lookup legacy token first, then hash (since we may have plain token stored during transition)
             $previousTokenObj = $this->modx->getObject(msCustomerToken::class, [
                 'token' => $previousToken,
                 'type' => msCustomerToken::TYPE_API,
             ]);
+            if (!$previousTokenObj) {
+                $previousTokenObj = $this->modx->getObject(msCustomerToken::class, [
+                    'token_hash' => hash('sha256', $previousToken),
+                    'type' => msCustomerToken::TYPE_API,
+                ]);
+            }
         }
 
         // Always rotate API token on login/register (do not upgrade a planted guest token).
@@ -328,10 +335,17 @@ class AuthManager
         } else {
             $orphanToken = $tokenService->getBindableTokenString();
             if ($orphanToken !== '') {
+                // Lookup legacy token first, then hash
                 $tokenObj = $this->modx->getObject(msCustomerToken::class, [
                     'token' => $orphanToken,
                     'type' => msCustomerToken::TYPE_API,
                 ]);
+                if (!$tokenObj) {
+                    $tokenObj = $this->modx->getObject(msCustomerToken::class, [
+                        'token_hash' => hash('sha256', $orphanToken),
+                        'type' => msCustomerToken::TYPE_API,
+                    ]);
+                }
                 if ($tokenObj) {
                     $tokenObj->remove();
                 }
@@ -473,6 +487,7 @@ class AuthManager
 
         $token->set('customer_id', $customer->id);
         $token->set('token', $tokenString);
+        $token->set('token_hash', hash('sha256', $tokenString));
         $token->set('type', $type);
         $token->set('expires_at', $expiresAt);
 
@@ -501,16 +516,26 @@ class AuthManager
      */
     public function validateToken(string $tokenString, string $type = 'api'): ?msCustomer
     {
+        // Lookup by hash first, then legacy plain token
+        $tokenHash = hash('sha256', $tokenString);
         /** @var msCustomerToken $token */
         $token = $this->modx->getObject(msCustomerToken::class, [
-            'token' => $tokenString,
+            'token_hash' => $tokenHash,
             'type' => $type,
         ]);
+
+        // Fallback to legacy plain token for backward compatibility
+        if (!$token) {
+            $token = $this->modx->getObject(msCustomerToken::class, [
+                'token' => $tokenString,
+                'type' => $type,
+            ]);
+        }
 
         if (!$token) {
             $this->modx->log(
                 modX::LOG_LEVEL_DEBUG,
-                "[AuthManager] Token not found: {$tokenString}"
+                "[AuthManager] Token not found (type: {$type})"
             );
             return null;
         }
@@ -518,7 +543,7 @@ class AuthManager
         if ($token->isExpired()) {
             $this->modx->log(
                 modX::LOG_LEVEL_DEBUG,
-                "[AuthManager] Token expired: {$tokenString}"
+                "[AuthManager] Token expired (type: {$type})"
             );
             $token->remove();
             return null;
@@ -527,7 +552,7 @@ class AuthManager
         if (in_array($type, ['magic_link', 'email_verification']) && $token->get('used_at')) {
             $this->modx->log(
                 modX::LOG_LEVEL_DEBUG,
-                "[AuthManager] Token already used: {$tokenString}"
+                "[AuthManager] Token already used (type: {$type})"
             );
             return null;
         }
@@ -538,7 +563,7 @@ class AuthManager
         if (!$customer) {
             $this->modx->log(
                 modX::LOG_LEVEL_ERROR,
-                "[AuthManager] Customer not found for token: {$tokenString}"
+                "[AuthManager] Customer not found for token (type: {$type})"
             );
             return null;
         }

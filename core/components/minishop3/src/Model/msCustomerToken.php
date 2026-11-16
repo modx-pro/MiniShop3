@@ -14,6 +14,7 @@ use xPDO\Om\xPDOSimpleObject;
  * @property integer $id
  * @property integer $customer_id
  * @property string $token
+ * @property string $token_hash Token hash (SHA-256) for secure storage
  * @property string $type
  * @property string $expires_at
  * @property string $created_at
