@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace MiniShop3\Tests\Support;
 
+use MiniShop3\Services\Inventory\InventoryKey;
 use MiniShop3\Services\Inventory\InventoryStockStoreInterface;
 
 /**
@@ -15,7 +16,7 @@ final class InMemoryInventoryStockStore implements InventoryStockStoreInterface
     private array $stock = [];
 
     /**
-     * @var array<string, array{order_id: int, product_id: int, qty: float, state: string}>
+     * @var array<string, array{order_id: int, product_id: int, variant_key: ?string, qty: float, state: string}>
      */
     private array $reservations = [];
 
@@ -24,45 +25,45 @@ final class InMemoryInventoryStockStore implements InventoryStockStoreInterface
         $this->stock[$productId] = round($qty, 3);
     }
 
-    public function getAvailable(int $productId): float
+    public function getAvailable(InventoryKey $key): float
     {
-        return $this->stock[$productId] ?? 0.0;
+        return $this->stock[$key->productId] ?? 0.0;
     }
 
-    public function tryDecrement(int $productId, float $qty): bool
+    public function tryDecrement(InventoryKey $key, float $qty): bool
     {
-        $available = $this->getAvailable($productId);
+        $available = $this->getAvailable($key);
         if ($available < $qty) {
             return false;
         }
-        $this->stock[$productId] = round($available - $qty, 3);
+        $this->stock[$key->productId] = round($available - $qty, 3);
 
         return true;
     }
 
-    public function decrement(int $productId, float $qty): bool
+    public function decrement(InventoryKey $key, float $qty): bool
     {
-        if (!array_key_exists($productId, $this->stock)) {
+        if (!array_key_exists($key->productId, $this->stock)) {
             return false;
         }
-        $this->stock[$productId] = round($this->stock[$productId] - $qty, 3);
+        $this->stock[$key->productId] = round($this->stock[$key->productId] - $qty, 3);
 
         return true;
     }
 
-    public function increment(int $productId, float $qty): void
+    public function increment(InventoryKey $key, float $qty): void
     {
-        $this->stock[$productId] = round($this->getAvailable($productId) + $qty, 3);
+        $this->stock[$key->productId] = round($this->getAvailable($key) + $qty, 3);
     }
 
-    public function findReservation(int $orderId, int $productId): ?array
+    public function findReservation(int $orderId, InventoryKey $key): ?array
     {
-        return $this->reservations[$this->reservationKey($orderId, $productId)] ?? null;
+        return $this->reservations[$this->reservationKey($orderId, $key)] ?? null;
     }
 
-    public function lockReservation(int $orderId, int $productId): ?array
+    public function lockReservation(int $orderId, InventoryKey $key): ?array
     {
-        return $this->findReservation($orderId, $productId);
+        return $this->findReservation($orderId, $key);
     }
 
     public function listReservations(int $orderId): array
@@ -77,36 +78,37 @@ final class InMemoryInventoryStockStore implements InventoryStockStoreInterface
         return $rows;
     }
 
-    public function saveReservation(int $orderId, int $productId, float $qty, string $state): void
+    public function saveReservation(int $orderId, InventoryKey $key, float $qty, string $state): void
     {
-        $this->reservations[$this->reservationKey($orderId, $productId)] = [
+        $this->reservations[$this->reservationKey($orderId, $key)] = [
             'order_id' => $orderId,
-            'product_id' => $productId,
+            'product_id' => $key->productId,
+            'variant_key' => $key->variantKey,
             'qty' => round($qty, 3),
             'state' => $state,
         ];
     }
 
-    public function insertReservation(int $orderId, int $productId, float $qty, string $state): bool
+    public function insertReservation(int $orderId, InventoryKey $key, float $qty, string $state): bool
     {
-        $key = $this->reservationKey($orderId, $productId);
-        if (isset($this->reservations[$key])) {
+        $k = $this->reservationKey($orderId, $key);
+        if (isset($this->reservations[$k])) {
             return false;
         }
-        $this->saveReservation($orderId, $productId, $qty, $state);
+        $this->saveReservation($orderId, $key, $qty, $state);
 
         return true;
     }
 
     public function transitionReservation(
         int $orderId,
-        int $productId,
+        InventoryKey $key,
         string $fromState,
         string $toState,
         ?float $qty = null
     ): bool {
-        $key = $this->reservationKey($orderId, $productId);
-        $row = $this->reservations[$key] ?? null;
+        $k = $this->reservationKey($orderId, $key);
+        $row = $this->reservations[$k] ?? null;
         if ($row === null || $row['state'] !== $fromState) {
             return false;
         }
@@ -114,14 +116,14 @@ final class InMemoryInventoryStockStore implements InventoryStockStoreInterface
         if ($qty !== null) {
             $row['qty'] = round($qty, 3);
         }
-        $this->reservations[$key] = $row;
+        $this->reservations[$k] = $row;
 
         return true;
     }
 
-    public function deleteReservation(int $orderId, int $productId): void
+    public function deleteReservation(int $orderId, InventoryKey $key): void
     {
-        unset($this->reservations[$this->reservationKey($orderId, $productId)]);
+        unset($this->reservations[$this->reservationKey($orderId, $key)]);
     }
 
     public function runInTransaction(callable $work): void
@@ -129,8 +131,8 @@ final class InMemoryInventoryStockStore implements InventoryStockStoreInterface
         $work();
     }
 
-    private function reservationKey(int $orderId, int $productId): string
+    private function reservationKey(int $orderId, InventoryKey $key): string
     {
-        return $orderId . ':' . $productId;
+        return $orderId . ':' . $key->identity();
     }
 }
