@@ -37,6 +37,11 @@ final class CustomerAuthPdoStore
         return new self($pdo);
     }
 
+    public function getPdo(): PDO
+    {
+        return $this->pdo;
+    }
+
     public function reset(): void
     {
         $this->pdo->query('DELETE FROM ms_customer_token');

@@ -412,6 +412,50 @@ class AuthManagerLifecycleTest extends TestCase
         self::assertSame(4, (int) $row['failed_login_attempts']);
     }
 
+    public function testCleanupExpiredTokensUsesBatchedDelete(): void
+    {
+        $now = time();
+        $expired = [
+            ['token' => 'exp-1', 'expires_at' => date('Y-m-d H:i:s', $now - 100)],
+            ['token' => 'exp-2', 'expires_at' => date('Y-m-d H:i:s', $now - 200)],
+            ['token' => 'exp-3', 'expires_at' => date('Y-m-d H:i:s', $now - 300)],
+        ];
+        $valid = [
+            ['token' => 'valid-1', 'expires_at' => date('Y-m-d H:i:s', $now + 3600)],
+            ['token' => 'valid-2', 'expires_at' => date('Y-m-d H:i:s', $now + 7200)],
+        ];
+
+        foreach ($expired as $fields) {
+            $this->seedToken(0, $fields['token'], msCustomerToken::TYPE_API, $fields['expires_at']);
+        }
+        foreach ($valid as $fields) {
+            $this->seedToken(0, $fields['token'], msCustomerToken::TYPE_API, $fields['expires_at']);
+        }
+
+        $modx = $this->makeModx();
+        $auth = $this->makeAuthManager($modx);
+
+        $deleted = $auth->cleanupExpiredTokens(1000);
+
+        self::assertSame(3, $deleted);
+        self::assertSame(2, $this->store->countTokens(0, msCustomerToken::TYPE_API));
+    }
+
+    public function testCleanupExpiredTokensRespectsBatchSize(): void
+    {
+        $now = time();
+        for ($i = 0; $i < 7; $i++) {
+            $this->seedToken(0, 'exp-' . $i, msCustomerToken::TYPE_API, date('Y-m-d H:i:s', $now - 100));
+        }
+
+        $modx = $this->makeModx();
+        $auth = $this->makeAuthManager($modx);
+
+        $deleted = $auth->cleanupExpiredTokens(3);
+
+        self::assertSame(7, $deleted);
+    }
+
     /**
      * @param array<string, mixed> $fields
      */
@@ -430,6 +474,19 @@ class AuthManagerLifecycleTest extends TestCase
         $customer->hydrate($row);
 
         return $customer;
+    }
+
+    /**
+     * Seed a token directly into the store.
+     */
+    private function seedToken(int $customerId, string $token, string $type, string $expiresAt): void
+    {
+        $this->store->insertToken([
+            'customer_id' => $customerId,
+            'token' => $token,
+            'type' => $type,
+            'expires_at' => $expiresAt,
+        ]);
     }
 
     /**
@@ -472,6 +529,9 @@ class AuthManagerLifecycleTest extends TestCase
         );
 
         $modx = new class ($store, $options, $orderDraftManager, $addressManager) extends modX {
+            /** @var PDO */
+            public $pdo;
+
             /**
              * @param array<string, mixed> $options
              */
@@ -482,6 +542,8 @@ class AuthManagerLifecycleTest extends TestCase
                 OrderAddressManager $addressManager,
             ) {
                 parent::__construct();
+                // Expose store's PDO for batched DELETE path
+                $this->pdo = $store->getPdo();
                 $tokenService = new TokenService($this);
                 $this->services = new class ($tokenService, $orderDraftManager, $addressManager) {
                     public function __construct(
@@ -591,6 +653,17 @@ class AuthManagerLifecycleTest extends TestCase
                 }
 
                 return null;
+            }
+
+            public function getTableName($className, $default = null)
+            {
+                if ($className === msCustomerToken::class) {
+                    return '`ms_customer_token`';
+                }
+                if ($className === msCustomer::class) {
+                    return '`ms_customer`';
+                }
+                return $default;
             }
 
             public function getCollection($className, $criteria = null, $cacheFlag = true)

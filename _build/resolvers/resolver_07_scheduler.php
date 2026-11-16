@@ -135,6 +135,24 @@ switch ($options[xPDOTransport::PACKAGE_ACTION]) {
                 if ($task->save()) {
                     $updated++;
                 }
+
+                // Revive a recurring task that has no scheduled run (#999a):
+                // Scheduler only re-plans after a successful run, so a task
+                // that once lost its run (e.g. installed while Scheduler was
+                // too old for recurring) would never start again.
+                if ($recurring && !empty($interval)) {
+                    $pendingRun = $modx->getObject('sTaskRun', [
+                        'task' => $task->get('id'),
+                        'status' => 0, // STATUS_SCHEDULED
+                    ]);
+                    if (!$pendingRun) {
+                        $task->schedule('+1 minute');
+                        $modx->log(
+                            modX::LOG_LEVEL_INFO,
+                            "[MiniShop3] Scheduled first run for recurring task '{$taskData['reference']}' (revived on update)"
+                        );
+                    }
+                }
             } else {
                 // Create new task
                 $task = $modx->newObject('sTask');
