@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.15.0-beta1]
+
+No breaking changes. Upgrade through the MODX package manager as usual.
+
+### Security
+- The customer reference endpoint `GET /api/mgr/references/customers` returns names, phones and emails but required only `view_document`. It now also requires one of `msorder_list`, `msorder_view`, `msorder_save` on top of the group permission (#921).
+- Email confirmation signed in whichever browser opened the link, so a forwarded message or a mail preview could log someone else in. The session is now bound to the browser that requested the confirmation (#925).
+- Product links and product data did not check resource-group ACL. `msProduct` extends `modResource` and is covered automatically, but `msProductData` and `msProductFile` are plain xPDO objects — products from closed groups were readable and writable through the links and gallery APIs (#922).
+- Gallery upload accepted a URL in the `file` parameter and fetched it without restrictions, including internal addresses and private networks. The host is now resolved up front, private ranges are blocked, the resolved address is pinned against DNS rebinding, redirects are capped and the download aborts past a size limit (#923).
+- The access resolver granted `miniShopManagerPolicy` to every group with any rule in the `mgr` context, including service and API groups. It now grants it only to groups whose policy allows `frames`, that is, groups that can actually enter the manager (#1002).
+- `symfony/config` and `symfony/filesystem` updated from 7.4.8 to 7.4.23 (GHSA-5jff-8h8q-r5qx, GHSA-6prc-h956-hxjq). The vulnerable code paths are not reachable from MiniShop3 — both arrive transitively through Phinx — but dependency audits flagged the package.
+
+### Added
+- Upload a gallery image by URL: the server downloads it for you. Controlled by the new `ms3_gallery_allow_url_upload` setting, enabled by default (#923).
+- Status transition matrix in the status settings: a grid for editing which transitions are allowed, with a highlight for statuses no transition leads to. It edits the existing `ms3_order_status_transitions` setting (#796).
+- Event `msOnChangeOptionsInCart`, matching the naming rule of every other cart pair. The miniShop2 spelling `msOnChangeOptionInCart` is fired right after it with the same parameters and keeps working, but is deprecated (#807).
+
+### Fixed
+- Zero is no longer treated as an empty value in four places: product option JSON fields (#875, #884), required address fields on checkout such as ground floor or building 0 (#867), and order autofill from the customer profile (#996).
+- Address hash was computed from seven fields in the manager API and four on the storefront, so an address created in the admin was not recognised at checkout and got duplicated. Both sides now use the same set, and a partial update no longer wipes the hash. Addresses created before the upgrade keep their old hash until the address is next changed (#876, #863).
+- Order line keys were built by a separate formula in the manager, bypassing `ms3_cart_product_key_fields`, so the same product added in the admin and on the storefront produced two lines (#877).
+- Deleting a link type silently destroyed every product link of that type: the "type is in use" guard counted on a column the model does not have, always got zero and never fired (#948).
+- Filters for custom `msProductData` columns in the category products grid did not reach the query, and every grid request logged PHP warnings (#937).
+- Filters in the vendors grid were ignored (#952).
+- Decimal stock values could not be saved although the column is `decimal(13,3)` (#938).
+- Fields with errors were not highlighted after a failed checkout: the response carries the field list in `data`, the frontend only read `errors` (#954).
+- The gallery created the product container on every product page view, writing a manager-log row each time (#998).
+- Delivery validation rules were lost when fields shared the same rule set (#949).
+- Empty JSON in the status transition setting is now treated as a configuration error instead of "no restrictions" (#788).
+- Localised the fallback name for customer addresses (#819); `msCart` no longer accepts bogus `sortby`/`sortdir`; the `msProducts` log is no longer mixed into `outputSeparator` (#806); discount is calculated in the product template (#814); the test harness is kept out of the transport package (#789).
+
 ## [1.14.3-beta2]
 
 ### Fixed
