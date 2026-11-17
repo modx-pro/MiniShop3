@@ -6,7 +6,9 @@ use MiniShop3\Model\msOrder;
 use MiniShop3\Model\msOrderAddress;
 use MiniShop3\Model\msOrderProduct;
 use MiniShop3\Model\msOrderStatus;
+use MiniShop3\Services\Delivery\DeliveryPublicFields;
 use MiniShop3\Services\Order\OrderStatusService;
+use MiniShop3\Services\Payment\PaymentPublicFields;
 use MiniShop3\Services\Shipment\ShipmentLifecycleService;
 use MODX\Revolution\modX;
 
@@ -312,6 +314,13 @@ class CustomerOrderService
             return null;
         }
 
+        if ($entity instanceof \MiniShop3\Model\msDelivery) {
+            return DeliveryPublicFields::fromEntityOrEmpty($entity);
+        }
+        if ($entity instanceof \MiniShop3\Model\msPayment) {
+            return PaymentPublicFields::fromEntityOrEmpty($entity);
+        }
+        // Fallback for unknown types
         return [
             'id' => (int)$entity->get('id'),
             'name' => (string)$entity->get('name'),
