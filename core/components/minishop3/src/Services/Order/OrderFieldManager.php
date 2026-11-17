@@ -265,10 +265,12 @@ class OrderFieldManager
     public function validate(array $orderData, string $key, mixed $value): array
     {
         // Default validation rules
-        $this->validationRules = [
+        $defaultRules = [
             'delivery_id' => 'required|numeric',
             'payment_id' => 'required|numeric',
         ];
+        // Merge defaults with any custom rules that may have been set via setValidationRules()
+        $this->validationRules = array_merge($defaultRules, $this->validationRules);
 
         $this->validationMessages = [
             'required' => 'Required',
