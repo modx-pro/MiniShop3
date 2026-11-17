@@ -634,7 +634,9 @@ class AuthManager
         }
 
         $maxAttempts = (int)$this->modx->getOption('ms3_customer_max_login_attempts', null, 5);
-        $blockDuration = (int)$this->modx->getOption('ms3_customer_block_duration', null, 3600);
+        // 300 — значение из _build/elements/settings.php; фоллбэк не должен
+        // расходиться с поставкой, иначе без строки настройки блокировка длится час (#886).
+        $blockDuration = (int)$this->modx->getOption('ms3_customer_block_duration', null, 300);
 
         $attempts = $customer->get('failed_login_attempts') + 1;
         $customer->set('failed_login_attempts', $attempts);
