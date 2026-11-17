@@ -13,6 +13,10 @@ $_lang['ms3_err_token_expired'] = 'Token has expired';
 $_lang['ms3_customer_addresses'] = 'Customer addresses';
 $_lang['ms3_customer_key_empty'] = 'Request key missing';
 $_lang['ms3_err_customer_nf'] = 'Customer profile not found';
+$_lang['ms3_err_customer_required'] = 'Customer login required to select a saved address';
+$_lang['ms3_err_address_not_found'] = 'Saved address not found';
+$_lang['ms3_err_customer_create'] = 'Failed to create customer profile';
+$_lang['ms3_order_err_address_nf'] = 'Order address not found';
 
 $_lang['ms3_customer_comment'] = 'Comment';
 $_lang['ms3_customer_first_name'] = 'First name';

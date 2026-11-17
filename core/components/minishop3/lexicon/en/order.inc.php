@@ -30,6 +30,7 @@ $_lang['ms3_order_payment_id_nf'] = 'Payment method not found';
 $_lang['ms3_err_customer_nf'] = 'Customer not found';
 $_lang['ms3_err_user_nf'] = 'User not found';
 $_lang['ms3_err_order_load'] = 'Error loading order. Please try again later.';
+$_lang['ms3_err_status_change'] = 'Failed to change order status';
 
 // General errors
 $_lang['ms3_err_unknown'] = 'Unknown error. Please try again later or contact the administrator.';

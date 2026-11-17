@@ -241,6 +241,8 @@ $_lang['ms3_utilities_import_debug'] = 'Режим отладки';
 $_lang['ms3_utilities_import_file_ns'] = 'Не выбран файл для импорта.';
 $_lang['ms3_utilities_import_file_ext_err'] = 'Не верное расширение файла.<br> Разрешен только *.csv';
 $_lang['ms3_utilities_import_file_nf'] = 'Файл с расположением <strong>[[+path]]</strong> не найден';
+$_lang['ms3_utilities_import_cancelled'] = 'Импорт отменён';
+$_lang['ms3_utilities_import_file_outside'] = 'Файл находится вне разрешённой директории';
 $_lang['ms3_utilities_import_fields_ns'] = 'Не заполнен параметр <br><strong>Поля импорта</strong>.';
 $_lang['ms3_utilities_import_intro'] = 'Простой импорт каталога товаров. <br>При импорте большого объема товаров ваш сайт может зависнуть.<br>Рекомендуем запускать выполнение в фоновом режиме, для этого необходимо отметить чекбокс "Использовать планировщик" (требуется установленный компонент <a href="https://modstore.pro/packages/utilities/scheduler" target="_blank">Scheduler</a>)';
 $_lang['ms3_utilities_import_key_ns'] = 'Не заполнен параметр <br><strong>Уникальное поле</strong>.';

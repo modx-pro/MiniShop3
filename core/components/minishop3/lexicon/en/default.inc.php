@@ -169,6 +169,8 @@ $_lang['ms3_frontend_go_to_catalog'] = 'Go to catalog';
 $_lang['ms3_message_close_all'] = 'close all';
 $_lang['ms3_err_unknown'] = 'Unknown error';
 $_lang['ms3_err_ns'] = 'This field is required';
+$_lang['ms3_err_nf'] = 'Not found';
+$_lang['ms3_err_save'] = 'Failed to save';
 $_lang['ms3_err_product_key_required'] = 'Product key is required';
 $_lang['ms3_err_cart_options'] = 'options must be an object or a JSON string';
 $_lang['ms3_err_field_key_required'] = 'Field key is required';
@@ -234,6 +236,7 @@ $_lang['ms3_err_value_duplicate'] = 'You did not enter value or entered duplicat
 
 $_lang['ms3_err_gallery_save'] = 'Cannot save file (see system log).';
 $_lang['ms3_err_gallery_ns'] = 'Empty file passed';
+$_lang['ms3_gallery_err_no_source'] = 'Source not specified';
 $_lang['ms3_err_gallery_ext'] = 'Invalid file extension';
 $_lang['ms3_err_gallery_exists'] = 'Such image already exists in product gallery.';
 $_lang['ms3_err_gallery_thumb'] = 'Failed to generate thumbnails. See system log.';

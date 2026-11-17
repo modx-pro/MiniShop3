@@ -241,6 +241,8 @@ $_lang['ms3_utilities_import_debug'] = 'Debug mode';
 $_lang['ms3_utilities_import_file_ns'] = 'No import file selected.';
 $_lang['ms3_utilities_import_file_ext_err'] = 'Invalid file extension.<br> Only *.csv allowed';
 $_lang['ms3_utilities_import_file_nf'] = 'File at location <strong>[[+path]]</strong> not found';
+$_lang['ms3_utilities_import_cancelled'] = 'Import cancelled';
+$_lang['ms3_utilities_import_file_outside'] = 'File is outside allowed directory';
 $_lang['ms3_utilities_import_fields_ns'] = 'Parameter not filled <br><strong>Import fields</strong>.';
 $_lang['ms3_utilities_import_intro'] = 'Simple product catalog import. <br>When importing large volume of products your site may hang.<br>We recommend running in background mode, for this you need to check "Use scheduler" checkbox (requires installed <a href="https://modstore.pro/packages/utilities/scheduler" target="_blank">Scheduler</a> component)';
 $_lang['ms3_utilities_import_key_ns'] = 'Parameter not filled <br><strong>Unique field</strong>.';

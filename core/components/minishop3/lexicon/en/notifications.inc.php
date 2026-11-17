@@ -57,3 +57,5 @@ $_lang['ms3_telegram_order'] = 'Order';
 $_lang['ms3_telegram_status'] = 'Status';
 $_lang['ms3_telegram_total'] = 'Total';
 $_lang['ms3_telegram_new_order'] = 'New order';
+$_lang['ms3_telegram_order_status_customer'] = 'Order status changed';
+$_lang['ms3_telegram_order_status_manager'] = 'Order status changed (manager)';

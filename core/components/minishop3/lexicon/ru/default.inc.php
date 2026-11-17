@@ -169,6 +169,8 @@ $_lang['ms3_frontend_go_to_catalog'] = 'Перейти в каталог';
 $_lang['ms3_message_close_all'] = 'закрыть все';
 $_lang['ms3_err_unknown'] = 'Неизвестная ошибка';
 $_lang['ms3_err_ns'] = 'Это поле обязательно';
+$_lang['ms3_err_nf'] = 'Не найдено';
+$_lang['ms3_err_save'] = 'Не удалось сохранить';
 $_lang['ms3_err_product_key_required'] = 'Не указан ключ товара';
 $_lang['ms3_err_cart_options'] = 'options должен быть объектом или JSON-строкой';
 $_lang['ms3_err_field_key_required'] = 'Не указан ключ поля';
@@ -234,6 +236,7 @@ $_lang['ms3_err_value_duplicate'] = 'Вы не ввели значение ил�
 
 $_lang['ms3_err_gallery_save'] = 'Не могу сохранить файл не был сохранён (см. системный журнал).';
 $_lang['ms3_err_gallery_ns'] = 'Передан пустой файл';
+$_lang['ms3_gallery_err_no_source'] = 'Не указан источник';
 $_lang['ms3_err_gallery_ext'] = 'Неверное расширение файла';
 $_lang['ms3_err_gallery_exists'] = 'Такое изображение уже есть в галерее товара.';
 $_lang['ms3_err_gallery_thumb'] = 'Не получилось сгенерировать превьюшки. Смотрите системный лог.';
