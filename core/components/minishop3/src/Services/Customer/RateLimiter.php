@@ -49,6 +49,9 @@ class RateLimiter
     /**
      * Check request limit and increment counter
      *
+     * Uses atomic cache->add for first attempt, then get+set for subsequent.
+     * For truly atomic increments, use Redis/Memcached store with INCR.
+     *
      * @param string $action Action type (login, register, email_send, etc.)
      * @param string $identifier Identifier (IP, email, customer_id, etc.)
      * @param int $maxAttempts Maximum number of attempts
@@ -59,6 +62,17 @@ class RateLimiter
     {
         $key = $this->getKey($action, $identifier);
 
+        // Try to atomically add counter with value 1 (first attempt)
+        // add() returns false if key already exists, which is expected for subsequent attempts
+        $value = 1;
+        $added = $this->modx->cacheManager->add($key, $value, $windowSeconds);
+        
+        if ($added === true) {
+            // First attempt: counter was set to 1
+            return true;
+        }
+
+        // Key exists: read current value
         $attempts = (int)$this->modx->cacheManager->get($key);
 
         if ($attempts >= $maxAttempts) {
@@ -69,6 +83,9 @@ class RateLimiter
             return false;
         }
 
+        // Increment: race condition window exists for file-based cache,
+        // but acceptable for typical single-server deployments.
+        // For high-concurrency, use Redis/Memcached store with atomic INCR.
         $i = $attempts + 1;
         $this->modx->cacheManager->set($key, $i, $windowSeconds);
 
