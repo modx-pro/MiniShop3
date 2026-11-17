@@ -131,7 +131,7 @@ class Import extends Processor
 
         require_once $schedulerPath . 'model/scheduler/scheduler.class.php';
         $scheduler = new \Scheduler($this->modx);
-        $task = $scheduler->getTask('MiniShop3', 'ms3_csv_import');
+        $task = $scheduler->getTask('minishop3', 'ms3_csv_import');
 
         if (!$task) {
             $task = $this->createImportTask();
@@ -159,7 +159,7 @@ class Import extends Processor
         $task->fromArray([
             'class_key' => 'sFileTask',
             'content' => '/elements/tasks/csvImport.php',
-            'namespace' => 'MiniShop3',
+            'namespace' => 'minishop3',
             'reference' => 'ms3_csv_import',
             'description' => 'MiniShop3 CSV import'
         ]);
