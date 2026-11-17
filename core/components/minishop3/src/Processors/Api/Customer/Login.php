@@ -39,8 +39,9 @@ class Login extends Processor
         $rateLimiter = $this->modx->services->get('ms3_rate_limiter');
 
         $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
-        $maxAttempts = 5;
-        $windowSeconds = 300;
+        // Read limits from system settings, fallback to defaults
+        $maxAttempts = (int)$this->modx->getOption('ms3_customer_max_login_attempts', null, 5);
+        $windowSeconds = (int)$this->modx->getOption('ms3_customer_block_duration', null, 300);
 
         if (!$rateLimiter->check('login', $ip, $maxAttempts, $windowSeconds)) {
             $attempts = $rateLimiter->getAttempts('login', $ip);
