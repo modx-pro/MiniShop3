@@ -202,7 +202,7 @@ return [
         'area' => 'ms3_order',
     ],
     'ms3_date_format' => [
-        'value' => 'd.m.y H:M',
+        'value' => 'd.m.Y H:i',
         'xtype' => 'textfield',
         'area' => 'ms3_order',
     ],
