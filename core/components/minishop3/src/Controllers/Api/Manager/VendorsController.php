@@ -6,6 +6,7 @@ use MiniShop3\Model\msExtraField;
 use MiniShop3\Model\msVendor;
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
+use MODX\Revolution\modSystemEvent;
 use MODX\Revolution\modX;
 use MODX\Revolution\modResource;
 
@@ -184,9 +185,29 @@ class VendorsController
             }
         }
 
+        // Fire before event
+        $modeNew = defined(modSystemEvent::class . '::MODE_NEW')
+            ? modSystemEvent::MODE_NEW
+            : 'new';
+        $eventResponse = $this->invokeEvent('msOnBeforeVendorCreate', [
+            'mode' => $modeNew,
+            'data' => $data,
+            'object' => $vendor,
+        ]);
+        if (!$eventResponse['success']) {
+            return Response::error((string)$eventResponse['message'], HttpStatus::BAD_REQUEST)->getData();
+        }
+
         if (!$vendor->save()) {
             return Response::error('Failed to create vendor', HttpStatus::INTERNAL_SERVER_ERROR)->getData();
         }
+
+        // Fire after event
+        $this->invokeEvent('msOnVendorCreate', [
+            'mode' => $modeNew,
+            'data' => $data,
+            'object' => $vendor,
+        ]);
 
         return Response::success($this->formatVendor($vendor), 'Vendor created successfully')->getData();
     }
@@ -220,9 +241,29 @@ class VendorsController
             }
         }
 
+        // Fire before event
+        $modeUpd = defined(modSystemEvent::class . '::MODE_UPD')
+            ? modSystemEvent::MODE_UPD
+            : 'upd';
+        $eventResponse = $this->invokeEvent('msOnBeforeVendorUpdate', [
+            'mode' => $modeUpd,
+            'data' => $data,
+            'object' => $vendor,
+        ]);
+        if (!$eventResponse['success']) {
+            return Response::error((string)$eventResponse['message'], HttpStatus::BAD_REQUEST)->getData();
+        }
+
         if (!$vendor->save()) {
             return Response::error('Failed to save vendor', HttpStatus::INTERNAL_SERVER_ERROR)->getData();
         }
+
+        // Fire after event
+        $this->invokeEvent('msOnVendorUpdate', [
+            'mode' => $modeUpd,
+            'data' => $data,
+            'object' => $vendor,
+        ]);
 
         return Response::success($this->formatVendor($vendor), 'Vendor updated successfully')->getData();
     }
@@ -248,9 +289,27 @@ class VendorsController
             return Response::error('Vendor not found', HttpStatus::NOT_FOUND)->getData();
         }
 
+        // Fire before event
+        $modeUpd = defined(modSystemEvent::class . '::MODE_UPD')
+            ? modSystemEvent::MODE_UPD
+            : 'upd';
+        $eventResponse = $this->invokeEvent('msOnBeforeVendorDelete', [
+            'mode' => $modeUpd,
+            'object' => $vendor,
+        ]);
+        if (!$eventResponse['success']) {
+            return Response::error((string)$eventResponse['message'], HttpStatus::BAD_REQUEST)->getData();
+        }
+
         if (!$vendor->remove()) {
             return Response::error('Failed to delete vendor', HttpStatus::INTERNAL_SERVER_ERROR)->getData();
         }
+
+        // Fire after event
+        $this->invokeEvent('msOnVendorDelete', [
+            'mode' => $modeUpd,
+            'object' => $vendor,
+        ]);
 
         return Response::success([], 'Vendor deleted successfully')->getData();
     }
@@ -309,6 +368,18 @@ class VendorsController
             return Response::error('No valid vendor IDs provided', HttpStatus::BAD_REQUEST)->getData();
         }
 
+        // Fire before bulk delete event
+        $modeUpd = defined(modSystemEvent::class . '::MODE_UPD')
+            ? modSystemEvent::MODE_UPD
+            : 'upd';
+        $eventResponse = $this->invokeEvent('msOnBeforeVendorDelete', [
+            'mode' => $modeUpd,
+            'ids' => $ids,
+        ]);
+        if (!$eventResponse['success']) {
+            return Response::error((string)$eventResponse['message'], HttpStatus::BAD_REQUEST)->getData();
+        }
+
         $deleted = 0;
         $failed = 0;
 
@@ -326,6 +397,14 @@ class VendorsController
                 $failed++;
             }
         }
+
+        // Fire after bulk delete event
+        $this->invokeEvent('msOnVendorDelete', [
+            'mode' => $modeUpd,
+            'ids' => $ids,
+            'deleted' => $deleted,
+            'failed' => $failed,
+        ]);
 
         if ($deleted === 0) {
             return Response::error('Failed to delete vendors', HttpStatus::INTERNAL_SERVER_ERROR)->getData();
@@ -352,4 +431,18 @@ class VendorsController
 
         return $data;
     }
+
+    /**
+     * Helper to invoke MODX events with normalized response.
+     */
+    protected function invokeEvent(string $eventName, array $params = []): array
+    {
+        $params['controller'] = $this;
+        $response = $this->modx->invokeEvent($eventName, $params);
+        $message = is_array($response) ? implode(' ', $response) : ((string) $response);
+        return $message === ''
+            ? ['success' => true, 'message' => '']
+            : ['success' => false, 'message' => $message];
+    }
 }
+

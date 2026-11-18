@@ -120,4 +120,18 @@ class modX
     public function log($level, $message): void
     {
     }
+
+    /**
+     * Invoke a system event (stub — returns empty string, meaning no cancellation).
+     *
+     * Tests may override this method on anonymous subclasses.
+     *
+     * @param string $eventName
+     * @param array<string, mixed> $params
+     * @return string
+     */
+    public function invokeEvent($eventName, array $params = [])
+    {
+        return '';
+    }
 }
