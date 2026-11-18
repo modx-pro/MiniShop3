@@ -84,7 +84,7 @@ class Register extends Processor
         $customer = $result['customer'];
 
         $autoLogin = (bool)$this->modx->getOption('ms3_customer_auto_login_after_register', null, true);
-        $requireEmailVerification = (bool)$this->modx->getOption('ms3_customer_require_email_verification', null, true);
+        $requireEmailVerification = (bool)$this->modx->getOption('ms3_customer_require_email_verification', null, false);
 
         $tokenString = null;
         $expiresAt = null;
