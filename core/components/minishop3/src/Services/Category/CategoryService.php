@@ -89,13 +89,13 @@ class CategoryService
     }
 
     /**
-     * Copy category options
+     * Copy category options from source to target category
      *
      * @param msCategory $sourceCategory
      * @param msCategory $targetCategory
      * @return bool
      */
-    protected function duplicateCategoryOptions(msCategory $sourceCategory, msCategory $targetCategory): bool
+    public function duplicateCategoryOptions(msCategory $sourceCategory, msCategory $targetCategory): bool
     {
         $options = $sourceCategory->getMany('CategoryOptions');
 

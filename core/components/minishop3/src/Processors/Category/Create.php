@@ -73,16 +73,16 @@ class Create extends CreateProcessor
         }
 
         if ($this->object->get('parent')) {
+            /** @var msCategory|null $msCategoryParent */
             $msCategoryParent = $this->modx->getObject($this->classKey, ['id' => $this->object->get('parent')]);
 
-            if ($msCategoryParent) {
-                /** @var MiniShop3 $ms3 */
-                $ms3 = $this->modx->services->get('ms3');
-                $processorConfig = [
-                    'category_to' => $this->object->get('id'),
-                    'category_from' => $this->object->get('parent')
-                ];
-                $this->modx->runProcessor('MiniShop3\\Processors\\Category\\Option\\Duplicate', $processorConfig);
+            if ($msCategoryParent instanceof msCategory && $this->object instanceof msCategory) {
+                /** @var \MiniShop3\Services\Category\CategoryService $categoryService */
+                $categoryService = $this->modx->services->get('ms3_category_service');
+                $success = $categoryService->duplicateCategoryOptions($msCategoryParent, $this->object);
+                if (!$success) {
+                    $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[MiniShop3] Failed to duplicate category options from parent');
+                }
             }
         }
 
