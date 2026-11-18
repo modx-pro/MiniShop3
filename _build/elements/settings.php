@@ -76,7 +76,7 @@ return [
         'area' => 'ms3_product',
     ],
     'ms3_product_source_default' => [
-        'value' => 0,
+        'value' => 1,
         'xtype' => 'modx-combo-source',
         'area' => 'ms3_product',
     ],
