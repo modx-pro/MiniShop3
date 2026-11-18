@@ -12,6 +12,7 @@ use MiniShop3\Services\Customer\AuthManager;
 use MiniShop3\Services\Customer\CustomerAccess;
 use MiniShop3\Services\Grid\ManagerListFilterPolicy;
 use MiniShop3\Services\Grid\RelationSqlFragments;
+use MODX\Revolution\modSystemEvent;
 use MODX\Revolution\modX;
 
 /**
@@ -215,9 +216,26 @@ class CustomersController
             }
         }
 
+        // Fire before event
+        $eventResponse = $this->invokeEvent('msOnBeforeUpdateCustomer', [
+            'mode' => modSystemEvent::MODE_UPD,
+            'data' => $data,
+            'object' => $customer,
+        ]);
+        if (!$eventResponse['success']) {
+            return Response::error((string)$eventResponse['message'], HttpStatus::BAD_REQUEST)->getData();
+        }
+
         if (!$customer->save()) {
             return Response::error('Failed to save customer', HttpStatus::INTERNAL_SERVER_ERROR)->getData();
         }
+
+        // Fire after event
+        $this->invokeEvent('msOnUpdateCustomer', [
+            'mode' => modSystemEvent::MODE_UPD,
+            'data' => $data,
+            'object' => $customer,
+        ]);
 
         if (CustomerAccess::isAccessDenied($customer)) {
             /** @var AuthManager $authManager */
@@ -584,5 +602,14 @@ class CustomersController
             $this->modx->log(modX::LOG_LEVEL_ERROR, "[CustomersController] Error computing field with {$className}: {$e->getMessage()}");
             return null;
         }
+    }
+
+    /**
+     * Helper to invoke MODX events with normalized response.
+     */
+    protected function invokeEvent(string $eventName, array $params = []): array
+    {
+        $params['controller'] = $this;
+        return $this->modx->services->get('ms3')->utils->invokeEvent($eventName, $params);
     }
 }
