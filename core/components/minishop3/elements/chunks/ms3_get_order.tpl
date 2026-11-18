@@ -8,7 +8,7 @@
                 </svg>
                 Заказ №{$order.num}
             </h5>
-            <span class="badge bg-light text-dark">{$order.status_name ?: 'Новый'}</span>
+            <span class="badge bg-light text-dark">{$order.Status.name ?: 'Новый'}</span>
         </div>
     </div>
     <div class="card-body">
@@ -155,7 +155,7 @@
 </div>
 
 {* Customer and Address Info *}
-{if $address.receiver || $address.phone || $address.email || $address.street}
+{if $address.first_name || $address.last_name || $address.phone || $address.email || $address.street}
     <div class="card border-0 bg-light">
         <div class="card-body">
             <h6 class="card-title mb-3">
@@ -165,10 +165,10 @@
                 Контактные данные
             </h6>
             <div class="row g-3">
-                {if $address.receiver?}
+                {if $address.first_name || $address.last_name}
                     <div class="col-md-6">
                         <div class="small text-muted">Получатель</div>
-                        <div class="fw-semibold">{$address.receiver}</div>
+                        <div class="fw-semibold">{$address.first_name} {$address.last_name}</div>
                     </div>
                 {/if}
                 {if $address.phone?}
@@ -197,10 +197,10 @@
                         </div>
                     </div>
                 {/if}
-                {if $order.comment?}
+                {if $order.order_comment?}
                     <div class="col-12">
                         <div class="small text-muted">Комментарий к заказу</div>
-                        <div class="fw-semibold">{$order.comment}</div>
+                        <div class="fw-semibold">{$order.order_comment}</div>
                     </div>
                 {/if}
             </div>
