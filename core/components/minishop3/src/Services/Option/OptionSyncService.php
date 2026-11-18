@@ -268,7 +268,7 @@ class OptionSyncService
 
         // Clean up: trim, remove duplicates, remove empty
         $values = array_map('trim', $values);
-        $values = array_keys(array_flip($values));  // Remove duplicates
+        $values = array_values(array_unique($values, SORT_STRING));  // Remove duplicates preserving string type
         $values = array_diff($values, ['']);  // Remove empty strings
 
         if (empty($values)) {
