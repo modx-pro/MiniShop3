@@ -217,8 +217,11 @@ class CustomersController
         }
 
         // Fire before event
+        $modeUpd = defined(modSystemEvent::class . '::MODE_UPD')
+            ? modSystemEvent::MODE_UPD
+            : 'upd';
         $eventResponse = $this->invokeEvent('msOnBeforeUpdateCustomer', [
-            'mode' => modSystemEvent::MODE_UPD,
+            'mode' => $modeUpd,
             'data' => $data,
             'object' => $customer,
         ]);
@@ -232,7 +235,7 @@ class CustomersController
 
         // Fire after event
         $this->invokeEvent('msOnUpdateCustomer', [
-            'mode' => modSystemEvent::MODE_UPD,
+            'mode' => $modeUpd,
             'data' => $data,
             'object' => $customer,
         ]);
@@ -610,6 +613,10 @@ class CustomersController
     protected function invokeEvent(string $eventName, array $params = []): array
     {
         $params['controller'] = $this;
-        return $this->modx->services->get('ms3')->utils->invokeEvent($eventName, $params);
+        $response = $this->modx->invokeEvent($eventName, $params);
+        $message = is_array($response) ? implode(' ', $response) : ((string) $response);
+        return $message === ''
+            ? ['success' => true, 'message' => '']
+            : ['success' => false, 'message' => $message];
     }
 }

@@ -186,8 +186,11 @@ class VendorsController
         }
 
         // Fire before event
+        $modeNew = defined(modSystemEvent::class . '::MODE_NEW')
+            ? modSystemEvent::MODE_NEW
+            : 'new';
         $eventResponse = $this->invokeEvent('msOnBeforeVendorCreate', [
-            'mode' => modSystemEvent::MODE_NEW,
+            'mode' => $modeNew,
             'data' => $data,
             'object' => $vendor,
         ]);
@@ -201,7 +204,7 @@ class VendorsController
 
         // Fire after event
         $this->invokeEvent('msOnVendorCreate', [
-            'mode' => modSystemEvent::MODE_NEW,
+            'mode' => $modeNew,
             'data' => $data,
             'object' => $vendor,
         ]);
@@ -239,8 +242,11 @@ class VendorsController
         }
 
         // Fire before event
+        $modeUpd = defined(modSystemEvent::class . '::MODE_UPD')
+            ? modSystemEvent::MODE_UPD
+            : 'upd';
         $eventResponse = $this->invokeEvent('msOnBeforeVendorUpdate', [
-            'mode' => modSystemEvent::MODE_UPD,
+            'mode' => $modeUpd,
             'data' => $data,
             'object' => $vendor,
         ]);
@@ -254,7 +260,7 @@ class VendorsController
 
         // Fire after event
         $this->invokeEvent('msOnVendorUpdate', [
-            'mode' => modSystemEvent::MODE_UPD,
+            'mode' => $modeUpd,
             'data' => $data,
             'object' => $vendor,
         ]);
@@ -284,8 +290,11 @@ class VendorsController
         }
 
         // Fire before event
+        $modeUpd = defined(modSystemEvent::class . '::MODE_UPD')
+            ? modSystemEvent::MODE_UPD
+            : 'upd';
         $eventResponse = $this->invokeEvent('msOnBeforeVendorDelete', [
-            'mode' => modSystemEvent::MODE_UPD,
+            'mode' => $modeUpd,
             'object' => $vendor,
         ]);
         if (!$eventResponse['success']) {
@@ -298,7 +307,7 @@ class VendorsController
 
         // Fire after event
         $this->invokeEvent('msOnVendorDelete', [
-            'mode' => modSystemEvent::MODE_UPD,
+            'mode' => $modeUpd,
             'object' => $vendor,
         ]);
 
@@ -360,8 +369,11 @@ class VendorsController
         }
 
         // Fire before bulk delete event
+        $modeUpd = defined(modSystemEvent::class . '::MODE_UPD')
+            ? modSystemEvent::MODE_UPD
+            : 'upd';
         $eventResponse = $this->invokeEvent('msOnBeforeVendorDelete', [
-            'mode' => modSystemEvent::MODE_UPD,
+            'mode' => $modeUpd,
             'ids' => $ids,
         ]);
         if (!$eventResponse['success']) {
@@ -388,7 +400,7 @@ class VendorsController
 
         // Fire after bulk delete event
         $this->invokeEvent('msOnVendorDelete', [
-            'mode' => modSystemEvent::MODE_UPD,
+            'mode' => $modeUpd,
             'ids' => $ids,
             'deleted' => $deleted,
             'failed' => $failed,
@@ -426,7 +438,11 @@ class VendorsController
     protected function invokeEvent(string $eventName, array $params = []): array
     {
         $params['controller'] = $this;
-        return $this->modx->services->get('ms3')->utils->invokeEvent($eventName, $params);
+        $response = $this->modx->invokeEvent($eventName, $params);
+        $message = is_array($response) ? implode(' ', $response) : ((string) $response);
+        return $message === ''
+            ? ['success' => true, 'message' => '']
+            : ['success' => false, 'message' => $message];
     }
 }
 
