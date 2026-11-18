@@ -305,14 +305,21 @@ class ManagerOrderCostRecalculator
             ];
         }
 
+        // Persisted payment fee from the order (cost - cart_cost - delivery_cost)
+        $persistedPaymentFee = round(
+            (float)$order->get('cost') - (float)$order->get('cart_cost') - (float)$order->get('delivery_cost'),
+            6
+        );
+
         if ($mode === self::MODE_FORCE_PROVIDER) {
             try {
                 if (!$msPayment->loadHandler()) {
                     $warnings[] = self::WARNING_PAYMENT_PROVIDER_ERROR;
 
+                    // On handler load failure, preserve the persisted fee (like delivery does)
                     return [
                         'success' => true,
-                        'payment_fee' => 0.0,
+                        'payment_fee' => $persistedPaymentFee,
                         'warnings' => $warnings,
                     ];
                 }
@@ -332,9 +339,10 @@ class ManagerOrderCostRecalculator
                 );
                 $warnings[] = self::WARNING_PAYMENT_PROVIDER_ERROR;
 
+                // On exception, preserve the persisted fee (like delivery does)
                 return [
                     'success' => true,
-                    'payment_fee' => 0.0,
+                    'payment_fee' => $persistedPaymentFee,
                     'warnings' => $warnings,
                 ];
             }
