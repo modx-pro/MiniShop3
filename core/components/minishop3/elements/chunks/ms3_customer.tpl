@@ -17,7 +17,7 @@
     </div>
 
     <div class="d-flex flex-column flex-md-row align-items-center justify-content-center justify-content-md-end mt-4">
-        <button type="submit" name="ms3_action" value="customer/set" class="btn btn-lg btn-primary ml-md-2 ms3_link">
+        <button type="submit" name="ms3_action" value="customer/update-profile" class="btn btn-lg btn-primary ml-md-2 ms3_link">
             {'ms3_frontend_save' | lexicon}
         </button>
     </div>
