@@ -97,10 +97,12 @@ class ManagerOrderProductsService
             return $this->error('Order not found', HttpStatus::NOT_FOUND);
         }
 
-        // Check order status (should not be final)
+        // Check order status (final) and permission
         $status = $this->modx->getObject(msOrderStatus::class, $order->get('status_id'));
         if ($status && $status->get('final')) {
-            return $this->error('Cannot add products to finalized order', HttpStatus::BAD_REQUEST);
+            if (!$this->canEditFinal()) {
+                return $this->error($this->modx->lexicon('order_cannot_add_to_finalized'), HttpStatus::FORBIDDEN);
+            }
         }
 
         // Get the product
@@ -243,6 +245,14 @@ class ManagerOrderProductsService
         $order = $this->modx->getObject(msOrder::class, $orderId);
         if (!$order) {
             return $this->error('Order not found', HttpStatus::NOT_FOUND);
+        }
+
+        // Check order status (final) and permission
+        $status = $this->modx->getObject(msOrderStatus::class, $order->get('status_id'));
+        if ($status && $status->get('final')) {
+            if (!$this->canEditFinal()) {
+                return $this->error($this->modx->lexicon('order_cannot_add_to_finalized'), HttpStatus::FORBIDDEN);
+            }
         }
 
         // Store old values for logging
@@ -404,6 +414,14 @@ class ManagerOrderProductsService
         $order = $this->modx->getObject(msOrder::class, $orderId);
         if (!$order) {
             return $this->error('Order not found', HttpStatus::NOT_FOUND);
+        }
+
+        // Check order status (final) and permission
+        $status = $this->modx->getObject(msOrderStatus::class, $order->get('status_id'));
+        if ($status && $status->get('final')) {
+            if (!$this->canEditFinal()) {
+                return $this->error($this->modx->lexicon('order_cannot_add_to_finalized'), HttpStatus::FORBIDDEN);
+            }
         }
 
         // Check if this is the last product
@@ -609,6 +627,11 @@ class ManagerOrderProductsService
     private function canOverrideInventory(): bool
     {
         return (bool)$this->modx->hasPermission('msorder_inventory_override');
+    }
+
+    private function canEditFinal(): bool
+    {
+        return (bool)$this->modx->hasPermission('msorder_edit_final');
     }
 
     /**
