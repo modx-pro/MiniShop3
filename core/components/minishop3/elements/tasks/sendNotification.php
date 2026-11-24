@@ -77,9 +77,10 @@ if (!$channel->isAvailable()) {
 }
 
 // Recreate notification based on class
-// For StatusChangedNotification, we need to load status objects
+// Status-based notifications (StatusChangedNotification and its subclasses)
+// need the status objects restored from the stored payload.
 try {
-    if ($notificationClass === 'MiniShop3\Notifications\Order\StatusChangedNotification') {
+    if (is_a($notificationClass, \MiniShop3\Notifications\Order\StatusChangedNotification::class, true)) {
         $newStatusId = $notificationData['new_status']['id'] ?? null;
         $oldStatusId = $notificationData['old_status']['id'] ?? null;
 
@@ -93,7 +94,7 @@ try {
         if (!$newStatus) {
             $modx->log(
                 modX::LOG_LEVEL_ERROR,
-                "[sendNotification task] New status not found for StatusChangedNotification"
+                "[sendNotification task] New status not found for {$notificationClass}"
             );
             return false;
         }

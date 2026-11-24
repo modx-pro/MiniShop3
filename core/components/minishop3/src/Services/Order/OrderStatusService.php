@@ -8,6 +8,8 @@ use MiniShop3\Model\msOrderAddress;
 use MiniShop3\Model\msOrderStatus as msOrderStatusModel;
 use MiniShop3\Model\msCustomer;
 use MiniShop3\Notifications\NotificationManager;
+use MiniShop3\Notifications\Notification;
+use MiniShop3\Notifications\Order\OrderCreatedNotification;
 use MiniShop3\Notifications\Order\StatusChangedNotification;
 use MiniShop3\Services\Customer\CustomerPublicDto;
 use MiniShop3\Services\Events\DomainEvent;
@@ -461,6 +463,42 @@ class OrderStatusService implements OrderStatusChanger
             $oldStatus
         );
 
+        $this->dispatchNotification($notification, $msOrder);
+
+        // The order left the draft state — the order itself was created (#811).
+        // The event is dispatched here, because both creation paths (checkout
+        // and finalizing a draft) go through this gate.
+        if ($this->isCreatedFromDraft($oldStatus)) {
+            $createdNotification = new OrderCreatedNotification(
+                $this->modx,
+                $msOrder,
+                $newStatus
+            );
+
+            $this->dispatchNotification($createdNotification, $msOrder);
+        }
+    }
+
+    /**
+     * Was the order a draft before the change? Only such a transition creates
+     * the order: a draft is a cart of the storefront, not an order yet.
+     */
+    protected function isCreatedFromDraft(?msOrderStatusModel $oldStatus): bool
+    {
+        if (!$oldStatus instanceof msOrderStatusModel) {
+            return false;
+        }
+
+        $draftStatusId = (int) $this->modx->getOption('ms3_status_draft', null, 1) ?: 1;
+
+        return (int) $oldStatus->get('id') === $draftStatusId;
+    }
+
+    /**
+     * Send one notification to the customer and to the managers.
+     */
+    protected function dispatchNotification(Notification $notification, msOrder $msOrder): void
+    {
         $notificationManager = $this->getNotificationManager();
 
         // Send to customer (channels determined by notification config)
