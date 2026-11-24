@@ -25,8 +25,9 @@ class OrderCreatedNotification extends StatusChangedNotification
 
     /**
      * A created order has no previous status: the draft it replaces is not
-     * a status of the order itself. The argument is kept for compatibility
-     * with the scheduler task, which recreates notifications by class.
+     * a status of the order itself. The 4th argument stays for scheduler
+     * recreation (`new $class($modx, $order, $newStatus, $oldStatus)`), but
+     * is never passed to the parent (#811).
      */
     public function __construct(
         modX $modx,
@@ -34,6 +35,7 @@ class OrderCreatedNotification extends StatusChangedNotification
         msOrderStatus $newStatus,
         ?msOrderStatus $oldStatus = null
     ) {
+        unset($oldStatus);
         parent::__construct($modx, $order, $newStatus, null);
     }
 
