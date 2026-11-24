@@ -8,6 +8,7 @@ use MiniShop3\Model\msOptionGroup;
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
 use MiniShop3\Services\Option\OptionCategoryService;
+use MiniShop3\Services\Option\OptionKeyValidator;
 use MiniShop3\Services\Option\OptionService;
 use MiniShop3\Utils\IntArrayDecoder;
 use MiniShop3\Utils\ResourceCategoryTreeQueryTrait;
@@ -137,6 +138,11 @@ class OptionsController
         }
         $key = str_replace('.', '_', $key);
 
+        $keyError = $this->optionKeyErrorResponse($key);
+        if ($keyError !== null) {
+            return $keyError;
+        }
+
         if ($this->modx->getCount(msOption::class, ['key' => $key]) > 0) {
             return Response::error("Option with key '{$key}' already exists", HttpStatus::UNPROCESSABLE_ENTITY, ['errors' => ['key']])->getData();
         }
@@ -179,9 +185,18 @@ class OptionsController
             if ($newKey === '') {
                 return Response::error('Option key is required', HttpStatus::BAD_REQUEST, ['errors' => ['key']])->getData();
             }
-            if ($newKey !== $oldKey
-                && $this->modx->getCount(msOption::class, ['key' => $newKey, 'id:!=' => $id]) > 0) {
-                return Response::error("Option with key '{$newKey}' already exists", HttpStatus::UNPROCESSABLE_ENTITY, ['errors' => ['key']])->getData();
+            if ($newKey !== $oldKey) {
+                $keyError = $this->optionKeyErrorResponse($newKey);
+                if ($keyError !== null) {
+                    return $keyError;
+                }
+                if ($this->modx->getCount(msOption::class, ['key' => $newKey, 'id:!=' => $id]) > 0) {
+                    return Response::error(
+                        "Option with key '{$newKey}' already exists",
+                        HttpStatus::UNPROCESSABLE_ENTITY,
+                        ['errors' => ['key']]
+                    )->getData();
+                }
             }
             $data['key'] = $newKey;
         }
@@ -531,6 +546,31 @@ class OptionsController
         }
 
         return $map;
+    }
+
+    /**
+     * Reject keys that fail msOption model validation (invalid / reserved) (#841).
+     *
+     * @return array<string, mixed>|null Error response payload, or null when the key is allowed
+     */
+    protected function optionKeyErrorResponse(string $key): ?array
+    {
+        $lexiconKey = OptionKeyValidator::lexiconErrorFor($key);
+        if ($lexiconKey === null) {
+            return null;
+        }
+
+        $this->modx->lexicon->load('minishop3:default');
+        $message = $this->modx->lexicon($lexiconKey);
+        if (!is_string($message) || $message === '' || $message === $lexiconKey) {
+            $message = $lexiconKey;
+        }
+
+        return Response::error(
+            $message,
+            HttpStatus::UNPROCESSABLE_ENTITY,
+            ['errors' => ['key']]
+        )->getData();
     }
 
     /**
