@@ -162,6 +162,11 @@ class ExtraFieldsService
         $c = $this->modx->newQuery(msExtraField::class);
 
         if (!empty($criteria)) {
+            if (isset($criteria['class']) && is_string($criteria['class']) && $criteria['class'] !== '') {
+                // Manager UI stores FQCN; order card used to query short aliases (#812).
+                $criteria['class:IN'] = self::classFilterVariants($criteria['class']);
+                unset($criteria['class']);
+            }
             $c->where($criteria);
         }
 
@@ -175,6 +180,28 @@ class ExtraFieldsService
         }
 
         return $result;
+    }
+
+    /**
+     * Accept both short model aliases (`msOrder`) and FQCN when filtering by class.
+     *
+     * @return list<string>
+     */
+    public static function classFilterVariants(string $class): array
+    {
+        $variants = [$class];
+        $prefix = 'MiniShop3\\Model\\';
+
+        if (str_starts_with($class, $prefix)) {
+            $short = substr($class, strlen($prefix));
+            if ($short !== '' && !str_contains($short, '\\')) {
+                $variants[] = $short;
+            }
+        } elseif (!str_contains($class, '\\')) {
+            $variants[] = $prefix . $class;
+        }
+
+        return array_values(array_unique($variants));
     }
 
     /**

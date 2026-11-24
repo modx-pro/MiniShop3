@@ -209,7 +209,11 @@ class ExtraFields
         }
 
         $meta = [];
-        foreach (['dbtype', 'phptype', 'null', 'precision', 'attributes'] as $k) {
+        // `null` is boolean on msExtraField (0 = NOT NULL). empty(false) is true,
+        // so the old loop dropped the key and the xPDO map disagreed with the
+        // NOT NULL column from MigrationGenerator (#866).
+        $meta['null'] = (bool) $field->get('null');
+        foreach (['dbtype', 'phptype', 'precision', 'attributes'] as $k) {
             $v = $field->get($k);
             if (!empty($v)) {
                 $meta[$k] = $v;

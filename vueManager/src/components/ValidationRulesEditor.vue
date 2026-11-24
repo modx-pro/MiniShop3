@@ -181,8 +181,10 @@ async function loadExtensionFieldDefinitions() {
       }
     }
     const [orderExtra, addressExtra] = await Promise.all([
-      request.get('/api/mgr/extra-fields', { class: 'msOrder' }),
-      request.get('/api/mgr/extra-fields', { class: 'msOrderAddress' }),
+      request.get('/api/mgr/extra-fields', { class: 'MiniShop3\\Model\\msOrder' }),
+      request.get('/api/mgr/extra-fields', {
+        class: 'MiniShop3\\Model\\msOrderAddress',
+      }),
     ])
     pushExtraRows(orderExtra.fields, 'order')
     pushExtraRows(addressExtra.fields, 'address')
