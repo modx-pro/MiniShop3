@@ -360,7 +360,18 @@ class CartController
 
             $html = $this->modx->runSnippet($snippetName, $snippetParams);
 
-            if (!empty($html)) {
+            // A snippet in return=data mode produces an array, not markup.
+            // It must never reach `data.render` — CartUI assigns it to
+            // innerHTML (#831). Keep the guard at the controller as well.
+            if (!is_string($html)) {
+                $this->modx->log(
+                    \MODX\Revolution\modX::LOG_LEVEL_DEBUG,
+                    "[MiniShop3] Snippet {$snippetName} returned a non-string result for cart re-render; skipping"
+                );
+                continue;
+            }
+
+            if ($html !== '') {
                 $rendered[$token] = $html;
             }
         }

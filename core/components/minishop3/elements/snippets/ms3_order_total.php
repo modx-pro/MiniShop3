@@ -14,7 +14,14 @@ if (!$modx->services->has('ms3')) {
 
 $ms3 = $modx->services->get('ms3');
 $ms3->initialize($modx->context->key);
-$ms3->registerSnippet($scriptProperties, 'msOrderTotal');
+
+// Only a chunk-rendering call is a widget that must be re-rendered after a
+// cart change. With return=data the snippet hands an array to the template;
+// registering it would make CartController inject that array into innerHTML (#831).
+$return = $modx->getOption('return', $scriptProperties, 'tpl');
+if ($return !== 'data') {
+    $ms3->registerSnippet($scriptProperties, 'msOrderTotal');
+}
 
 /** @var \MiniShop3\Services\TokenService $tokenService */
 $tokenService = $modx->services->get('ms3_token_service');
@@ -25,7 +32,6 @@ $pdoFetch = $modx->services->get(Fetch::class);
 $pdoFetch->addTime('pdoTools loaded.');
 
 $tpl = $modx->getOption('tpl', $scriptProperties, 'tpl.msOrderTotal');
-$return = $modx->getOption('return', $scriptProperties, 'tpl');
 
 $ms3->order->initialize($token);
 $response = $ms3->order->getCost();

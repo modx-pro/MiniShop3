@@ -69,13 +69,19 @@ if ($ignoredSortProperties !== []) {
     );
 }
 
-$ms3->registerSnippet($scriptProperties);
+// Register for cart re-rendering only when this call actually produces HTML.
+// A return=data call is consumed by the template as an array; a registered
+// token would make CartController push that array into a DOM container (#831).
+$return = $modx->getOption('return', $scriptProperties, 'tpl');
+if ($return !== 'data') {
+    $ms3->registerSnippet($scriptProperties);
+}
+
 /** @var Fetch $pdoFetch */
 $pdoFetch = $modx->services->get(Fetch::class);
 $pdoFetch->addTime('pdoTools loaded.');
 
 $tpl = $modx->getOption('tpl', $scriptProperties, 'tpl.msCart');
-$return = $modx->getOption('return', $scriptProperties, 'tpl');
 $response = $ms3->cart->get();
 $cart = $response['data']['cart'];
 $status = $response['data']['status'];
