@@ -31,6 +31,14 @@ if (!str_contains($source, 'if ($this->isCategoriesIdListPayload($payload))')) {
 if (!str_contains($source, 'array_diff($current, $enabled)')) {
     $fail('list sync must compute detach as current links minus enabled ids (#869)');
 }
+if (!str_contains($source, 'removeFromCategories($optionId, $detach)')) {
+    $fail('list sync must call removeFromCategories with the detach set (#869)');
+}
+// Legacy map path may still use $disabled — that's fine. Only assert the list
+// branch computes its own detach set via $enabled.
+if (!str_contains($source, 'array_diff($current, $enabled)')) {
+    $fail('list sync must compute detach as current links minus enabled ids (#869)');
+}
 
 fwrite(STDOUT, "OK OptionsCategoriesSyncTest (#869)\n");
 exit(0);

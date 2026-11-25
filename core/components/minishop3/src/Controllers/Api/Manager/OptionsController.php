@@ -623,6 +623,28 @@ class OptionsController
     }
 
     /**
+     * Whether the payload is a flat list of category ids (modern Vue shape) rather
+     * than an assoc {id: bool} map (legacy ExtJS shape).
+     *
+     * @param mixed $payload
+     */
+    protected function isCategoriesIdListPayload($payload): bool
+    {
+        if (is_string($payload)) {
+            $decoded = json_decode($payload, true);
+            if (!is_array($decoded)) {
+                return false;
+            }
+            $payload = $decoded;
+        }
+        if (!is_array($payload) || $payload === []) {
+            return true;
+        }
+
+        return array_keys($payload) === range(0, count($payload) - 1);
+    }
+
+    /**
      * @return array{0: int[], 1: int[]} [enabled, disabled]
      */
     protected function splitCategoriesPayload($payload): array
