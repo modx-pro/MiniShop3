@@ -7,6 +7,7 @@ use MiniShop3\Model\msOrder;
 use MiniShop3\Model\msOrderProduct;
 use MiniShop3\Model\msProduct;
 use MiniShop3\Services\Catalog\CatalogResourceGroupVisibility;
+use MiniShop3\Utils\ValuePresence;
 use MODX\Revolution\modX;
 
 /**
@@ -159,14 +160,9 @@ class CartItemManager
 
         $currentOptions = $item->get('options') ?? [];
 
-        // Merge options
-        foreach ($newOptions as $key => $value) {
-            if (!empty($value)) {
-                $currentOptions[$key] = $value;
-            } else {
-                unset($currentOptions[$key]);
-            }
-        }
+        // Only null/blank strings clear a key — 0 and "0" are legitimate
+        // option values (e.g. floor = 0) and must be preserved (#862).
+        $currentOptions = ValuePresence::merge($currentOptions, $newOptions);
 
         // Generate new key
         $product = $item->getOne('Product');
