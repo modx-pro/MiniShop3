@@ -74,7 +74,9 @@
         'return' => 'data',
         'nestedChunkPrefix' => 'minishop3_',
     ];
-    $returnType = !empty($scriptProperties['return']) ? $scriptProperties['return'] : 'data';
+    // Canonical default is the declared transport property value (tpl), so a
+    // fresh install and a snippet call with the property cleared behave alike (#823).
+    $returnType = $modx->getOption('return', $scriptProperties, 'tpl', true);
     if ($returnType === 'tpl') {
         unset($scriptProperties['return']);
     }
