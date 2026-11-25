@@ -34,6 +34,12 @@ class OrderUI {
     document.addEventListener('ms3:cart:updated', () => {
       this.updateOrderCosts()
     })
+
+    // order/clean resets the draft, not the cart: recalculate costs on the
+    // dedicated event instead of a bogus ms3:cart:updated (#802)
+    document.addEventListener('ms3:order:cleaned', () => {
+      this.updateOrderCosts()
+    })
   }
 
   /**
@@ -291,7 +297,12 @@ class OrderUI {
         document.querySelectorAll(this.selectors.formOrder).forEach(form => {
           form.reset()
         })
-        document.dispatchEvent(new CustomEvent('ms3:cart:updated'))
+        // order/clean never touches the cart, so ms3:cart:updated must not
+        // fire here: subscribers would see a cart change that never happened,
+        // and the old dispatch had no detail at all (#802).
+        document.dispatchEvent(new CustomEvent('ms3:order:cleaned', {
+          detail: { response },
+        }))
       }
 
       return response
