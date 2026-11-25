@@ -157,6 +157,8 @@ $_lang['setting_ms3_customer_cancel_allowed_statuses'] = 'Statuses from which cu
 $_lang['setting_ms3_customer_cancel_allowed_statuses_desc'] = 'Comma-separated status IDs. Default: New and Paid (2,3). Empty = use ms3_status_new and ms3_status_paid.';
 $_lang['setting_ms3_status_for_stat'] = 'Status IDs for statistics';
 $_lang['setting_ms3_status_for_stat_desc'] = 'Comma-separated statuses for building COMPLETED orders statistics';
+$_lang['setting_ms3_payment_link_statuses'] = 'Payment link statuses';
+$_lang['setting_ms3_payment_link_statuses_desc'] = 'Comma-separated order status IDs for which payment links are generated. Empty value uses the default awaiting-payment status (ms3_status_new).';
 $_lang['setting_ms3_use_scheduler'] = 'Use queue manager';
 $_lang['setting_ms3_use_scheduler_desc'] = 'Before using, make sure you have Scheduler component installed';
 $_lang['setting_ms3_utility_import_fields'] = 'Import fields list';
