@@ -48,6 +48,20 @@ class ConfigService
             }
         }
 
+        // Reserved group for fields with no section (field.section = null).
+        // groupProductDataSections() maps null/empty to the 'default' key, so
+        // supply its label in the same payload as the real sections (#827).
+        $sectionsById['default'] = [
+            'id' => 'default',
+            'key' => 'default',
+            'lexicon_key' => 'ms3_vue_no_section',
+            'sort_order' => null,
+            'hidden' => false,
+            'is_default' => true,
+            // Same key the section selector uses, so both views stay in sync.
+            'label' => $this->getLexiconValue('ms3_vue_no_section', 'minishop3', 'vue'),
+        ];
+
         return [
             'fields' => array_values($visibleFields),
             'sections' => $sectionsById
@@ -387,6 +401,7 @@ class ConfigService
      */
     public function deleteSection(string $pageKey, string $sectionKey): bool
     {
+        $ownsTransaction = false;
         try {
             $section = $this->modx->getObject('MiniShop3\\Model\\msPageSection', [
                 'page_key' => $pageKey,
@@ -397,11 +412,79 @@ class ConfigService
                 return true;
             }
 
-            return $section->remove();
-        } catch (\Exception $e) {
+            // ms3_product_fields.section is a FK to ms3_page_sections.id with
+            // ON DELETE RESTRICT. Move its fields to the reserved "no section"
+            // group first, otherwise the delete fails or leaves orphaned fields
+            // that render under a numeric group key (#827). Collect the rows
+            // before writing so the iterator's own WHERE is not mutated.
+            $toDetach = [];
+            foreach ($this->modx->getIterator('MiniShop3\\Model\\msProductField', [
+                'section' => (int)$section->get('id'),
+            ]) as $field) {
+                $toDetach[] = $field;
+            }
+
+            $ownsTransaction = $this->beginOwnedTransaction();
+            foreach ($toDetach as $field) {
+                $field->set('section', null);
+                if (!$field->save()) {
+                    $this->endOwnedTransaction($ownsTransaction, false);
+                    $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR,
+                        "[ConfigService] Failed to detach field from section: {$sectionKey}");
+                    return false;
+                }
+            }
+
+            $removed = $section->remove();
+            $this->endOwnedTransaction($ownsTransaction, $removed);
+
+            return (bool)$removed;
+        } catch (\Throwable $e) {
+            $this->endOwnedTransaction($ownsTransaction, false);
             $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR,
                 "[ConfigService] Error deleting section: " . $e->getMessage());
             return false;
+        }
+    }
+
+    /**
+     * Own the transaction only when the connection can start a new one (#603).
+     */
+    private function beginOwnedTransaction(): bool
+    {
+        if (
+            !is_callable([$this->modx, 'beginTransaction'])
+            || !is_callable([$this->modx, 'commit'])
+            || !is_callable([$this->modx, 'rollBack'])
+        ) {
+            return false;
+        }
+
+        $pdo = $this->modx->pdo;
+        if ($pdo instanceof \PDO && $pdo->inTransaction()) {
+            return false;
+        }
+
+        $this->modx->beginTransaction();
+
+        return true;
+    }
+
+    private function endOwnedTransaction(bool $ownsTransaction, bool $success): void
+    {
+        if (!$ownsTransaction) {
+            return;
+        }
+
+        $pdo = $this->modx->pdo;
+        if ($pdo instanceof \PDO && !$pdo->inTransaction()) {
+            return;
+        }
+
+        if ($success) {
+            $this->modx->commit();
+        } else {
+            $this->modx->rollBack();
         }
     }
 }
