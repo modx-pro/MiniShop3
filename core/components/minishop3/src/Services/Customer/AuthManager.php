@@ -495,22 +495,33 @@ class AuthManager
     /**
      * Validate token and get customer
      *
+     * Looks up by SHA-256 hash first (`token_hash`). Falls back to plaintext
+     * `token` column for transition period (old tokens).
+     *
      * @param string $tokenString Token string
      * @param string $type Token type (api, refresh, magic_link, email_verification, password_reset)
      * @return msCustomer|null
      */
-    public function validateToken(string $tokenString, string $type = 'api'): ?msCustomer
+    public function validateToken(string $tokenString, string $type = 'api'): ?ms_customer
     {
-        /** @var msCustomerToken $token */
+        // 1. Try hash lookup (new tokens)
         $token = $this->modx->getObject(msCustomerToken::class, [
-            'token' => $tokenString,
+            'token_hash' => hash('sha256', $tokenString),
             'type' => $type,
         ]);
+
+        // 2. Fallback to plaintext token (transition period / old tokens)
+        if (!$token) {
+            $token = $this->modx->getObject(msCustomerToken::class, [
+                'token' => $tokenString,
+                'type' => $type,
+            ]);
+        }
 
         if (!$token) {
             $this->modx->log(
                 modX::LOG_LEVEL_DEBUG,
-                "[AuthManager] Token not found: {$tokenString}"
+                "[AuthManager] Token not found"
             );
             return null;
         }
@@ -518,7 +529,7 @@ class AuthManager
         if ($token->isExpired()) {
             $this->modx->log(
                 modX::LOG_LEVEL_DEBUG,
-                "[AuthManager] Token expired: {$tokenString}"
+                "[AuthManager] Token expired"
             );
             $token->remove();
             return null;
@@ -527,7 +538,7 @@ class AuthManager
         if (in_array($type, ['magic_link', 'email_verification']) && $token->get('used_at')) {
             $this->modx->log(
                 modX::LOG_LEVEL_DEBUG,
-                "[AuthManager] Token already used: {$tokenString}"
+                "[AuthManager] Token already used"
             );
             return null;
         }
@@ -538,7 +549,7 @@ class AuthManager
         if (!$customer) {
             $this->modx->log(
                 modX::LOG_LEVEL_ERROR,
-                "[AuthManager] Customer not found for token: {$tokenString}"
+                "[AuthManager] Customer not found for token"
             );
             return null;
         }

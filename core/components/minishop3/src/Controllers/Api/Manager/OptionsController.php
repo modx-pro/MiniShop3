@@ -558,6 +558,28 @@ class OptionsController
     }
 
     /**
+     * Whether the payload is a flat list of category ids (modern Vue shape) rather
+     * than an assoc {id: bool} map (legacy ExtJS shape).
+     *
+     * @param mixed $payload
+     */
+    protected function isCategoriesIdListPayload($payload): bool
+    {
+        if (is_string($payload)) {
+            $decoded = json_decode($payload, true);
+            if (!is_array($decoded)) {
+                return false;
+            }
+            $payload = $decoded;
+        }
+        if (!is_array($payload) || $payload === []) {
+            return true;
+        }
+
+        return array_keys($payload) === range(0, count($payload) - 1);
+    }
+
+    /**
      * Sync option↔category links from payload.
      *
      * Accepts:
@@ -573,6 +595,22 @@ class OptionsController
 
         [$enabled, $disabled] = $this->splitCategoriesPayload($payload);
         $optionId = (int)$option->get('id');
+
+        if ($this->isCategoriesIdListPayload($payload)) {
+            // Flat list payload is the desired set of enabled category ids (#869).
+            if ($enabled !== []) {
+                $option->setCategories($enabled);
+            }
+            $current = array_keys($this->getOptionCategoriesMap($optionId));
+            $detach = array_values(array_diff($current, $enabled));
+            if ($detach !== []) {
+                /** @var OptionCategoryService $categoryService */
+                $categoryService = $this->optionService->getCategory();
+                $categoryService->removeFromCategories($optionId, $detach);
+            }
+
+            return;
+        }
 
         if ($enabled !== []) {
             $option->setCategories($enabled);

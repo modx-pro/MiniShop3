@@ -94,6 +94,8 @@ class TokenService
      * Persist an API token row and hydrate session/cookie from that DB row.
      *
      * Single mint/update path for guest, login bind, and logout anonymous token.
+     * Stores SHA-256 hash of the token in `token_hash` column; plaintext
+     * `token` column is kept for transition period (old tokens).
      *
      * @param int $customerId 0 = guest
      * @param string|null $reuseToken update this token when present in DB; otherwise mint
@@ -122,10 +124,16 @@ class TokenService
         } else {
             $tokenObj = $this->modx->newObject(msCustomerToken::class);
             $tokenObj->set('customer_id', $customerId);
-            $tokenObj->set('token', bin2hex(random_bytes(32)));
             $tokenObj->set('type', msCustomerToken::TYPE_API);
             $tokenObj->set('expires_at', $expiresAt);
             $tokenObj->set('created_at', date('Y-m-d H:i:s'));
+
+            // Generate new token and store its hash
+            $tokenString = bin2hex(random_bytes(32));
+            $tokenHash = hash('sha256', $tokenString);
+            $tokenObj->set('token_hash', $tokenHash);
+            // Keep plaintext token for transition period (old clients)
+            $tokenObj->set('token', $tokenString);
         }
 
         if (!$tokenObj->save()) {
@@ -144,8 +152,10 @@ class TokenService
     /**
      * Resolve an API token from the database.
      *
-     * Expired tokens are removed (same policy as AuthManager::validateToken).
-     * Does not extend TTL and does not keep the same token string alive.
+     * Looks up by SHA-256 hash first (`token_hash`). If not found, falls back
+     * to plaintext `token` column for transition period (old tokens).
+     * Expired tokens are removed. Does not extend TTL and does not keep the
+     * same token string alive.
      *
      * @return array{token: ?msCustomerToken, reason: 'ok'|'missing'|'expired'}
      *         reason missing also covers a live token whose customer is inactive or blocked
@@ -156,11 +166,19 @@ class TokenService
             return ['token' => null, 'reason' => 'missing'];
         }
 
-        /** @var msCustomerToken|null $tokenObj */
+        // 1. Try hash lookup (new tokens)
         $tokenObj = $this->modx->getObject(msCustomerToken::class, [
-            'token' => $tokenString,
+            'token_hash' => hash('sha256', $tokenString),
             'type' => msCustomerToken::TYPE_API,
         ]);
+
+        // 2. Fallback to plaintext token (transition period / old tokens)
+        if (!$tokenObj) {
+            $tokenObj = $this->modx->getObject(msCustomerToken::class, [
+                'token' => $tokenString,
+                'type' => msCustomerToken::TYPE_API,
+            ]);
+        }
 
         if (!$tokenObj) {
             return ['token' => null, 'reason' => 'missing'];
@@ -246,12 +264,20 @@ class TokenService
 
     /**
      * Renew expired API token TTL and hydrate $_SESSION from DB row.
+     * Uses token_hash for cookie when available (new tokens), falls back to
+     * plaintext token for transition period (old tokens).
      */
     public function syncSessionFromToken(msCustomerToken $tokenObj): void
     {
         $this->renewTokenIfExpired($tokenObj);
         $this->applyTokenToSession($tokenObj);
-        CookieHelper::setTokenCookie($this->modx, $tokenObj->get('token'));
+
+        // Prefer hash for cookie (new tokens), fallback to plaintext (transition)
+        $cookieToken = $tokenObj->get('token_hash')
+            ?? $tokenObj->get('token');
+        if ($cookieToken !== '') {
+            CookieHelper::setTokenCookie($this->modx, $cookieToken);
+        }
     }
 
     /**
@@ -273,10 +299,17 @@ class TokenService
 
         SessionHelper::ensureActive();
 
+        // Try hash lookup first, then plaintext for transition
         $tokenObj = $this->modx->getObject(msCustomerToken::class, [
-            'token' => $token,
+            'token_hash' => hash('sha256', $token),
             'type' => msCustomerToken::TYPE_API,
         ]);
+        if (!$tokenObj) {
+            $tokenObj = $this->modx->getObject(msCustomerToken::class, [
+                'token' => $token,
+                'type' => msCustomerToken::TYPE_API,
+            ]);
+        }
 
         if (!$tokenObj) {
             return $this->generateCustomerToken($ttl);
@@ -293,7 +326,12 @@ class TokenService
         }
 
         $this->applyTokenToSession($tokenObj);
-        CookieHelper::setTokenCookie($this->modx, $token);
+        // Set cookie from hash when available, otherwise plaintext
+        $cookieToken = $tokenObj->get('token_hash')
+            ?? $token;
+        if ($cookieToken !== '') {
+            CookieHelper::setTokenCookie($this->modx, $cookieToken);
+        }
 
         $this->modx->log(
             modX::LOG_LEVEL_DEBUG,
@@ -694,6 +732,7 @@ class TokenService
 
     /**
      * Hydrate $_SESSION from httpOnly cookie token when session has no customer token yet.
+     * Tries hash lookup first, then plaintext for transition period.
      */
     public function restoreSessionFromCookie(): void
     {
@@ -708,10 +747,17 @@ class TokenService
             return;
         }
 
+        // Try hash lookup first, then plaintext for transition period
         $tokenObj = $this->modx->getObject(msCustomerToken::class, [
-            'token' => $cookieToken,
+            'token_hash' => hash('sha256', $cookieToken),
             'type' => msCustomerToken::TYPE_API,
         ]);
+        if (!$tokenObj) {
+            $tokenObj = $this->modx->getObject(msCustomerToken::class, [
+                'token' => $cookieToken,
+                'type' => msCustomerToken::TYPE_API,
+            ]);
+        }
 
         if (!$tokenObj) {
             return;
@@ -731,6 +777,7 @@ class TokenService
     /**
      * Whether session/cookie API token belongs to customer and is not expired.
      * Renews TTL in DB when the row is past expires_at.
+     * Tries hash lookup first, then plaintext for transition period.
      */
     public function sessionTokenBelongsToCustomer(int $customerId): bool
     {
@@ -744,10 +791,17 @@ class TokenService
             return false;
         }
 
+        // Try hash lookup first, then plaintext for transition period
         $tokenObj = $this->modx->getObject(msCustomerToken::class, [
-            'token' => $token,
+            'token_hash' => hash('sha256', $token),
             'type' => msCustomerToken::TYPE_API,
         ]);
+        if (!$tokenObj) {
+            $tokenObj = $this->modx->getObject(msCustomerToken::class, [
+                'token' => $token,
+                'type' => msCustomerToken::TYPE_API,
+            ]);
+        }
 
         if (!$tokenObj || (int)$tokenObj->get('customer_id') !== $customerId) {
             return false;
@@ -762,7 +816,12 @@ class TokenService
         }
 
         $this->applyTokenToSession($tokenObj);
-        CookieHelper::setTokenCookie($this->modx, (string)$tokenObj->get('token'));
+        // Set cookie from hash when available, otherwise plaintext
+        $cookieToken = $tokenObj->get('token_hash')
+            ?? (string)$tokenObj->get('token');
+        if ($cookieToken !== '') {
+            CookieHelper::setTokenCookie($this->modx, $cookieToken);
+        }
 
         return true;
     }
