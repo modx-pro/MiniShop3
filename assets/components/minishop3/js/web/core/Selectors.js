@@ -38,6 +38,73 @@ function getSelectors () {
   return { ...defaultSelectors, ...custom }
 }
 
+/**
+ * Fallback roots for cart SSR when the snippet call has no &selector.
+ * Shared by CartUI and QuantityUI so both modules resolve the same target (#804).
+ */
+const cartRenderFallbackSelectors = [
+  '#ms3oc-cart-live',
+  '#msb-test-cart',
+  '#msCart',
+  '[data-ms-cart]',
+  '.msCart',
+]
+
+/** Tokens already reported, so a multi-root page does not spam on every update. */
+const warnedCartRenderTokens = new Set()
+
+/**
+ * Resolve the DOM root for one rendered cart token (#804).
+ *
+ * A configured selector always wins. Without it, the fallback roots are
+ * collected and used only when exactly one root exists: writing one cart's
+ * HTML into another is worse than skipping. Skipping is never silent — the
+ * reason is logged once per token, because a cart that stops updating is
+ * otherwise impossible to diagnose.
+ *
+ * @param {string} configuredSelector - Selector from the snippet call, if any
+ * @param {string} token - Render token the HTML belongs to
+ * @returns {Element|null} Render target or null when it is ambiguous/missing
+ */
+function resolveCartRenderRoot (configuredSelector, token) {
+  const selector = configuredSelector ? String(configuredSelector) : ''
+
+  if (selector !== '') {
+    const configured = document.querySelector(selector)
+    if (configured) {
+      return configured
+    }
+  }
+
+  const found = []
+  cartRenderFallbackSelectors.forEach((fallbackSelector) => {
+    document.querySelectorAll(fallbackSelector).forEach((node) => {
+      if (!found.includes(node)) {
+        found.push(node)
+      }
+    })
+  })
+
+  // Avoid writing one cart HTML into another when several roots exist.
+  if (found.length === 1) {
+    return found[0]
+  }
+
+  const key = `${token}\u0000${selector}\u0000${found.length}`
+  if (!warnedCartRenderTokens.has(key)) {
+    warnedCartRenderTokens.add(key)
+    const target = selector !== ''
+      ? `selector "${selector}" matched nothing and ${found.length} default cart root(s) matched`
+      : `${found.length} default cart roots matched`
+    console.warn(
+      `[MiniShop3] Cart HTML for "${token}" was not rendered: ${target}. ` +
+      'Add &selector to the msCart or msOrderTotal snippet call to choose the render target.',
+    )
+  }
+
+  return null
+}
+
 // Expose for fallback when Selectors.js loads but getSelectors fails (e.g. in unit tests)
 if (typeof window !== 'undefined') {
   window.Ms3DefaultSelectors = defaultSelectors

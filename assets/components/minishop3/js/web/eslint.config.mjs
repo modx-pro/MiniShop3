@@ -15,7 +15,7 @@ const globals = require('globals')
 
 /** Top-level names defined for other <script> files — unused in their own file. */
 const exportedScriptNames =
-  '^(ApiClient|TokenManager|CartAPI|OrderAPI|CustomerAPI|CartUI|OrderUI|CustomerUI|AuthUI|QuantityUI|ProductCardUI|ms3|getSelectors|defaultSelectors|ms3Confirm|CUSTOMER_UI_LEXICON|AUTH_UI_LEXICON)$'
+  '^(ApiClient|TokenManager|CartAPI|OrderAPI|CustomerAPI|CartUI|OrderUI|CustomerUI|AuthUI|QuantityUI|ProductCardUI|ms3|getSelectors|defaultSelectors|resolveCartRenderRoot|ms3Confirm|CUSTOMER_UI_LEXICON|AUTH_UI_LEXICON)$'
 
 export default [
   {

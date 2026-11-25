@@ -18,6 +18,7 @@
  *   <button type="button" class="qty-btn inc-qty">+</button>
  * </form>
  */
+/* global resolveCartRenderRoot */
 class QuantityUI {
   /**
    * @param {CartAPI} cartAPI - Cart API instance
@@ -213,6 +214,10 @@ class QuantityUI {
   /**
    * Render cart HTML blocks (SSR)
    *
+   * Uses the same target resolution as CartUI: a configured selector wins,
+   * otherwise the shared fallback roots are tried and an ambiguous target is
+   * reported instead of silently skipped (#804).
+   *
    * @param {Object} renderData - Object {token: html}
    */
   renderCart (renderData) {
@@ -229,12 +234,8 @@ class QuantityUI {
     for (const token in renderData) {
       const html = renderData[token]
       const config = cartRenderConfig.find(item => item.token === token)
-
-      if (!config || !config.selector) {
-        continue
-      }
-
-      const element = document.querySelector(config.selector)
+      const configuredSelector = config && config.selector ? String(config.selector) : ''
+      const element = resolveCartRenderRoot(configuredSelector, token)
 
       if (element) {
         element.innerHTML = html
