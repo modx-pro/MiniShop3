@@ -159,6 +159,10 @@ return [
                 'type' => 'textfield',
                 'value' => 'tpl.msCart',
             ],
+            'selector' => [
+                'type' => 'textfield',
+                'value' => '',
+            ],
             'includeTVs' => [
                 'type' => 'textfield',
                 'value' => '',
@@ -178,6 +182,10 @@ return [
             'return' => [
                 'type' => 'textfield',
                 'value' => 'tpl',
+            ],
+            'customer_token' => [
+                'type' => 'textfield',
+                'value' => '',
             ],
         ],
     ],
@@ -401,6 +409,10 @@ return [
             'tpl' => [
                 'type' => 'textfield',
                 'value' => 'tpl.msOrderTotal',
+            ],
+            'selector' => [
+                'type' => 'textfield',
+                'value' => '',
             ],
             'return' => [
                 'type' => 'textfield',
