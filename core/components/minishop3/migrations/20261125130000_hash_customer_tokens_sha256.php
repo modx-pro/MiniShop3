@@ -11,7 +11,8 @@ use Phinx\Migration\AbstractMigration;
  * the token_hash column but backfilled it with MD5(CONCAT('minishop3_token_', token))
  * while the PHP code looks up hash('sha256', $token). This migration:
  *
- * - normalizes token_hash to VARCHAR(64) and ensures idx_token_hash exists;
+ * - normalizes token_hash to VARCHAR(64) and makes idx_token_hash UNIQUE
+ *   (falls back to non-unique when an installation already has duplicates);
  * - recomputes token_hash = SHA-256(token) for every row that still has a
  *   plaintext token (repairs the MD5 backfill, keeps active tokens usable);
  * - drops the UNIQUE index on `token` (new rows store '' there, uniqueness
@@ -54,35 +55,46 @@ final class HashCustomerTokensSha256 extends AbstractMigration
             }
         }
 
-        if (!$phinxTable->hasIndexByName('idx_token_hash')) {
-            $phinxTable->addIndex(['token_hash'], [
-                'name' => 'idx_token_hash',
-                'unique' => false,
-            ])->save();
-        }
-
         // New tokens store '' in `token`; the legacy UNIQUE index would collide.
         if ($phinxTable->hasIndexByName('idx_token_unique')) {
             $phinxTable->removeIndexByName('idx_token_unique')->save();
         }
 
-        // Backfill/repair hashes from plaintext. fetchAll/execute do not
-        // substitute the table prefix, unlike table().
-        $rows = $this->fetchAll(
-            "SELECT `id`, `token` FROM `{$table}` WHERE `token` != ''"
+        // Backfill/repair hashes from plaintext in one pass. execute() does not
+        // substitute the table prefix, unlike table(). SHA2(token, 256)
+        // produces the same lowercase hex as PHP's hash('sha256', $token).
+        $this->execute(
+            "UPDATE `{$table}` SET `token_hash` = SHA2(`token`, 256) WHERE `token` != ''"
         );
-        foreach ($rows as $row) {
-            $hash = hash('sha256', (string) $row['token']);
-            $id = (int) $row['id'];
-            $this->execute(
-                "UPDATE `{$table}` SET `token_hash` = '{$hash}' WHERE `id` = {$id}"
-            );
-        }
 
         // Hashes are backfilled — active tokens resolve via token_hash now.
         $this->execute(
             "UPDATE `{$table}` SET `token` = '' WHERE `token` != ''"
         );
+
+        // token_hash is the bearer identity now, so enforce uniqueness in the
+        // database. Multiple NULLs are allowed by MySQL. If an installation
+        // already holds duplicate hashes, keep a non-unique index rather than
+        // aborting the migration.
+        if ($phinxTable->hasIndexByName('idx_token_hash')) {
+            $phinxTable->removeIndexByName('idx_token_hash')->save();
+        }
+        $duplicates = $this->fetchRow(
+            "SELECT COUNT(*) AS cnt FROM ("
+            . " SELECT 1 FROM `{$table}` WHERE `token_hash` IS NOT NULL"
+            . " GROUP BY `token_hash` HAVING COUNT(*) > 1"
+            . ") AS duplicates"
+        );
+        $unique = (int) ($duplicates['cnt'] ?? 0) === 0;
+        if (!$unique) {
+            $this->output->writeln(
+                '<comment>HashCustomerTokensSha256: duplicate token_hash values found; idx_token_hash stays non-unique.</comment>'
+            );
+        }
+        $phinxTable->addIndex(['token_hash'], [
+            'name' => 'idx_token_hash',
+            'unique' => $unique,
+        ])->save();
     }
 
     public function down(): void

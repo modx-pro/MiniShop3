@@ -251,6 +251,12 @@ class EmailVerificationService
      */
     public function verifyToken(string $token): ?msCustomer
     {
+        // Empty legacy `token` is shared by all #927 rows, so a blank input
+        // must not resolve an arbitrary verification row via the fallback.
+        if ($token === '') {
+            return null;
+        }
+
         if ($this->authManager) {
             $customer = $this->authManager->validateToken($token, 'email_verification');
         } else {

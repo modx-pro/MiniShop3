@@ -74,7 +74,7 @@ class msCustomerToken extends \MiniShop3\Model\msCustomerToken
             'idx_token_hash' => [
                 'alias' => 'idx_token_hash',
                 'primary' => false,
-                'unique' => false,
+                'unique' => true,
                 'type' => 'BTREE',
                 'columns' => [
                     'token_hash' => [

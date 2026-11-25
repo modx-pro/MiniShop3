@@ -521,6 +521,12 @@ class AuthManager
      */
     public function validateToken(string $tokenString, string $type = 'api'): ?msCustomer
     {
+        // After #927 the legacy `token` column is empty for all new rows and is
+        // no longer UNIQUE. An empty input must never match an arbitrary row.
+        if ($tokenString === '') {
+            return null;
+        }
+
         // 1. Try hash lookup (new tokens)
         $token = $this->modx->getObject(msCustomerToken::class, [
             'token_hash' => hash('sha256', $tokenString),

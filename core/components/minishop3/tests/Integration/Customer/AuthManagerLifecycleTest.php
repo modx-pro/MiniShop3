@@ -347,6 +347,27 @@ class AuthManagerLifecycleTest extends TestCase
         self::assertNull($auth->validateToken((string) $token->getPlainToken(), msCustomerToken::TYPE_API));
     }
 
+    public function testEmptyTokenNeverResolvesAnyCustomer(): void
+    {
+        $customer = $this->seedCustomer([
+            'email' => 'empty-token@example.com',
+            'is_active' => 1,
+            'is_blocked' => 0,
+        ]);
+        $modx = $this->makeModx();
+        $auth = $this->makeAuthManager($modx);
+
+        $token = $auth->createToken($customer, msCustomerToken::TYPE_PASSWORD_RESET, 3600);
+        self::assertNotNull($token);
+
+        // #927 cleared `token` for every row and dropped its UNIQUE index,
+        // so a blank input used to resolve an arbitrary reset row.
+        self::assertNull($auth->validateToken('', msCustomerToken::TYPE_PASSWORD_RESET));
+        self::assertNotNull(
+            $auth->validateToken((string) $token->getPlainToken(), msCustomerToken::TYPE_PASSWORD_RESET)
+        );
+    }
+
     public function testHandleFailedLoginBlocksAfterMaxAttempts(): void
     {
         $customer = $this->seedCustomer([

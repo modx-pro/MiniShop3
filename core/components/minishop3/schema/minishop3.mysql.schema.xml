@@ -533,7 +533,7 @@
         <field key="created_at" dbtype="datetime" phptype="datetime" null="false" default="CURRENT_TIMESTAMP"/>
         <field key="used_at" dbtype="datetime" phptype="datetime" null="true"/>
 
-        <index alias="idx_token_hash" name="idx_token_hash" primary="false" unique="false" type="BTREE">
+        <index alias="idx_token_hash" name="idx_token_hash" primary="false" unique="true" type="BTREE">
             <column key="token_hash" length="" collation="A" null="true"/>
         </index>
         <index alias="idx_customer_type" name="idx_customer_type" primary="false" unique="false" type="BTREE">
