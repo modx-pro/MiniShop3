@@ -22,9 +22,9 @@ final class StubMsCustomer extends msCustomer
         $this->fields = $fields;
     }
 
-    public function get($key)
+    public function get($k, $format = null, $formatTemplate = null)
     {
-        return $this->fields[$key] ?? null;
+        return $this->fields[$k] ?? null;
     }
 
     /**

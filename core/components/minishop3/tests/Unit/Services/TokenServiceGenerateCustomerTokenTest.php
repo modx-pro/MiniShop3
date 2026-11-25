@@ -59,9 +59,13 @@ final class TokenServiceGenerateCustomerTokenTest extends TestCase
                         return $this;
                     }
 
-                    public function get($key)
+                    public function get($k, $format = null, $formatTemplate = null)
                     {
-                        return $this->data[$key] ?? null;
+                        if ($k === 'token' && $this->getPlainToken() !== null) {
+                            return $this->getPlainToken();
+                        }
+
+                        return $this->data[$k] ?? null;
                     }
 
                     public function save($cacheFlag = null)

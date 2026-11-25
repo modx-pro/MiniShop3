@@ -150,9 +150,9 @@ final class FakePageCustomer extends msCustomer
     {
     }
 
-    public function get($key)
+    public function get($k, $format = null, $formatTemplate = null)
     {
-        return $this->fields[$key] ?? null;
+        return $this->fields[$k] ?? null;
     }
 }
 
@@ -163,9 +163,9 @@ final class FakePageCustomerToken extends msCustomerToken
     {
     }
 
-    public function get($key)
+    public function get($k, $format = null, $formatTemplate = null)
     {
-        return $this->fields[$key] ?? null;
+        return $this->fields[$k] ?? null;
     }
 
     public function isExpired()
