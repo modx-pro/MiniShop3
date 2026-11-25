@@ -2,11 +2,14 @@ Ext.override(MODx.window.QuickCreateResource, {
     listeners: {
         show: function () {
             let classKey = this.config.record.class_key,
-                isProduct = classKey === 'MiniShop3\\Model\\msProduct',
+                // MODX 3 stores the FQCN in class_key (MiniShop3\Model\msProduct),
+                // while upgraded installs may still keep the legacy short alias.
+                shortClassKey = String(classKey || '').split('\\').pop(),
+                isProduct = shortClassKey === 'msProduct',
                 class_key = isProduct ? 'ms3_product' : 'ms3_category',
                 windowTitle = _(class_key + '_create_here');
 
-            if (['msProduct', 'msCategory'].includes(classKey)) {
+            if (['msProduct', 'msCategory'].includes(shortClassKey)) {
                 switch (this.action) {
                     case 'resource/create':
                         let form = this.fp.getForm(),
