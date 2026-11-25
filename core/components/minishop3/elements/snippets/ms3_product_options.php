@@ -4,6 +4,7 @@ use MiniShop3\MiniShop3;
 use MiniShop3\Model\msProduct;
 use MiniShop3\Model\msProductData;
 use MiniShop3\Services\Catalog\CatalogResourceGroupVisibility;
+use MiniShop3\Utils\CommaList;
 use ModxPro\PdoTools\CoreTools;
 
 /** @var \MODX\Revolution\modX $modx */
@@ -22,9 +23,12 @@ if (!empty($input) && empty($product)) {
     $product = $input;
 }
 
-$_ms3LoadedById = !empty($product) && (int) $product !== (int) $modx->resource->id;
+// $product may arrive as an id or as an already loaded object. Casting the
+// object to int emits a PHP 8 warning, so take its id explicitly (#842 review).
+$passedProductId = empty($product) ? 0 : (is_object($product) ? (int) $product->get('id') : (int) $product);
+$_ms3LoadedById = $passedProductId > 0 && $passedProductId !== (int) $modx->resource->id;
 $product = $_ms3LoadedById
-    ? $modx->getObject(msProduct::class, ['id' => (int) $product])
+    ? $modx->getObject(msProduct::class, ['id' => $passedProductId])
     : $modx->resource;
 if (!($product instanceof msProduct)) {
     return $modx->lexicon('ms3_err_options_is_not_msproduct', [
@@ -35,17 +39,18 @@ if ($_ms3LoadedById && !(new CatalogResourceGroupVisibility($modx))->isVisibleFo
     return '';
 }
 
-$ignoreGroups = array_diff(array_map('trim', explode(',', $modx->getOption('ignoreGroups', $scriptProperties, ''))), ['']);
-$ignoreOptions = array_diff(array_map('trim', explode(',', $modx->getOption('ignoreOptions', $scriptProperties, ''))), ['']);
-$sortGroups = array_diff(array_map('trim', explode(',', $modx->getOption('sortGroups', $scriptProperties, ''))), ['']);
-$sortOptions = array_diff(array_map('trim', explode(',', $modx->getOption('sortOptions', $scriptProperties, ''))), ['']);
-$onlyOptions = array_diff(array_map('trim', explode(',', $modx->getOption('onlyOptions', $scriptProperties, ''))), ['']);
+$ignoreGroups = CommaList::parse($modx->getOption('ignoreGroups', $scriptProperties, ''));
+$ignoreOptions = CommaList::parse($modx->getOption('ignoreOptions', $scriptProperties, ''));
+$sortGroups = CommaList::parse($modx->getOption('sortGroups', $scriptProperties, ''));
+$sortOptions = CommaList::parse($modx->getOption('sortOptions', $scriptProperties, ''));
+$onlyOptions = CommaList::parse($modx->getOption('onlyOptions', $scriptProperties, ''));
 if (empty($sortOptions) && !empty($onlyOptions)) {
     $sortOptions = $onlyOptions;
 }
-$groups = !empty($groups)
-    ? array_map('trim', explode(',', $groups))
-    : [];
+// Keep the old falsy semantics of &groups (e.g. '0' meant "no filter").
+// MODX extracts snippet properties into variables, so accept both sources.
+$groupsRaw = $scriptProperties['groups'] ?? $groups ?? '';
+$groups = empty($groupsRaw) ? [] : CommaList::parse($groupsRaw);
 /** @var msProductData $data */
 if ($data = $product->getOne('Data')) {
     $optionKeys = $data->getOptionKeys();
@@ -58,7 +63,7 @@ $productData = $product->loadOptions();
 $options = [];
 foreach ($optionKeys as $key) {
     // Filter by key
-    if (!empty($onlyOptions) && $onlyOptions[0] != '' && !in_array($key, $onlyOptions)) {
+    if (!empty($onlyOptions) && !in_array($key, $onlyOptions)) {
         continue;
     } elseif (in_array($key, $ignoreOptions)) {
         continue;
