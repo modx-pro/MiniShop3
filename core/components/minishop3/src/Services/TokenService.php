@@ -122,10 +122,16 @@ class TokenService
         } else {
             $tokenObj = $this->modx->newObject(msCustomerToken::class);
             $tokenObj->set('customer_id', $customerId);
-            $tokenObj->set('token', bin2hex(random_bytes(32)));
             $tokenObj->set('type', msCustomerToken::TYPE_API);
             $tokenObj->set('expires_at', $expiresAt);
             $tokenObj->set('created_at', date('Y-m-d H:i:s'));
+
+            // Generate new token and store its hash
+            $tokenString = bin2hex(random_bytes(32));
+            $tokenHash = hash('sha256', $tokenString);
+            $tokenObj->set('token_hash', $tokenHash);
+            // Keep plaintext token for transition period (old clients)
+            $tokenObj->set('token', $tokenString);
         }
 
         if (!$tokenObj->save()) {
@@ -156,11 +162,19 @@ class TokenService
             return ['token' => null, 'reason' => 'missing'];
         }
 
-        /** @var msCustomerToken|null $tokenObj */
+        // 1. Try hash lookup (new tokens)
         $tokenObj = $this->modx->getObject(msCustomerToken::class, [
-            'token' => $tokenString,
+            'token_hash' => hash('sha256', $tokenString),
             'type' => msCustomerToken::TYPE_API,
         ]);
+
+        // 2. Fallback to plaintext token (transition period / old tokens)
+        if (!$tokenObj) {
+            $tokenObj = $this->modx->getObject(msCustomerToken::class, [
+                'token' => $tokenString,
+                'type' => msCustomerToken::TYPE_API,
+            ]);
+        }
 
         if (!$tokenObj) {
             return ['token' => null, 'reason' => 'missing'];
@@ -251,7 +265,13 @@ class TokenService
     {
         $this->renewTokenIfExpired($tokenObj);
         $this->applyTokenToSession($tokenObj);
-        CookieHelper::setTokenCookie($this->modx, $tokenObj->get('token'));
+
+        // Prefer hash for cookie (new tokens), fallback to plaintext (transition)
+        $cookieToken = $tokenObj->get('token_hash')
+            ?? $tokenObj->get('token');
+        if ($cookieToken !== '') {
+            CookieHelper::setTokenCookie($this->modx, $cookieToken);
+        }
     }
 
     /**
@@ -273,10 +293,17 @@ class TokenService
 
         SessionHelper::ensureActive();
 
+        // Try hash lookup first, then plaintext for transition
         $tokenObj = $this->modx->getObject(msCustomerToken::class, [
-            'token' => $token,
+            'token_hash' => hash('sha256', $token),
             'type' => msCustomerToken::TYPE_API,
         ]);
+        if (!$tokenObj) {
+            $tokenObj = $this->modx->getObject(msCustomerToken::class, [
+                'token' => $token,
+                'type' => msCustomerToken::TYPE_API,
+            ]);
+        }
 
         if (!$tokenObj) {
             return $this->generateCustomerToken($ttl);
@@ -293,7 +320,12 @@ class TokenService
         }
 
         $this->applyTokenToSession($tokenObj);
-        CookieHelper::setTokenCookie($this->modx, $token);
+        // Set cookie from hash when available, otherwise plaintext
+        $cookieToken = $tokenObj->get('token_hash')
+            ?? $token;
+        if ($cookieToken !== '') {
+            CookieHelper::setTokenCookie($this->modx, $cookieToken);
+        }
 
         $this->modx->log(
             modX::LOG_LEVEL_DEBUG,
@@ -708,10 +740,17 @@ class TokenService
             return;
         }
 
+        // Try hash lookup first, then plaintext for transition period
         $tokenObj = $this->modx->getObject(msCustomerToken::class, [
-            'token' => $cookieToken,
+            'token_hash' => hash('sha256', $cookieToken),
             'type' => msCustomerToken::TYPE_API,
         ]);
+        if (!$tokenObj) {
+            $tokenObj = $this->modx->getObject(msCustomerToken::class, [
+                'token' => $cookieToken,
+                'type' => msCustomerToken::TYPE_API,
+            ]);
+        }
 
         if (!$tokenObj) {
             return;
@@ -744,10 +783,17 @@ class TokenService
             return false;
         }
 
+        // Try hash lookup first, then plaintext for transition period
         $tokenObj = $this->modx->getObject(msCustomerToken::class, [
-            'token' => $token,
+            'token_hash' => hash('sha256', $token),
             'type' => msCustomerToken::TYPE_API,
         ]);
+        if (!$tokenObj) {
+            $tokenObj = $this->modx->getObject(msCustomerToken::class, [
+                'token' => $token,
+                'type' => msCustomerToken::TYPE_API,
+            ]);
+        }
 
         if (!$tokenObj || (int)$tokenObj->get('customer_id') !== $customerId) {
             return false;
@@ -762,7 +808,12 @@ class TokenService
         }
 
         $this->applyTokenToSession($tokenObj);
-        CookieHelper::setTokenCookie($this->modx, (string)$tokenObj->get('token'));
+        // Set cookie from hash when available, otherwise plaintext
+        $cookieToken = $tokenObj->get('token_hash')
+            ?? (string)$tokenObj->get('token');
+        if ($cookieToken !== '') {
+            CookieHelper::setTokenCookie($this->modx, $cookieToken);
+        }
 
         return true;
     }
