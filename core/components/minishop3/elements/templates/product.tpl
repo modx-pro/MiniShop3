@@ -108,11 +108,12 @@
                             <div class="product-options mb-4">
                                 {* Цвета *}
                                 {if $_modx->resource.color?}
-                                    <div class="option-group mb-3">
+                                    <div class="option-group mb-3" data-option-key="color">
                                         <label class="form-label fw-semibold">Цвет:</label>
                                         <div class="d-flex flex-wrap gap-2">
                                             {foreach $_modx->resource.color as $colorOption}
-                                                <button type="button" class="btn btn-outline-secondary btn-sm option-btn">
+                                                <button type="button" class="btn btn-outline-secondary btn-sm option-btn"
+                                                        data-option-value="{$colorOption | e}">
                                                     {$colorOption}
                                                 </button>
                                             {/foreach}
@@ -122,11 +123,12 @@
 
                                 {* Размеры *}
                                 {if $_modx->resource.size?}
-                                    <div class="option-group mb-3">
+                                    <div class="option-group mb-3" data-option-key="size">
                                         <label class="form-label fw-semibold">Размер:</label>
                                         <div class="d-flex flex-wrap gap-2">
                                             {foreach $_modx->resource.size as $sizeOption}
-                                                <button type="button" class="btn btn-outline-secondary btn-sm option-btn">
+                                                <button type="button" class="btn btn-outline-secondary btn-sm option-btn"
+                                                        data-option-value="{$sizeOption | e}">
                                                     {$sizeOption}
                                                 </button>
                                             {/foreach}
@@ -142,6 +144,13 @@
                             <form method="post" class="ms3_form" data-cart-state="add" data-ms3-form>
                                 <input type="hidden" name="id" value="{$_modx->resource.id}">
                                 <input type="hidden" name="ms3_action" value="cart/add">
+                                {* Selected options are collected by ms3.js (options[key] FormData entries) *}
+                                {if $_modx->resource.color?}
+                                    <input type="hidden" name="options[color]" value="">
+                                {/if}
+                                {if $_modx->resource.size?}
+                                    <input type="hidden" name="options[size]" value="">
+                                {/if}
 
                                 <div class="row g-3 align-items-end">
                                     <div class="col-auto">
@@ -357,23 +366,27 @@
     {* JavaScript для выбора опций *}
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Обработка кликов по опциям
-            document.querySelectorAll('.option-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    // Снимаем active с других кнопок в этой группе
-                    this.closest('.option-group').querySelectorAll('.option-btn').forEach(b => {
-                        b.classList.remove('active');
-                    });
-                    // Активируем текущую
-                    this.classList.add('active');
+            // Keep the add-to-cart form in sync with the selected options.
+            function selectOption(group, btn) {
+                group.querySelectorAll('.option-btn').forEach(b => {
+                    b.classList.toggle('active', b === btn);
                 });
-            });
+                const key = group.dataset.optionKey;
+                const input = document.querySelector('input[name="options[' + key + ']"]');
+                if (input) {
+                    input.value = btn.dataset.optionValue || '';
+                }
+            }
 
-            // Активируем первую опцию по умолчанию
-            document.querySelectorAll('.option-group').forEach(group => {
-                const firstBtn = group.querySelector('.option-btn');
+            document.querySelectorAll('.option-group[data-option-key]').forEach(group => {
+                group.querySelectorAll('.option-btn').forEach(btn => {
+                    btn.addEventListener('click', () => selectOption(group, btn));
+                });
+
+                // Preserve the demo's default selection and send it to the cart as well.
+                const firstBtn = group.querySelector('.option-btn.active') || group.querySelector('.option-btn');
                 if (firstBtn) {
-                    firstBtn.classList.add('active');
+                    selectOption(group, firstBtn);
                 }
             });
         });
