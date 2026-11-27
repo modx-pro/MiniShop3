@@ -199,6 +199,8 @@ $_lang['setting_ms3_payment_on_refunded_status'] = 'Статус заказа п
 $_lang['setting_ms3_payment_on_refunded_status_desc'] = 'ID статуса заказа после полного refund. 0 — не менять заказ. Частичный возврат статус заказа не меняет. По умолчанию статус отмены (5).';
 
 // Currency and Formatting Settings
+$_lang['setting_ms3_currency_code'] = 'ISO-код валюты';
+$_lang['setting_ms3_currency_code_desc'] = 'Код валюты по ISO 4217 (например, RUB, KZT, UAH, EUR) для микроразметки и журнала платежей. По умолчанию RUB.';
 $_lang['setting_ms3_currency_symbol'] = 'Символ валюты';
 $_lang['setting_ms3_currency_symbol_desc'] = 'Символ валюты для отображения цен. По умолчанию "₽" (рубль). Примеры: $, €, £, ₽, ₴, ¥, ₸.';
 $_lang['setting_ms3_currency_position'] = 'Позиция символа валюты';
