@@ -178,10 +178,9 @@ class msProduct extends modResource
             return parent::get($k, $format, $formatTemplate);
         }
 
-        if (strpos($k, 'vendor_') !== false || strpos($k, 'vendor.') !== false) {
-            return $this->loadVendor()->get(substr($k, 7), $format, $formatTemplate);
-        }
         if (isset($this->loadData()->_fields[$k])) {
+            // Real product data columns (for example the vendor_id foreign key) must be read from
+            // the product data itself and must not be captured by the vendor-prefixed lookup.
             return $this->loadData()->get($k, $format, $formatTemplate);
         }
         if (
@@ -193,6 +192,9 @@ class msProduct extends modResource
             }
             $this->loadOptions();
             return $this->options[$k] ?? null;
+        }
+        if (strpos($k, 'vendor_') === 0 || strpos($k, 'vendor.') === 0) {
+            return $this->loadVendor()->get(substr($k, 7), $format, $formatTemplate);
         }
         return parent::get($k, $format, $formatTemplate);
     }
@@ -223,9 +225,13 @@ class msProduct extends modResource
         $original = parent::toArray($keyPrefix, $rawValues, $excludeLazy, $includeRelated);
         $additional = array_merge(
             $this->loadData()->toArray($keyPrefix, $rawValues, $excludeLazy, $includeRelated),
-            $this->loadOptions(),
-            $this->loadVendor()->toArray($keyPrefix . 'vendor_', $rawValues, $excludeLazy, $includeRelated)
+            $this->loadOptions()
         );
+        $vendorFields = $this->loadVendor()->toArray($keyPrefix . 'vendor_', $rawValues, $excludeLazy, $includeRelated);
+        // The vendor card exposes its own PK under the vendor_ prefix; it must not overwrite
+        // the product data vendor_id foreign key.
+        unset($vendorFields[$keyPrefix . 'vendor_id']);
+        $additional = array_merge($additional, $vendorFields);
         $intersect = array_keys(array_intersect_key($original, $additional));
         foreach ($intersect as $key) {
             unset($additional[$key]);
