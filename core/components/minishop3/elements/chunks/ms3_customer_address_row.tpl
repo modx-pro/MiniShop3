@@ -30,9 +30,9 @@
                     м. {$metro}
                 </p>
                 {/if}
-                {if $text_address}
+                {if $comment}
                 <p class="mb-1 small text-muted fst-italic">
-                    {$text_address}
+                    {$comment}
                 </p>
                 {/if}
             </div>

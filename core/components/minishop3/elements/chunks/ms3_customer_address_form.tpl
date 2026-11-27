@@ -120,14 +120,13 @@
                     {* Дом *}
                     <div class="col-md-3 mb-3">
                         <label for="building" class="form-label">
-                            {'ms3_customer_building' | lexicon} <span class="text-danger">*</span>
+                            {'ms3_customer_building' | lexicon}
                         </label>
                         <input type="text"
                                class="form-control {if $errors.building?}is-invalid{/if}"
                                id="building"
                                name="building"
-                               value="{$address.building}"
-                               required>
+                               value="{$address.building}">
                         {if $errors.building?}
                         <div class="invalid-feedback">{$errors.building}</div>
                         {/if}
@@ -196,15 +195,15 @@
 
                 {* Комментарий к адресу *}
                 <div class="mb-3">
-                    <label for="text_address" class="form-label">
+                    <label for="comment" class="form-label">
                         {'ms3_customer_comment' | lexicon}
                     </label>
-                    <textarea class="form-control {if $errors.text_address?}is-invalid{/if}"
-                              id="text_address"
-                              name="text_address"
-                              rows="2">{$address.text_address}</textarea>
-                    {if $errors.text_address?}
-                    <div class="invalid-feedback">{$errors.text_address}</div>
+                    <textarea class="form-control {if $errors.comment?}is-invalid{/if}"
+                              id="comment"
+                              name="comment"
+                              rows="2">{$address.comment}</textarea>
+                    {if $errors.comment?}
+                    <div class="invalid-feedback">{$errors.comment}</div>
                     {/if}
                     <div class="form-text">
                         {'ms3_customer_address_comment_help' | lexicon}
