@@ -41,7 +41,7 @@ class ProductDataController extends BaseApiController
             return Response::success($data);
         } catch (\Exception $e) {
             $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ProductDataController] ' . $e->getMessage());
-            return Response::error('Failed to load product data: ' . $e->getMessage(), HttpStatus::INTERNAL_SERVER_ERROR);
+            return Response::error('Failed to load product data', HttpStatus::INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -102,7 +102,7 @@ class ProductDataController extends BaseApiController
             return Response::error($message, $code);
         } catch (\Exception $e) {
             $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ProductDataController] ' . $e->getMessage());
-            return Response::error('Failed to save product data: ' . $e->getMessage(), HttpStatus::INTERNAL_SERVER_ERROR);
+            return Response::error('Failed to save product data', HttpStatus::INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -139,7 +139,7 @@ class ProductDataController extends BaseApiController
             return Response::success(['results' => $nodes, 'total' => count($nodes)]);
         } catch (\Exception $e) {
             $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ProductDataController] ' . $e->getMessage());
-            return Response::error('Failed to load category tree: ' . $e->getMessage(), HttpStatus::INTERNAL_SERVER_ERROR);
+            return Response::error('Failed to load category tree', HttpStatus::INTERNAL_SERVER_ERROR);
         }
     }
 

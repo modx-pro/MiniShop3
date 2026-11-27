@@ -74,12 +74,9 @@ trait ProcessesManagerConnectorRouteTrait
             $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[MiniShop3 API] ' . $e->getMessage());
             http_response_code(500);
 
-            return $this->failure(
-                $this->modx->getOption('ms3_api_debug', null, false)
-                    ? $e->getMessage()
-                    : 'Internal server error',
-                ['code' => 500]
-            );
+            // Details go to error.log only: exception text can contain SQL and
+            // absolute paths even for an authenticated manager (#931).
+            return $this->failure('Internal server error', ['code' => 500]);
         }
     }
 

@@ -118,8 +118,9 @@ try {
         $modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[MiniShop3 Action] ' . $e->getMessage());
         $modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[MiniShop3 Action] Stack trace: ' . $e->getTraceAsString());
 
-        // В режиме разработки показываем детали ошибки
-        if ($modx->getOption('debug', null, false)) {
+        // Detailed errors are gated by a dedicated setting AND a manager session:
+        // MODX `debug` alone must never expose traces to anonymous API clients (#931).
+        if (\MiniShop3\Utils\ApiDebugPolicy::allowed($modx)) {
             $response['debug'] = [
                 'exception' => get_class($e),
                 'message' => $e->getMessage(),

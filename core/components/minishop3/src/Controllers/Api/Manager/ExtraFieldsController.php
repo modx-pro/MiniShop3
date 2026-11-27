@@ -44,7 +44,7 @@ class ExtraFieldsController
             $this->logError($e);
 
             return Response::error(
-                'Failed to load extra fields: ' . $e->getMessage(),
+                'Failed to load extra fields',
                 HttpStatus::INTERNAL_SERVER_ERROR
             )->getData();
         }
@@ -97,7 +97,7 @@ class ExtraFieldsController
             $this->logError($e);
 
             return Response::error(
-                'Failed to create field: ' . $e->getMessage(),
+                'Failed to create field',
                 HttpStatus::INTERNAL_SERVER_ERROR
             )->getData();
         }
@@ -135,7 +135,7 @@ class ExtraFieldsController
             $this->logError($e);
 
             return Response::error(
-                'Failed to update field: ' . $e->getMessage(),
+                'Failed to update field',
                 HttpStatus::INTERNAL_SERVER_ERROR
             )->getData();
         }
@@ -167,7 +167,7 @@ class ExtraFieldsController
             $this->logError($e);
 
             return Response::error(
-                'Failed to delete field: ' . $e->getMessage(),
+                'Failed to delete field',
                 HttpStatus::INTERNAL_SERVER_ERROR
             )->getData();
         }
