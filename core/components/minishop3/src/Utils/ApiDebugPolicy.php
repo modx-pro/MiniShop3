@@ -13,6 +13,10 @@ use MODX\Revolution\modX;
  * accidentally and must never disclose file paths, line numbers or traces to
  * anonymous Web API clients. Both the dedicated MiniShop3 setting and an
  * authenticated manager session are required.
+ *
+ * `isAuthenticated('mgr')` alone can be true via `$_SESSION['mgrValidated']`
+ * for a web user sharing a PHP session with a manager, so the manager identity
+ * from the context token is checked too.
  */
 final class ApiDebugPolicy
 {
@@ -22,6 +26,13 @@ final class ApiDebugPolicy
             return false;
         }
 
-        return $modx->user !== null && $modx->user->isAuthenticated('mgr');
+        $user = $modx->user;
+        if ($user === null || !$user->isAuthenticated('mgr') || !$user->hasSessionContext('mgr')) {
+            return false;
+        }
+
+        $managerId = (int) ($_SESSION['modx.user.contextTokens']['mgr'] ?? 0);
+
+        return $managerId > 0 && (int) $user->get('id') === $managerId;
     }
 }

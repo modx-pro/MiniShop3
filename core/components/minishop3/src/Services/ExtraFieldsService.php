@@ -58,7 +58,7 @@ class ExtraFieldsService
             $migrationFile = $this->migrationGenerator->generateAddColumnMigration($field);
         } catch (\Exception $e) {
             $field->remove();
-            return ['success' => false, 'message' => 'Migration generation error: ' . $e->getMessage()];
+            return ['success' => false, 'message' => 'Migration generation error'];
         }
 
         $migrationResult = $this->runMigrations();
@@ -113,7 +113,7 @@ class ExtraFieldsService
             try {
                 $migrationFile = $this->migrationGenerator->generateDropColumnMigration($field);
             } catch (\Exception $e) {
-                return ['success' => false, 'message' => 'Migration generation error: ' . $e->getMessage()];
+                return ['success' => false, 'message' => 'Migration generation error'];
             }
 
             $migrationResult = $this->runMigrations();
@@ -321,8 +321,7 @@ class ExtraFieldsService
 
             return [
                 'success' => false,
-                'message' => 'Migration execution error: ' . $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'message' => 'Migration execution error'
             ];
         }
     }

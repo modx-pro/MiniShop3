@@ -92,7 +92,7 @@ class ManagerOrderMutationService
                 );
 
                 return $this->error(
-                    'Failed to create customer: ' . $e->getMessage(),
+                    'Failed to create customer',
                     HttpStatus::INTERNAL_SERVER_ERROR
                 );
             }

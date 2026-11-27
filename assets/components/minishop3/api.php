@@ -120,7 +120,16 @@ try {
 
         // Detailed errors are gated by a dedicated setting AND a manager session:
         // MODX `debug` alone must never expose traces to anonymous API clients (#931).
-        if (\MiniShop3\Utils\ApiDebugPolicy::allowed($modx)) {
+        // The component autoloader may be missing in the early-failure path, so
+        // load the policy from a path independent of $modx/$componentPath.
+        $policyClass = \MiniShop3\Utils\ApiDebugPolicy::class;
+        if (!class_exists($policyClass, false)) {
+            $policyFile = dirname(__DIR__, 3) . '/core/components/minishop3/src/Utils/ApiDebugPolicy.php';
+            if (is_file($policyFile)) {
+                require_once $policyFile;
+            }
+        }
+        if (class_exists($policyClass, false) && $policyClass::allowed($modx)) {
             $response['debug'] = [
                 'exception' => get_class($e),
                 'message' => $e->getMessage(),

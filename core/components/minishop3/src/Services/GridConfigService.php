@@ -308,7 +308,7 @@ class GridConfigService
 
             return [
                 'success' => false,
-                'message' => 'Error deleting field: ' . $e->getMessage(),
+                'message' => 'Error deleting field',
             ];
         }
     }
@@ -385,7 +385,7 @@ class GridConfigService
 
             return [
                 'success' => false,
-                'message' => 'Error adding field: ' . $e->getMessage(),
+                'message' => 'Error adding field',
             ];
         }
     }
@@ -462,7 +462,7 @@ class GridConfigService
 
             return [
                 'success' => false,
-                'message' => 'Error updating field: ' . $e->getMessage(),
+                'message' => 'Error updating field',
             ];
         }
     }

@@ -368,10 +368,7 @@ try {
 } catch (\Exception $e) {
     $modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ms3_products] Query error: ' . $e->getMessage());
 
-    if ($modx->getOption('debug', null, false)) {
-        return '<div class="alert alert-danger">Product loading error: ' . htmlspecialchars($e->getMessage()) . '</div>';
-    }
-
+    // Never render exception text to storefront visitors (#931); details are logged.
     $rows = [];
 }
 

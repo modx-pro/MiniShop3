@@ -9,62 +9,95 @@ use MODX\Revolution\modX;
 use PHPUnit\Framework\TestCase;
 
 /**
- * #931: exception details require both ms3_api_debug and a manager session.
+ * #931: exception details require ms3_api_debug and the same manager identity
+ * as the mgr context token — global debug or a web user must never be enough.
  */
 final class ApiDebugPolicyTest extends TestCase
 {
+    /** @var array<string, mixed> */
+    private array $sessionBackup = [];
+
     protected function setUp(): void
     {
         if (!class_exists(modX::class, false)) {
             require_once dirname(__DIR__, 2) . '/stubs/ModxStub.php';
         }
+        $this->sessionBackup = $_SESSION ?? [];
+        $_SESSION = [];
+    }
+
+    protected function tearDown(): void
+    {
+        $_SESSION = $this->sessionBackup;
     }
 
     public function testGlobalDebugSettingNeverExposesDetails(): void
     {
-        $modx = $this->modx(false, true, true);
-
-        self::assertFalse(ApiDebugPolicy::allowed($modx));
+        self::assertFalse(ApiDebugPolicy::allowed($this->modx(false, 7, true)));
     }
 
     public function testAnonymousClientNeverSeesDetailsEvenWithApiDebugEnabled(): void
     {
-        $modx = $this->modx(true, false, true);
-
-        self::assertFalse(ApiDebugPolicy::allowed($modx));
+        self::assertFalse(ApiDebugPolicy::allowed($this->modx(true, null, true)));
     }
 
-    public function testAbsentUserNeverSeesDetails(): void
+    public function testUnsetSettingNeverExposesDetails(): void
     {
-        $modx = $this->modx(true, null, false);
+        self::assertFalse(ApiDebugPolicy::allowed($this->modx(null, 7, false)));
+    }
 
-        self::assertFalse(ApiDebugPolicy::allowed($modx));
+    public function testWebUserWithMgrValidatedFlagDoesNotSeeDetails(): void
+    {
+        $_SESSION['mgrValidated'] = 1;
+
+        self::assertFalse(ApiDebugPolicy::allowed($this->modx(true, 7, false)));
+    }
+
+    public function testDifferentManagerIdentityDoesNotSeeDetails(): void
+    {
+        $_SESSION['modx.user.contextTokens'] = ['mgr' => 99];
+
+        self::assertFalse(ApiDebugPolicy::allowed($this->modx(true, 7, false)));
     }
 
     public function testManagerSeesDetailsOnlyWithApiDebugEnabled(): void
     {
-        self::assertTrue(ApiDebugPolicy::allowed($this->modx(true, true, false)));
-        self::assertFalse(ApiDebugPolicy::allowed($this->modx(false, true, false)));
+        $_SESSION['modx.user.contextTokens'] = ['mgr' => 7];
+
+        self::assertTrue(ApiDebugPolicy::allowed($this->modx(true, 7, false)));
+        self::assertFalse(ApiDebugPolicy::allowed($this->modx(false, 7, false)));
     }
 
     /**
-     * @param bool|null $manager null means no authenticated user
+     * @param bool|null $apiDebug null means the setting is not configured
+     * @param int|null $userId null means no authenticated user
      */
-    private function modx(bool $apiDebug, ?bool $manager, bool $globalDebug): modX
+    private function modx(?bool $apiDebug, ?int $userId, bool $globalDebug): modX
     {
         $modx = new modX();
-        $modx->optionOverrides = [
-            'ms3_api_debug' => $apiDebug,
-            'debug' => $globalDebug,
-        ];
-        $modx->user = $manager === null ? null : new class ($manager) {
-            public function __construct(private bool $manager)
+        $options = ['debug' => $globalDebug];
+        if ($apiDebug !== null) {
+            $options['ms3_api_debug'] = $apiDebug;
+        }
+        $modx->optionOverrides = $options;
+        $modx->user = $userId === null ? null : new class ($userId) {
+            public function __construct(private int $id)
             {
+            }
+
+            public function get($key)
+            {
+                return $key === 'id' ? $this->id : null;
             }
 
             public function isAuthenticated(string $context = ''): bool
             {
-                return $this->manager && $context === 'mgr';
+                return $context === 'mgr';
+            }
+
+            public function hasSessionContext(string $context = ''): bool
+            {
+                return $context === 'mgr';
             }
         };
 
