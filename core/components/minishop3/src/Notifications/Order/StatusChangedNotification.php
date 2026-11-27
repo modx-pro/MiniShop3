@@ -97,11 +97,8 @@ class StatusChangedNotification extends Notification
         }
 
         $subject = $config->get('subject');
-        $template = $config->get('template');
-
-        if (empty($template)) {
-            return null;
-        }
+        // Empty template means "use the packaged default", as the UI hint promises (#846).
+        $template = $config->get('template') ?: 'tpl.msEmail';
 
         // Тема уходит шаблоном как есть: плейсхолдеры в ней подставляет
         // EmailChannel::buildSubject() — после парсеров, а не до них (#888).

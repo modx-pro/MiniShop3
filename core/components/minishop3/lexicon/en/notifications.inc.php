@@ -26,8 +26,8 @@ $_lang['ms3_notification_position'] = 'Position';
 // Field hints
 $_lang['ms3_notification_subject_placeholder'] = 'Order #{$num} - status change';
 $_lang['ms3_notification_subject_hint'] = 'Supports Fenom syntax: {$num}, {\'ms3_order\' | lexicon}';
-$_lang['ms3_notification_template_placeholder'] = 'tpl.msEmail.order.new';
-$_lang['ms3_notification_template_hint'] = 'Chunk name for email body. Leave empty for default template.';
+$_lang['ms3_notification_template_placeholder'] = 'tpl.msEmail.new.customer';
+$_lang['ms3_notification_template_hint'] = 'Chunk name for email body. Leave empty to use the default tpl.msEmail chunk.';
 
 // Event types
 $_lang['ms3_notification_event_status_changed'] = 'Order status changed';

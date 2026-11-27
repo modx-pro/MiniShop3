@@ -26,8 +26,8 @@ $_lang['ms3_notification_position'] = 'Позиция';
 // Подсказки к полям
 $_lang['ms3_notification_subject_placeholder'] = 'Заказ #{$num} - изменение статуса';
 $_lang['ms3_notification_subject_hint'] = 'Поддерживается синтаксис Fenom: {$num}, {\'ms3_order\' | lexicon}';
-$_lang['ms3_notification_template_placeholder'] = 'tpl.msEmail.order.new';
-$_lang['ms3_notification_template_hint'] = 'Имя чанка для тела письма. Оставьте пустым для стандартного шаблона.';
+$_lang['ms3_notification_template_placeholder'] = 'tpl.msEmail.new.customer';
+$_lang['ms3_notification_template_hint'] = 'Имя чанка для тела письма. Если оставить пустым, используется стандартный чанк tpl.msEmail.';
 
 // Типы событий
 $_lang['ms3_notification_event_status_changed'] = 'Смена статуса заказа';

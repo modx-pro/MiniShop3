@@ -155,6 +155,13 @@ class EmailChannel implements ChannelInterface
 
             // Discard any stray output
             ob_end_clean();
+
+            if (is_string($body) && trim($body) === '') {
+                $this->modx->log(
+                    modX::LOG_LEVEL_ERROR,
+                    "[MiniShop3] Email notification chunk '{$chunkName}' rendered empty or was not found"
+                );
+            }
         }
 
         // Process MODX tags
