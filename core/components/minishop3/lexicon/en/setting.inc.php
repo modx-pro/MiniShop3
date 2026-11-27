@@ -192,7 +192,7 @@ $_lang['setting_ms3_email_verification_url_desc'] = 'If empty, the link points t
 $_lang['setting_ms3_email_verification_success_url'] = 'Redirect URL after successful email verification (optional)';
 $_lang['setting_ms3_email_verification_success_url_desc'] = 'Used when the user opens the verification link from email (html=1). If empty, site_url is used; the query parameter ms3_email_verified=1 is appended.';
 $_lang['setting_ms3_payment_secret'] = 'Payment secret key';
-$_lang['setting_ms3_payment_secret_desc'] = 'Secret key for generating payment notification signatures. Recommended to set a unique value for improved security.';
+$_lang['setting_ms3_payment_secret_desc'] = 'Secret key for order and payment notification signatures. Filled with a random value on install/upgrade when empty. Never use site_id: an empty secret disables order signing. Changing the key invalidates previously issued signatures.';
 $_lang['setting_ms3_payment_on_failed_status'] = 'Order status after failed/cancelled payment';
 $_lang['setting_ms3_payment_on_failed_status_desc'] = 'Order status ID applied when a payment attempt fails or is cancelled before paid. 0 leaves the order unchanged. Default is 0.';
 $_lang['setting_ms3_payment_on_refunded_status'] = 'Order status after full refund';

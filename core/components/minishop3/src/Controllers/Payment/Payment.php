@@ -186,21 +186,21 @@ abstract class Payment implements PaymentProviderInterface
      * Used to verify data authenticity when processing callback from payment system.
      * Uses secure HMAC-SHA256 algorithm with secret key.
      *
-     * System setting ms3_payment_secret must be configured.
-     * If not set, site_id will be used as fallback.
+     * System setting ms3_payment_secret must be configured. An empty secret
+     * fails closed: site_id is not a cryptographic secret and must never be
+     * used to sign orders (#930). Install/upgrade generates a random secret.
      *
      * @param msOrder $order Order to hash
      * @return string Order hash (64 hex characters)
+     * @throws \RuntimeException when ms3_payment_secret is empty
      */
     public function getOrderHash(msOrder $order): string
     {
-        $secret = $this->modx->getOption('ms3_payment_secret', null, '');
+        $secret = trim((string) $this->modx->getOption('ms3_payment_secret', null, ''));
 
-        if (empty($secret)) {
-            $secret = $this->modx->getOption('site_id');
-            $this->modx->log(
-                modX::LOG_LEVEL_WARN,
-                "[Payment] ms3_payment_secret not set, using site_id as fallback. Please set ms3_payment_secret for better security."
+        if ($secret === '') {
+            throw new \RuntimeException(
+                '[Payment] ms3_payment_secret is empty; order hash generation is disabled (#930).'
             );
         }
 
