@@ -15,9 +15,9 @@
                 {/if}
             </a>
 
-            {* Статус наличия *}
+            {* Статус наличия: остаток, а не вес товара *}
             <div class="position-absolute top-0 start-0 m-2">
-                {if $weight > 0?}
+                {if $stock > 0}
                     <span class="badge bg-success bg-opacity-90 text-white px-2 py-1 rounded-1">
                         <svg width="12" height="12" fill="currentColor" class="me-1">
                             <use href="#icon-check"/>
@@ -59,7 +59,11 @@
         <div class="card-body d-flex flex-column p-3" itemtype="http://schema.org/Offer" itemprop="offers" itemscope>
             <meta itemprop="price" content="{$price}">
             <meta itemprop="priceCurrency" content="RUB">
-            <link itemprop="availability" href="http://schema.org/InStock"/>
+            {if $stock > 0}
+                <link itemprop="availability" href="http://schema.org/InStock"/>
+            {else}
+                <link itemprop="availability" href="http://schema.org/OutOfStock"/>
+            {/if}
             <link itemprop="url" href="{$id | url : ['scheme' => 'full']}"/>
 
             {* Производитель и артикул в одной строке *}
