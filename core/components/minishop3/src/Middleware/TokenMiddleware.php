@@ -124,14 +124,14 @@ class TokenMiddleware implements MiddlewareInterface
                 if (!$isPublic) {
                     $this->modx->log(
                         modX::LOG_LEVEL_INFO,
-                        '[TokenMiddleware] Rejected expired API token: ' . substr($token, 0, 16) . '...'
+                        '[TokenMiddleware] Rejected expired API token.'
                     );
                     return $this->unauthorizedError(ApiErrorCode::TOKEN_EXPIRED, 'ms3_err_token_expired');
                 }
             } elseif (!$isPublic) {
                 $this->modx->log(
                     modX::LOG_LEVEL_ERROR,
-                    '[TokenMiddleware] Token not found in database. Token: ' . substr($token, 0, 16) . '...'
+                    '[TokenMiddleware] Token not found in database.'
                 );
                 // Keep machine-stable keys in message — ApiClient.isTokenError() matches them
                 return $this->unauthorizedError(ApiErrorCode::TOKEN_INVALID, 'ms3_err_token_invalid');

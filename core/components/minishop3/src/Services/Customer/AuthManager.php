@@ -199,10 +199,17 @@ class AuthManager
 
         $previousTokenObj = null;
         if ($previousToken !== '') {
+            // Hash-first lookup, then legacy plaintext fallback (transition, #927).
             $previousTokenObj = $this->modx->getObject(msCustomerToken::class, [
-                'token' => $previousToken,
+                'token_hash' => hash('sha256', $previousToken),
                 'type' => msCustomerToken::TYPE_API,
             ]);
+            if (!$previousTokenObj) {
+                $previousTokenObj = $this->modx->getObject(msCustomerToken::class, [
+                    'token' => $previousToken,
+                    'type' => msCustomerToken::TYPE_API,
+                ]);
+            }
         }
 
         // Always rotate API token on login/register (do not upgrade a planted guest token).
@@ -328,10 +335,17 @@ class AuthManager
         } else {
             $orphanToken = $tokenService->getBindableTokenString();
             if ($orphanToken !== '') {
+                // Hash-first lookup, then legacy plaintext fallback (transition, #927).
                 $tokenObj = $this->modx->getObject(msCustomerToken::class, [
-                    'token' => $orphanToken,
+                    'token_hash' => hash('sha256', $orphanToken),
                     'type' => msCustomerToken::TYPE_API,
                 ]);
+                if (!$tokenObj) {
+                    $tokenObj = $this->modx->getObject(msCustomerToken::class, [
+                        'token' => $orphanToken,
+                        'type' => msCustomerToken::TYPE_API,
+                    ]);
+                }
                 if ($tokenObj) {
                     $tokenObj->remove();
                 }
@@ -472,11 +486,14 @@ class AuthManager
         $expiresAt = date('Y-m-d H:i:s', time() + $ttl);
 
         $token->set('customer_id', $customer->id);
-        $token->set('token', $tokenString);
+        // Store only the hash; plaintext is held in memory for this request (#927).
+        $token->set('token_hash', hash('sha256', $tokenString));
+        $token->set('token', '');
         $token->set('type', $type);
         $token->set('expires_at', $expiresAt);
 
         if ($token->save()) {
+            $token->setPlainToken($tokenString);
             $this->modx->log(
                 modX::LOG_LEVEL_INFO,
                 "[AuthManager] Created {$type} token for customer #{$customer->id}, expires: {$expiresAt}"
@@ -502,8 +519,14 @@ class AuthManager
      * @param string $type Token type (api, refresh, magic_link, email_verification, password_reset)
      * @return msCustomer|null
      */
-    public function validateToken(string $tokenString, string $type = 'api'): ?ms_customer
+    public function validateToken(string $tokenString, string $type = 'api'): ?msCustomer
     {
+        // After #927 the legacy `token` column is empty for all new rows and is
+        // no longer UNIQUE. An empty input must never match an arbitrary row.
+        if ($tokenString === '') {
+            return null;
+        }
+
         // 1. Try hash lookup (new tokens)
         $token = $this->modx->getObject(msCustomerToken::class, [
             'token_hash' => hash('sha256', $tokenString),
@@ -521,7 +544,7 @@ class AuthManager
         if (!$token) {
             $this->modx->log(
                 modX::LOG_LEVEL_DEBUG,
-                "[AuthManager] Token not found"
+                "[AuthManager] Token not found (type: {$type})"
             );
             return null;
         }
@@ -529,7 +552,7 @@ class AuthManager
         if ($token->isExpired()) {
             $this->modx->log(
                 modX::LOG_LEVEL_DEBUG,
-                "[AuthManager] Token expired"
+                "[AuthManager] Token expired (type: {$type})"
             );
             $token->remove();
             return null;
@@ -538,7 +561,7 @@ class AuthManager
         if (in_array($type, ['magic_link', 'email_verification']) && $token->get('used_at')) {
             $this->modx->log(
                 modX::LOG_LEVEL_DEBUG,
-                "[AuthManager] Token already used"
+                "[AuthManager] Token already used (type: {$type})"
             );
             return null;
         }
@@ -549,10 +572,12 @@ class AuthManager
         if (!$customer) {
             $this->modx->log(
                 modX::LOG_LEVEL_ERROR,
-                "[AuthManager] Customer not found for token"
+                "[AuthManager] Customer not found for token (type: {$type})"
             );
             return null;
         }
+
+        $token->setPlainToken($tokenString);
 
         if (in_array($type, ['magic_link', 'email_verification'])) {
             $token->set('used_at', date('Y-m-d H:i:s'));

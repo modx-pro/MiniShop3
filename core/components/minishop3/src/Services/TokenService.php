@@ -94,8 +94,8 @@ class TokenService
      * Persist an API token row and hydrate session/cookie from that DB row.
      *
      * Single mint/update path for guest, login bind, and logout anonymous token.
-     * Stores SHA-256 hash of the token in `token_hash` column; plaintext
-     * `token` column is kept for transition period (old tokens).
+     * Only the SHA-256 hash is stored in `token_hash` (#927); the plaintext is
+     * held in memory for this request (get('token'), cookie, session, API response).
      *
      * @param int $customerId 0 = guest
      * @param string|null $reuseToken update this token when present in DB; otherwise mint
@@ -112,28 +112,35 @@ class TokenService
         $tokenObj = null;
 
         if ($reuseToken !== null && $reuseToken !== '') {
+            // Hash-first lookup, then legacy plaintext fallback (transition, #927).
             $tokenObj = $this->modx->getObject(msCustomerToken::class, [
-                'token' => $reuseToken,
+                'token_hash' => hash('sha256', $reuseToken),
                 'type' => msCustomerToken::TYPE_API,
             ]);
+            if (!$tokenObj) {
+                $tokenObj = $this->modx->getObject(msCustomerToken::class, [
+                    'token' => $reuseToken,
+                    'type' => msCustomerToken::TYPE_API,
+                ]);
+            }
         }
 
         if ($tokenObj) {
+            $plainToken = (string)$reuseToken;
             $tokenObj->set('customer_id', $customerId);
             $tokenObj->set('expires_at', $expiresAt);
+            // Lazy-upgrade legacy rows: keep the hash, drop the plaintext.
+            $tokenObj->set('token_hash', hash('sha256', $plainToken));
+            $tokenObj->set('token', '');
         } else {
+            $plainToken = bin2hex(random_bytes(32));
             $tokenObj = $this->modx->newObject(msCustomerToken::class);
             $tokenObj->set('customer_id', $customerId);
             $tokenObj->set('type', msCustomerToken::TYPE_API);
             $tokenObj->set('expires_at', $expiresAt);
             $tokenObj->set('created_at', date('Y-m-d H:i:s'));
-
-            // Generate new token and store its hash
-            $tokenString = bin2hex(random_bytes(32));
-            $tokenHash = hash('sha256', $tokenString);
-            $tokenObj->set('token_hash', $tokenHash);
-            // Keep plaintext token for transition period (old clients)
-            $tokenObj->set('token', $tokenString);
+            $tokenObj->set('token_hash', hash('sha256', $plainToken));
+            $tokenObj->set('token', '');
         }
 
         if (!$tokenObj->save()) {
@@ -144,6 +151,7 @@ class TokenService
             return null;
         }
 
+        $tokenObj->setPlainToken($plainToken);
         $this->syncSessionFromToken($tokenObj);
 
         return $tokenObj;
@@ -187,7 +195,7 @@ class TokenService
         if ($tokenObj->isExpired()) {
             $this->modx->log(
                 modX::LOG_LEVEL_INFO,
-                '[TokenService] API token expired, removing. Token: ' . substr($tokenString, 0, 16) . '...'
+                '[TokenService] API token expired, removing.'
             );
             $tokenObj->remove();
 
@@ -197,6 +205,9 @@ class TokenService
         if (!$this->apiTokenPrincipalAllowed($tokenObj)) {
             return ['token' => null, 'reason' => 'missing'];
         }
+
+        // Hold the presented plaintext in memory for cookie/session hydration (#927).
+        $tokenObj->setPlainToken($tokenString);
 
         return ['token' => $tokenObj, 'reason' => 'ok'];
     }
@@ -264,17 +275,15 @@ class TokenService
 
     /**
      * Renew expired API token TTL and hydrate $_SESSION from DB row.
-     * Uses token_hash for cookie when available (new tokens), falls back to
-     * plaintext token for transition period (old tokens).
+     * Cookie/session receive the request plaintext (minted or presented),
+     * never the stored hash (#927).
      */
     public function syncSessionFromToken(msCustomerToken $tokenObj): void
     {
         $this->renewTokenIfExpired($tokenObj);
         $this->applyTokenToSession($tokenObj);
 
-        // Prefer hash for cookie (new tokens), fallback to plaintext (transition)
-        $cookieToken = $tokenObj->get('token_hash')
-            ?? $tokenObj->get('token');
+        $cookieToken = (string)$tokenObj->get('token');
         if ($cookieToken !== '') {
             CookieHelper::setTokenCookie($this->modx, $cookieToken);
         }
@@ -315,6 +324,8 @@ class TokenService
             return $this->generateCustomerToken($ttl);
         }
 
+        $tokenObj->setPlainToken($token);
+
         $expires = time() + $ttl;
         $tokenObj->set('expires_at', date('Y-m-d H:i:s', $expires));
         if (!$tokenObj->save()) {
@@ -326,9 +337,7 @@ class TokenService
         }
 
         $this->applyTokenToSession($tokenObj);
-        // Set cookie from hash when available, otherwise plaintext
-        $cookieToken = $tokenObj->get('token_hash')
-            ?? $token;
+        $cookieToken = (string)$tokenObj->get('token');
         if ($cookieToken !== '') {
             CookieHelper::setTokenCookie($this->modx, $cookieToken);
         }
@@ -767,6 +776,8 @@ class TokenService
             return;
         }
 
+        $tokenObj->setPlainToken($cookieToken);
+
         if ($tokenObj->isExpired() && !$this->renewTokenIfExpired($tokenObj)) {
             return;
         }
@@ -815,10 +826,9 @@ class TokenService
             return false;
         }
 
+        $tokenObj->setPlainToken($token);
         $this->applyTokenToSession($tokenObj);
-        // Set cookie from hash when available, otherwise plaintext
-        $cookieToken = $tokenObj->get('token_hash')
-            ?? (string)$tokenObj->get('token');
+        $cookieToken = (string)$tokenObj->get('token');
         if ($cookieToken !== '') {
             CookieHelper::setTokenCookie($this->modx, $cookieToken);
         }
@@ -879,7 +889,7 @@ class TokenService
             $_SESSION['ms3'] = [];
         }
 
-        $_SESSION['ms3']['customer_token'] = $tokenObj->get('token');
+        $_SESSION['ms3']['customer_token'] = (string)$tokenObj->get('token');
         $_SESSION['ms3']['customer_token_expires'] = strtotime($tokenObj->get('expires_at'));
 
         $tokenCustomerId = (int)$tokenObj->get('customer_id');

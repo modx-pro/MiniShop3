@@ -527,13 +527,14 @@
     <object class="msCustomerToken" table="ms3_customer_tokens" extends="xPDO\Om\xPDOSimpleObject">
         <field key="customer_id" dbtype="int" precision="10" attributes="unsigned" phptype="integer" null="false" default="0"/>
         <field key="token" dbtype="varchar" precision="128" phptype="string" null="false" default=""/>
+        <field key="token_hash" dbtype="varchar" precision="64" phptype="string" null="true" default="NULL"/>
         <field key="type" dbtype="enum" precision="'api','refresh','magic_link','email_verification','password_reset'" phptype="string" null="false" default="api"/>
         <field key="expires_at" dbtype="datetime" phptype="datetime" null="false"/>
         <field key="created_at" dbtype="datetime" phptype="datetime" null="false" default="CURRENT_TIMESTAMP"/>
         <field key="used_at" dbtype="datetime" phptype="datetime" null="true"/>
 
-        <index alias="idx_token_unique" name="idx_token_unique" primary="false" unique="true" type="BTREE">
-            <column key="token" length="" collation="A" null="false"/>
+        <index alias="idx_token_hash" name="idx_token_hash" primary="false" unique="true" type="BTREE">
+            <column key="token_hash" length="" collation="A" null="true"/>
         </index>
         <index alias="idx_customer_type" name="idx_customer_type" primary="false" unique="false" type="BTREE">
             <column key="customer_id" length="" collation="A" null="false"/>

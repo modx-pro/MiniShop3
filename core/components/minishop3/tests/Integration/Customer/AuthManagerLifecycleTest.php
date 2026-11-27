@@ -174,7 +174,7 @@ class AuthManagerLifecycleTest extends TestCase
         self::assertSame($loginToken, $_COOKIE['ms3_token'] ?? null);
 
         // Previous guest token must be gone (anti fixation).
-        self::assertNull($this->store->findToken(['token' => $guestToken, 'type' => msCustomerToken::TYPE_API]));
+        self::assertNull($this->findTokenRowByPlain($guestToken));
         self::assertSame(1, $this->store->countTokens((int) $customer->id, msCustomerToken::TYPE_API));
         self::assertContains('transfer:' . $guestToken . '=>' . $loginToken, $this->draftCalls);
         self::assertSame(1, $this->prefillCalls);
@@ -186,7 +186,7 @@ class AuthManagerLifecycleTest extends TestCase
         $guestAfter = $_SESSION['ms3']['customer_token'] ?? '';
         self::assertNotSame('', $guestAfter);
         self::assertNotSame($loginToken, $guestAfter);
-        $guestRow = $this->store->findToken(['token' => $guestAfter, 'type' => msCustomerToken::TYPE_API]);
+        $guestRow = $this->findTokenRowByPlain($guestAfter);
         self::assertNotNull($guestRow);
         self::assertSame(0, (int) $guestRow['customer_id']);
     }
@@ -216,7 +216,7 @@ class AuthManagerLifecycleTest extends TestCase
 
         $session = $auth->establishCustomerSession($authed);
         self::assertNotNull($session);
-        self::assertNull($this->store->findToken(['token' => $plantedToken, 'type' => msCustomerToken::TYPE_API]));
+        self::assertNull($this->findTokenRowByPlain($plantedToken));
         self::assertTrue(
             (bool) array_filter(
                 $this->draftCalls,
@@ -249,8 +249,8 @@ class AuthManagerLifecycleTest extends TestCase
         self::assertNotNull($rotated);
         self::assertNotSame($oldToken, $rotated['token']);
         self::assertSame((int) $customer->id, $rotated['customer_id']);
-        self::assertNull($this->store->findToken(['token' => $oldToken, 'type' => msCustomerToken::TYPE_API]));
-        self::assertNotNull($this->store->findToken(['token' => $rotated['token'], 'type' => msCustomerToken::TYPE_API]));
+        self::assertNull($this->findTokenRowByPlain($oldToken));
+        self::assertNotNull($this->findTokenRowByPlain($rotated['token']));
         self::assertContains('transfer:' . $oldToken . '=>' . $rotated['token'], $this->draftCalls);
 
         self::assertNull($tokenService->rotateApiToken($oldToken));
@@ -303,7 +303,10 @@ class AuthManagerLifecycleTest extends TestCase
 
         $token = $auth->createToken($customer, msCustomerToken::TYPE_API, 3600);
         self::assertNotNull($token);
-        $validated = $auth->validateToken((string) $token->get('token'), msCustomerToken::TYPE_API);
+        self::assertNotEmpty((string) $token->getPlainToken());
+        self::assertSame(hash('sha256', (string) $token->getPlainToken()), $token->get('token_hash'));
+        self::assertNotSame('', (string) $token->getPlainToken());
+        $validated = $auth->validateToken((string) $token->getPlainToken(), msCustomerToken::TYPE_API);
         self::assertNotNull($validated);
         self::assertSame((int) $customer->id, (int) $validated->id);
 
@@ -335,10 +338,34 @@ class AuthManagerLifecycleTest extends TestCase
         $token = $auth->createToken($customer, msCustomerToken::TYPE_PASSWORD_RESET, 3600);
         self::assertNotNull($token);
         self::assertSame(msCustomerToken::TYPE_PASSWORD_RESET, $token->get('type'));
-        $validated = $auth->validateToken((string) $token->get('token'), msCustomerToken::TYPE_PASSWORD_RESET);
+        self::assertNotEmpty((string) $token->getPlainToken());
+        self::assertSame(hash('sha256', (string) $token->getPlainToken()), $token->get('token_hash'));
+        self::assertNotSame('', (string) $token->getPlainToken());
+        $validated = $auth->validateToken((string) $token->getPlainToken(), msCustomerToken::TYPE_PASSWORD_RESET);
         self::assertNotNull($validated);
         self::assertSame((int) $customer->id, (int) $validated->id);
-        self::assertNull($auth->validateToken((string) $token->get('token'), msCustomerToken::TYPE_API));
+        self::assertNull($auth->validateToken((string) $token->getPlainToken(), msCustomerToken::TYPE_API));
+    }
+
+    public function testEmptyTokenNeverResolvesAnyCustomer(): void
+    {
+        $customer = $this->seedCustomer([
+            'email' => 'empty-token@example.com',
+            'is_active' => 1,
+            'is_blocked' => 0,
+        ]);
+        $modx = $this->makeModx();
+        $auth = $this->makeAuthManager($modx);
+
+        $token = $auth->createToken($customer, msCustomerToken::TYPE_PASSWORD_RESET, 3600);
+        self::assertNotNull($token);
+
+        // #927 cleared `token` for every row and dropped its UNIQUE index,
+        // so a blank input used to resolve an arbitrary reset row.
+        self::assertNull($auth->validateToken('', msCustomerToken::TYPE_PASSWORD_RESET));
+        self::assertNotNull(
+            $auth->validateToken((string) $token->getPlainToken(), msCustomerToken::TYPE_PASSWORD_RESET)
+        );
     }
 
     public function testHandleFailedLoginBlocksAfterMaxAttempts(): void
@@ -415,6 +442,59 @@ class AuthManagerLifecycleTest extends TestCase
     /**
      * @param array<string, mixed> $fields
      */
+    public function testTokenHashIsStoredInsteadOfPlaintext(): void
+    {
+        $customer = $this->seedCustomer([
+            'email' => 'hashed@example.com',
+            'is_active' => 1,
+            'is_blocked' => 0,
+        ]);
+        $modx = $this->makeModx();
+        $auth = $this->makeAuthManager($modx);
+
+        $token = $auth->createToken($customer, msCustomerToken::TYPE_API, 3600);
+        self::assertNotNull($token);
+        $plainToken = (string) $token->getPlainToken();
+        self::assertSame(hash('sha256', $plainToken), (string) $token->get('token_hash'));
+        self::assertNotSame('', $plainToken);
+
+        $tokenRow = $this->store->findToken([
+            'token_hash' => hash('sha256', $plainToken),
+            'type' => msCustomerToken::TYPE_API,
+        ]);
+        self::assertNotNull($tokenRow);
+        self::assertSame((int) $customer->id, (int) $tokenRow['customer_id']);
+        self::assertSame('', (string) $tokenRow['token']);
+        self::assertNull($this->store->findToken(['token' => $plainToken, 'type' => msCustomerToken::TYPE_API]));
+    }
+
+    public function testEstablishedSessionStoresHashOnly(): void
+    {
+        $customer = $this->seedCustomer([
+            'email' => 'hash-only-session@example.com',
+            'is_active' => 1,
+            'is_blocked' => 0,
+        ]);
+        $modx = $this->makeModx();
+        $tokenService = new TokenService($modx);
+
+        $auth = $this->makeAuthManager($modx);
+        $session = $auth->establishCustomerSession($auth->authenticate([
+            'email' => 'hash-only-session@example.com',
+            'password' => 'secret',
+        ]));
+
+        self::assertNotNull($session);
+        $token = $tokenService->persistApiToken((int) $customer->id, $session['token'], 3600);
+        self::assertNotNull($token);
+        self::assertNotSame('', (string) $token->getPlainToken());
+        self::assertSame(hash('sha256', (string) $token->getPlainToken()), (string) $token->get('token_hash'));
+
+        $resolved = $tokenService->resolveApiToken((string) $token->getPlainToken());
+        self::assertSame('ok', $resolved['reason']);
+        self::assertNotNull($resolved['token']);
+    }
+
     private function seedCustomer(array $fields): StoredMsCustomer
     {
         if (!isset($fields['password']) || $fields['password'] === '') {
@@ -430,6 +510,14 @@ class AuthManagerLifecycleTest extends TestCase
         $customer->hydrate($row);
 
         return $customer;
+    }
+
+    private function findTokenRowByPlain(string $token): ?array
+    {
+        return $this->store->findToken([
+            'token_hash' => hash('sha256', $token),
+            'type' => msCustomerToken::TYPE_API,
+        ]);
     }
 
     /**

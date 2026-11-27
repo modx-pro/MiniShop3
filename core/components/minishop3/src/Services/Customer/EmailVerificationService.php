@@ -94,11 +94,15 @@ class EmailVerificationService
         } else {
             /** @var msCustomerToken $tokenObj */
             $tokenObj = $this->modx->newObject(msCustomerToken::class);
+            $tokenString = bin2hex(random_bytes(64));
             $tokenObj->set('customer_id', $customer->id);
-            $tokenObj->set('token', bin2hex(random_bytes(64)));
+            // Store only the hash; plaintext is held in memory for this request (#927).
+            $tokenObj->set('token_hash', hash('sha256', $tokenString));
+            $tokenObj->set('token', '');
             $tokenObj->set('type', 'email_verification');
             $tokenObj->set('expires_at', date('Y-m-d H:i:s', time() + $ttl));
             $tokenObj->save();
+            $tokenObj->setPlainToken($tokenString);
         }
 
         if (!$tokenObj) {
@@ -247,14 +251,27 @@ class EmailVerificationService
      */
     public function verifyToken(string $token): ?msCustomer
     {
+        // Empty legacy `token` is shared by all #927 rows, so a blank input
+        // must not resolve an arbitrary verification row via the fallback.
+        if ($token === '') {
+            return null;
+        }
+
         if ($this->authManager) {
             $customer = $this->authManager->validateToken($token, 'email_verification');
         } else {
+            // Hash-first lookup, then legacy plaintext fallback (transition, #927).
             /** @var msCustomerToken $tokenObj */
             $tokenObj = $this->modx->getObject(msCustomerToken::class, [
-                'token' => $token,
+                'token_hash' => hash('sha256', $token),
                 'type' => 'email_verification',
             ]);
+            if (!$tokenObj) {
+                $tokenObj = $this->modx->getObject(msCustomerToken::class, [
+                    'token' => $token,
+                    'type' => 'email_verification',
+                ]);
+            }
 
             if (!$tokenObj) {
                 return null;
@@ -281,7 +298,7 @@ class EmailVerificationService
         if (!$customer) {
             $this->modx->log(
                 modX::LOG_LEVEL_DEBUG,
-                "[EmailVerificationService] Invalid or expired token: {$token}"
+                "[EmailVerificationService] Invalid or expired token"
             );
             return null;
         }
