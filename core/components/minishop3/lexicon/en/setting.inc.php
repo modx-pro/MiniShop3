@@ -199,6 +199,8 @@ $_lang['setting_ms3_payment_on_refunded_status'] = 'Order status after full refu
 $_lang['setting_ms3_payment_on_refunded_status_desc'] = 'Order status ID applied after a full refund. 0 leaves the order unchanged. Partial refunds never change order status. Default is the canceled status (5).';
 
 // Currency and Formatting Settings
+$_lang['setting_ms3_currency_code'] = 'ISO currency code';
+$_lang['setting_ms3_currency_code_desc'] = 'ISO 4217 currency code (e.g. RUB, KZT, UAH, EUR) used for schema.org markup and payment attempt log. Default is RUB.';
 $_lang['setting_ms3_currency_symbol'] = 'Currency symbol';
 $_lang['setting_ms3_currency_symbol_desc'] = 'Currency symbol for price display. Default is "₽" (ruble). Examples: $, €, £, ₽, ₴, ¥, ₸.';
 $_lang['setting_ms3_currency_position'] = 'Currency symbol position';

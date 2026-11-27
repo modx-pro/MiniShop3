@@ -287,7 +287,9 @@ class PaymentService
             (int) $payment->get('id'),
             $provider,
             (float) $order->get('cost'),
-            is_string($data['currency'] ?? null) ? $data['currency'] : 'RUB',
+            is_string($data['currency'] ?? null) && $data['currency'] !== ''
+                ? $data['currency']
+                : (string) $this->modx->getOption('ms3_currency_code', null, 'RUB'),
             $externalId,
             $payload
         );

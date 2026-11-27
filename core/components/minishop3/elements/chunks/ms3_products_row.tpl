@@ -1,3 +1,4 @@
+{set $currency_code = 'ms3_currency_code' | option}
 <div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-4 ms3-product-card" data-product-id="{$id}" data-ms3-product-card>
     <div class="card h-100 border-0 shadow-sm product-card" itemtype="http://schema.org/Product" itemscope>
         <meta itemprop="description" content="{($description ?: $pagetitle) | e}">
@@ -58,7 +59,7 @@
         {* Содержимое карточки *}
         <div class="card-body d-flex flex-column p-3" itemtype="http://schema.org/Offer" itemprop="offers" itemscope>
             <meta itemprop="price" content="{$price}">
-            <meta itemprop="priceCurrency" content="RUB">
+            <meta itemprop="priceCurrency" content="{$currency_code | e}">
             <link itemprop="availability" href="http://schema.org/InStock"/>
             <link itemprop="url" href="{$id | url : ['scheme' => 'full']}"/>
 

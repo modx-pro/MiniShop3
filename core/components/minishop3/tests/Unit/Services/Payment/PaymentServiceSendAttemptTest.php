@@ -49,6 +49,28 @@ final class PaymentServiceSendAttemptTest extends TestCase
         self::assertSame(31, $row['order_id']);
     }
 
+    public function testSendWithoutProviderCurrencyUsesConfiguredCurrency(): void
+    {
+        $store = new InMemoryPaymentAttemptStore();
+        $lifecycle = new PaymentLifecycleService($store, new modX(), new CallbackOrderStatusChanger(static fn (int $orderId, int $statusId): bool => true));
+        $service = new PaymentService($this->modxWithLifecycle($lifecycle, ['ms3_currency_code' => 'KZT']));
+        $order = new StubMsOrder(['id' => 311, 'cost' => 10, 'payment_id' => 9]);
+        $payment = new StubMsPayment(['id' => 9, 'class' => 'AsyncPay']);
+
+        $service->sendToPaymentGateway($payment, $this->sender([
+            'success' => true,
+            'data' => [
+                'external_id' => 'gw-311',
+                'payment_link' => 'https://pay.example/311',
+                'currency' => '',
+            ],
+        ]), $order);
+
+        $row = $store->findByExternalId('AsyncPay', 'gw-311', 9);
+        self::assertNotNull($row);
+        self::assertSame('KZT', $row['currency']);
+    }
+
     public function testSendWithoutExternalIdDoesNotInitiate(): void
     {
         $store = new InMemoryPaymentAttemptStore();
@@ -166,12 +188,14 @@ final class PaymentServiceSendAttemptTest extends TestCase
         };
     }
 
-    private function modxWithLifecycle(PaymentLifecycleService $lifecycle): modX
+    /** @param array<string, mixed> $optionOverrides */
+    private function modxWithLifecycle(PaymentLifecycleService $lifecycle, array $optionOverrides = []): modX
     {
-        return new class ($lifecycle) extends modX {
-            public function __construct(private PaymentLifecycleService $lifecycle)
+        return new class ($lifecycle, $optionOverrides) extends modX {
+            public function __construct(private PaymentLifecycleService $lifecycle, array $optionOverrides)
             {
                 parent::__construct();
+                $this->optionOverrides = $optionOverrides;
                 $this->services = new class ($lifecycle) {
                     public function __construct(private PaymentLifecycleService $lifecycle)
                     {

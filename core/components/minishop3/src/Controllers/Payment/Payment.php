@@ -41,7 +41,7 @@ use MODX\Revolution\modX;
  *         $client->setAuth($this->shopId, $this->secretKey);
  *
  *         $payment = $client->createPayment([
- *             'amount' => ['value' => $order->get('cost'), 'currency' => 'RUB'],
+ *             'amount' => ['value' => $order->get('cost'), 'currency' => $modx->getOption('ms3_currency_code', null, 'RUB')],
  *             'confirmation' => ['type' => 'redirect', 'return_url' => '...'],
  *             'description' => "Order #{$order->get('num')}",
  *             'metadata' => ['order_hash' => $this->getOrderHash($order)],

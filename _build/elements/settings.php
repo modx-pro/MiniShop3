@@ -533,6 +533,11 @@ return [
     ],
 
     // Currency and Formatting Settings
+    'ms3_currency_code' => [
+        'value' => 'RUB',
+        'xtype' => 'textfield',
+        'area' => 'ms3_product',
+    ],
     'ms3_currency_symbol' => [
         // Must match Format::DEFAULT_CURRENCY_SYMBOL (U+20BD); escape is ASCII-safe for transport builds
         'value' => "\u{20BD}",
