@@ -36,6 +36,13 @@ class GetList extends GetListProcessor
     {
         $this->ms3 = $this->modx->services->get('ms3');
 
+        // #901: a missing key is a caller typo (e.g. productId) and must be
+        // reported, while an explicit product_id = 0 is a valid query for
+        // orphan files / a new product and still returns an empty list.
+        if ($this->getProperty('product_id', null) === null) {
+            return $this->modx->lexicon('ms3_err_product_id_ns');
+        }
+
         $productId = (int)$this->getProperty('product_id');
 
         // Товар грузился, но результат никуда не влиял: при закрытом товаре

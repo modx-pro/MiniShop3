@@ -96,9 +96,8 @@ export function useGalleryApi() {
       const data = await connectorRequest(
         'MiniShop3\\Processors\\Gallery\\GetList',
         {
+          // GetList reads product_id, parent_id, query, start and limit only (#901).
           product_id: productId,
-          parent: 0,
-          type: 'image',
           query: query || undefined,
           start,
           limit,
