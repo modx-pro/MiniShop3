@@ -70,43 +70,97 @@ final class ImportCsvRowProcessor
             return true;
         }
 
-        if (empty($data['pagetitle'])) {
-            $this->ctx->modx->log(
-                modX::LOG_LEVEL_ERROR,
-                "[Import] Row {$this->ctx->rows}: Missing required field 'pagetitle'"
-            );
-            $this->ctx->errors++;
-
-            return false;
-        }
-
-        if (empty($data['parent'])) {
-            $this->ctx->modx->log(
-                modX::LOG_LEVEL_ERROR,
-                "[Import] Row {$this->ctx->rows}: Missing required field 'parent'"
-            );
-            $this->ctx->errors++;
-
-            return false;
-        }
-
-        $parentId = (int) $data['parent'];
-        $parent = $this->ctx->modx->getObject(modResource::class, ['id' => $parentId]);
-        if (!$parent) {
-            $this->ctx->modx->log(
-                modX::LOG_LEVEL_ERROR,
-                "[Import] Row {$this->ctx->rows}: Parent resource with id={$parentId} not found"
-            );
-            $this->ctx->errors++;
-
-            return false;
-        }
-
         if (empty($data['class_key'])) {
             $data['class_key'] = msProduct::class;
         }
-        if (empty($data['context_key'])) {
-            $data['context_key'] = $parent->get('context_key');
+
+        // Resolve the product first: pagetitle/parent are creation-only fields
+        // and must not be required when updating by the unique key (#853).
+        $exists = $this->upserter->findExistingProduct($data);
+        $key = $this->ctx->params['key'];
+        $keyValue = $data[$key] ?? 'N/A';
+
+        if ($exists) {
+            if (!$this->ctx->params['update']) {
+                $this->ctx->modx->log(
+                    modX::LOG_LEVEL_ERROR,
+                    "Skipping line with $key = \"$keyValue\" because update is disabled."
+                );
+                $this->ctx->skipped++;
+
+                return true;
+            }
+
+            $this->ctx->modx->log(modX::LOG_LEVEL_INFO, "Key $key = $keyValue has duplicate.");
+            $data['id'] = $exists->id;
+            $action = 'Update';
+
+            // A blank creation field in an update file must not wipe the value
+            // already stored on the product (#853 review).
+            foreach (['pagetitle', 'parent'] as $creationField) {
+                if (
+                    array_key_exists($creationField, $data)
+                    && ($data[$creationField] === null || trim((string) $data[$creationField]) === '')
+                ) {
+                    unset($data[$creationField]);
+                }
+            }
+
+            if (!empty($data['parent'])) {
+                $parentId = (int) $data['parent'];
+                $parent = $this->ctx->modx->getObject(modResource::class, ['id' => $parentId]);
+                if (!$parent) {
+                    $this->ctx->modx->log(
+                        modX::LOG_LEVEL_ERROR,
+                        "[Import] Row {$this->ctx->rows}: Parent resource with id={$parentId} not found"
+                    );
+                    $this->ctx->errors++;
+
+                    return false;
+                }
+                $data['parent'] = $parentId;
+                $data['context_key'] = $parent->get('context_key');
+            } elseif (empty($data['context_key'])) {
+                $data['context_key'] = $exists->get('context_key');
+            }
+        } else {
+            $action = 'Create';
+
+            if (empty($data['pagetitle'])) {
+                $this->ctx->modx->log(
+                    modX::LOG_LEVEL_ERROR,
+                    "[Import] Row {$this->ctx->rows}: Missing required field 'pagetitle'"
+                );
+                $this->ctx->errors++;
+
+                return false;
+            }
+
+            if (empty($data['parent'])) {
+                $this->ctx->modx->log(
+                    modX::LOG_LEVEL_ERROR,
+                    "[Import] Row {$this->ctx->rows}: Missing required field 'parent'"
+                );
+                $this->ctx->errors++;
+
+                return false;
+            }
+
+            $parentId = (int) $data['parent'];
+            $parent = $this->ctx->modx->getObject(modResource::class, ['id' => $parentId]);
+            if (!$parent) {
+                $this->ctx->modx->log(
+                    modX::LOG_LEVEL_ERROR,
+                    "[Import] Row {$this->ctx->rows}: Parent resource with id={$parentId} not found"
+                );
+                $this->ctx->errors++;
+
+                return false;
+            }
+
+            if (empty($data['context_key'])) {
+                $data['context_key'] = $parent->get('context_key');
+            }
         }
 
         $data['tvs'] = $this->ctx->params['tv_enabled'] || $tvData !== [];
@@ -124,27 +178,6 @@ final class ImportCsvRowProcessor
         }
 
         $this->ctx->modx->log(modX::LOG_LEVEL_INFO, "Array with importing data: \n" . print_r($data, true));
-
-        $exists = $this->upserter->findExistingProduct($data);
-
-        $action = 'Create';
-        if ($exists) {
-            $key = $this->ctx->params['key'];
-            $keyValue = $data[$key] ?? 'N/A';
-            $this->ctx->modx->log(modX::LOG_LEVEL_INFO, "Key $key = $keyValue has duplicate.");
-
-            if (!$this->ctx->params['update']) {
-                $this->ctx->modx->log(
-                    modX::LOG_LEVEL_ERROR,
-                    "Skipping line with $key = \"$keyValue\" because update is disabled."
-                );
-                $this->ctx->skipped++;
-
-                return true;
-            }
-            $action = 'Update';
-            $data['id'] = $exists->id;
-        }
 
         $this->upserter->runAction($action, $data, $gallery, $optionData);
 
