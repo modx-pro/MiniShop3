@@ -3,7 +3,8 @@
 /**
  * #901: Gallery\GetList must report a missing product_id instead of silently
  * returning an empty list, without breaking explicit product_id = 0 queries
- * (new product / orphan files) used by the Vue gallery.
+ * (new product / orphan files). Behavioral cases live in
+ * GalleryGetListMissingIdBehaviorTest.php.
  *
  * Run: php tests/GalleryGetListRequiredProductIdTest.php
  */
@@ -26,11 +27,14 @@ $read = static function (string $relative) use ($fail): string {
 };
 
 $processor = $read('src/Processors/Gallery/GetList.php');
-if (!str_contains($processor, "getProperty('product_id', null) === null")) {
-    $fail('GetList must distinguish a missing product_id key from an explicit zero (#901)');
+
+$guard = strpos($processor, "getProperty('product_id', null)");
+$cast = strpos($processor, '(int)$this->getProperty(\'product_id\')');
+if ($guard === false || $cast === false || $guard > $cast) {
+    $fail('GetList must check for a missing product_id before casting it (#901)');
 }
-if (!str_contains($processor, "return \$this->modx->lexicon('ms3_err_product_id_ns');")) {
-    $fail('GetList must fail with ms3_err_product_id_ns when product_id is absent (#901)');
+if (!str_contains($processor, "'minishop3:default'")) {
+    $fail('GetList must load minishop3:default: it owns ms3_err_product_id_ns (#901)');
 }
 if (preg_match('/\bproduct_id[^\n]*<=\s*0/', $processor) === 1) {
     $fail('GetList must not reject product_id = 0: the Vue gallery relies on an empty list (#901)');
@@ -41,12 +45,6 @@ foreach (['ru', 'en'] as $language) {
     if (!str_contains($lexicon, "\$_lang['ms3_err_product_id_ns']")) {
         $fail("lexicon/{$language}/default.inc.php missing ms3_err_product_id_ns (#901)");
     }
-}
-
-// The processor is also exercised with an explicit zero; keep that contract.
-$coverage = file_get_contents(__DIR__ . '/Modx/ProcessorCoverageTest.php');
-if ($coverage === false || !str_contains($coverage, "GalleryGetList::class, ['product_id' => 0")) {
-    $fail('ProcessorCoverageTest must keep the explicit product_id = 0 case (#901)');
 }
 
 // Vue sent `parent` and `type`, which GetList never reads. Remove the dead
