@@ -197,6 +197,8 @@ $_lang['setting_ms3_payment_on_failed_status'] = 'Статус заказа по
 $_lang['setting_ms3_payment_on_failed_status_desc'] = 'ID статуса заказа, который ставится при failed/cancelled попытки до оплаты. 0 — не менять заказ. По умолчанию 0.';
 $_lang['setting_ms3_payment_on_refunded_status'] = 'Статус заказа после полного возврата';
 $_lang['setting_ms3_payment_on_refunded_status_desc'] = 'ID статуса заказа после полного refund. 0 — не менять заказ. Частичный возврат статус заказа не меняет. По умолчанию статус отмены (5).';
+$_lang['setting_ms3_payment_link_ttl'] = 'Время жизни сохранённой ссылки на оплату (секунды)';
+$_lang['setting_ms3_payment_link_ttl_desc'] = 'Открытая попытка переиспользует сохранённую ссылку, пока не пройдёт это время с момента её сохранения; по истечении создаётся новый счёт. 0 — не проверять TTL и полагаться только на expirationDate от платёжного провайдера. По умолчанию 86400 (24 часа).';
 
 // Currency and Formatting Settings
 $_lang['setting_ms3_currency_symbol'] = 'Символ валюты';

@@ -201,8 +201,38 @@ class PaymentLifecycleService
             return null;
         }
         $link = $attempt['payload']['payment_link'] ?? null;
+        $link = PaymentLinkResolver::normalizePaymentLink(is_string($link) ? $link : null);
+        if ($link === null) {
+            return null;
+        }
 
-        return PaymentLinkResolver::normalizePaymentLink(is_string($link) ? $link : null);
+        return $this->isStoredLinkExpired($attempt) ? null : $link;
+    }
+
+    /**
+     * @param PaymentAttemptRow $attempt
+     */
+    private function isStoredLinkExpired(array $attempt): bool
+    {
+        $now = time();
+
+        // Provider-supplied invoice expiry takes precedence over the fallback TTL.
+        $expiresAt = PaymentLinkExpiry::timestamp($attempt['payload']);
+        if ($expiresAt !== null) {
+            return $expiresAt <= $now;
+        }
+
+        $ttl = (int) $this->modx->getOption('ms3_payment_link_ttl', null, 86400);
+        if ($ttl <= 0) {
+            return false;
+        }
+        // A later webhook may refresh updatedon; prefer the moment the link was saved.
+        $storedAt = (int) ($attempt['payload']['payment_link_saved_at'] ?? 0);
+        if ($storedAt <= 0) {
+            $storedAt = (int) ($attempt['updatedon'] ?? 0);
+        }
+
+        return $storedAt > 0 && $storedAt + $ttl <= $now;
     }
 
     /**
