@@ -294,7 +294,7 @@ $_lang['setting_ms3_rate_limit_redis_database_desc'] = 'Redis database index (de
 $_lang['setting_ms3_rate_limit_memcached_servers'] = 'Rate limit Memcached servers';
 $_lang['setting_ms3_rate_limit_memcached_servers_desc'] = 'Comma-separated host:port list for the memcached driver. Env: MS3_RATE_LIMIT_MEMCACHED_SERVERS. Requires ext-memcached.';
 $_lang['setting_ms3_public_seo_tv_map'] = 'Public SEO TV map';
-$_lang['setting_ms3_public_seo_tv_map_desc'] = 'Optional JSON map of allowlisted seo keys to TV references for Web API catalog payloads, e.g. {"title":"tv.seo_title","robots":"tv.robots"}. Invalid JSON is ignored. Applies to product/category get and list/tree when include_seo=1.';
+$_lang['setting_ms3_public_seo_tv_map_desc'] = 'Optional JSON map of seo keys to TV references for Web API catalog payloads, e.g. {"title":"tv.seo_title","robots":"tv.robots"}. Allowed: title, description, canonical, robots and og.title, og.description, og.image, og.type; other pairs are ignored. Invalid JSON, an invalid value type, invalid pairs and missing TVs are written to the MODX log at WARN level. Applies to product/category get and list/tree when include_seo=1.';
 
 // Notifications
 $_lang['setting_ms3_telegram_bot_token'] = 'Telegram bot token';

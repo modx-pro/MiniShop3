@@ -16,6 +16,9 @@ use MODX\Revolution\modX;
  *
  * Query flag `include_seo`: default 1 on product/category get; default 0 on list/tree.
  *
+ * A broken ms3_public_seo_tv_map is reported to the MODX log and never breaks
+ * the payload (#808).
+ *
  * Event msOnGetPublicSeo (product and category):
  * - Invoked after core build and TV overlay, before the final whitelist.
  * - Params: seo (current array), payload (catalog row), og_type (product|website).
@@ -248,6 +251,7 @@ final class PublicSeoService
         if ($this->parsedTvMap === null) {
             $this->parsedTvMap = PublicSeoTvMap::parseSettingValue(
                 $this->modx->getOption(PublicSeoTvMap::SETTING_KEY, null, ''),
+                $this->modx,
             );
         }
 
