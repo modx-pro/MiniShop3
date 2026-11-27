@@ -78,6 +78,21 @@ if ($transport->xpdo) {
                 }
             }
 
+            // #930: an empty payment secret used to fall back to site_id when
+            // signing orders. Generate a per-install secret instead so a
+            // default install never produces a weak, shared signature key.
+            $secretSetting = $modx->getObject(modSystemSetting::class, ['key' => 'ms3_payment_secret']);
+            if ($secretSetting && trim((string) $secretSetting->get('value')) === '') {
+                $secret = bin2hex(random_bytes(32));
+                $secretSetting->set('value', $secret);
+                if ($secretSetting->save()) {
+                    $modx->setOption('ms3_payment_secret', $secret);
+                    $modx->log(modX::LOG_LEVEL_INFO, '[MiniShop3] Generated ms3_payment_secret (#930).');
+                } else {
+                    $modx->log(modX::LOG_LEVEL_ERROR, '[MiniShop3] Failed to generate ms3_payment_secret (#930).');
+                }
+            }
+
             $setting = $modx->getObject(modSystemSetting::class, ['key' => 'ms3_order_address_fields']);
             if ($setting) {
                 $fields = explode(',', $setting->get('value'));

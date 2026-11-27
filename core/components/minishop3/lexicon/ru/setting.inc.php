@@ -192,7 +192,7 @@ $_lang['setting_ms3_email_verification_url_desc'] = 'Если пусто, в п�
 $_lang['setting_ms3_email_verification_success_url'] = 'URL редиректа после успешной верификации email (необязательно)';
 $_lang['setting_ms3_email_verification_success_url_desc'] = 'Используется при переходе по ссылке из письма (параметр html=1). Если пусто — берётся site_url; к URL добавляется параметр ms3_email_verified=1.';
 $_lang['setting_ms3_payment_secret'] = 'Секретный ключ для платежей';
-$_lang['setting_ms3_payment_secret_desc'] = 'Секретный ключ для генерации подписей платёжных уведомлений. Рекомендуется установить уникальное значение для повышения безопасности.';
+$_lang['setting_ms3_payment_secret_desc'] = 'Секретный ключ для подписей заказов и платёжных уведомлений. Заполняется случайным значением при установке или обновлении, если пусто. Не используйте site_id: при пустом ключе подпись заказа не создаётся. После смены ключа прежние подписи перестанут действовать.';
 $_lang['setting_ms3_payment_on_failed_status'] = 'Статус заказа после неуспешной оплаты';
 $_lang['setting_ms3_payment_on_failed_status_desc'] = 'ID статуса заказа, который ставится при failed/cancelled попытки до оплаты. 0 — не менять заказ. По умолчанию 0.';
 $_lang['setting_ms3_payment_on_refunded_status'] = 'Статус заказа после полного возврата';
