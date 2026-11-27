@@ -53,8 +53,9 @@ return [
     'msOnInventoryAdjust',
     'msOnBeforeMgrCreateOrder',
     'msOnMgrCreateOrder',
-    'msOnBeforeUpdateOrder',
-    'msOnUpdateOrder',
+    // Order updates use the Save pair: msOnBeforeSaveOrder / msOnSaveOrder
+    // receive mode = modSystemEvent::MODE_UPD for an existing order (#844).
+    // msOnBeforeUpdateOrder / msOnUpdateOrder were registered but never fired.
     'msOnBeforeSaveOrder',
     'msOnSaveOrder',
     'msOnBeforeRemoveOrder',
