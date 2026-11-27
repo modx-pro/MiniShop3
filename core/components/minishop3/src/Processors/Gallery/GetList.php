@@ -19,7 +19,7 @@ class GetList extends GetListProcessor
 
     public $classKey = msProductFile::class;
     public $shortClassKey = 'msProductFile';
-    public $languageTopics = ['default', 'minishop3:product'];
+    public $languageTopics = ['default', 'minishop3:default', 'minishop3:product'];
     public $defaultSortField = 'position';
     public $defaultSortDirection = 'ASC';
     public $permission = 'msproductfile_list';
@@ -34,6 +34,13 @@ class GetList extends GetListProcessor
      */
     public function initialize()
     {
+        // #901: a missing key is a caller typo (e.g. productId) and must be
+        // reported before any service lookup, while an explicit product_id = 0
+        // is a valid query for orphan files / a new product and stays empty.
+        if ($this->getProperty('product_id', null) === null) {
+            return $this->modx->lexicon('ms3_err_product_id_ns');
+        }
+
         $this->ms3 = $this->modx->services->get('ms3');
 
         $productId = (int)$this->getProperty('product_id');
