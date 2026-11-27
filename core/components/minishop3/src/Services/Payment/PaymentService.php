@@ -277,10 +277,13 @@ class PaymentService
         }
         $class = $payment->get('class');
         $provider = is_string($class) && $class !== '' ? $class : $this->defaultControllerClass;
-        $payload = [];
+        // Keep provider invoice expiry so storedPaymentLink() can stop reusing
+        // an invoice that has expired or been deactivated (#1063).
+        $payload = PaymentLinkExpiry::extract($data);
         $link = $data['payment_link'] ?? null;
         if (is_string($link) && $link !== '') {
             $payload['payment_link'] = $link;
+            $payload['payment_link_saved_at'] = time();
         }
         $lifecycle->initiate(
             (int) $order->get('id'),

@@ -317,6 +317,68 @@ final class PaymentLifecycleServiceTest extends TestCase
         self::assertNull($service->storedPaymentLink(10, 2));
     }
 
+    public function testStoredLinkIsNotReusedAfterProviderExpiry(): void
+    {
+        $service = $this->service();
+        $service->initiate(10, 2, 'TestPay', 100.0, 'RUB', 'ext-expired', [
+            'payment_link' => 'https://pay.example/expired',
+            'expirationDate' => gmdate('Y-m-d\TH:i:s\Z', time() - 3600),
+        ]);
+        self::assertNull($service->storedPaymentLink(10, 2));
+    }
+
+    public function testStoredLinkIsReusedWhileProviderExpiryIsInFuture(): void
+    {
+        $service = $this->service();
+        $service->initiate(10, 2, 'TestPay', 100.0, 'RUB', 'ext-valid', [
+            'payment_link' => 'https://pay.example/valid',
+            'expiration_date' => time() + 3600,
+        ]);
+        self::assertSame('https://pay.example/valid', $service->storedPaymentLink(10, 2));
+    }
+
+    public function testMalformedExpiryIsTreatedAsExpired(): void
+    {
+        $service = $this->service();
+        $service->initiate(10, 2, 'TestPay', 100.0, 'RUB', 'ext-bad-expiry', [
+            'payment_link' => 'https://pay.example/bad-expiry',
+            'expires_at' => 'not-a-date',
+        ]);
+        self::assertNull($service->storedPaymentLink(10, 2));
+    }
+
+    public function testStoredLinkFallsBackToConfiguredTtl(): void
+    {
+        $store = new InMemoryPaymentAttemptStore();
+        $service = $this->service(store: $store, ttl: 3600);
+        $attempt = $service->initiate(10, 2, 'TestPay', 100.0, 'RUB', 'ext-old', [
+            'payment_link' => 'https://pay.example/old',
+        ]);
+        $store->touch($attempt['id'], time() - 7200);
+        self::assertNull($service->storedPaymentLink(10, 2));
+    }
+
+    public function testTtlUsesSavedAtEvenWhenAttemptWasUpdatedLater(): void
+    {
+        $service = $this->service(ttl: 3600);
+        $service->initiate(10, 2, 'TestPay', 100.0, 'RUB', 'ext-saved-at', [
+            'payment_link' => 'https://pay.example/saved-at',
+            'payment_link_saved_at' => time() - 7200,
+        ]);
+        self::assertNull($service->storedPaymentLink(10, 2));
+    }
+
+    public function testTtlZeroLeavesProviderLinksWithoutExpiryReusable(): void
+    {
+        $store = new InMemoryPaymentAttemptStore();
+        $service = $this->service(store: $store, ttl: 0);
+        $attempt = $service->initiate(10, 2, 'TestPay', 100.0, 'RUB', 'ext-no-ttl', [
+            'payment_link' => 'https://pay.example/no-ttl',
+        ]);
+        $store->touch($attempt['id'], time() - 7200);
+        self::assertSame('https://pay.example/no-ttl', $service->storedPaymentLink(10, 2));
+    }
+
     public function testWebhookPaidWithoutAmountIsInvalid(): void
     {
         $service = $this->service();
@@ -526,12 +588,14 @@ final class PaymentLifecycleServiceTest extends TestCase
         ?msOrder $order = null,
         ?\Closure $changeStatus = null,
         ?OrderStatusChanger $changer = null,
+        ?InMemoryPaymentAttemptStore $store = null,
+        int $ttl = 86400,
     ): PaymentLifecycleService
     {
         $order ??= new StubMsOrder(['id' => 10, 'status_id' => 2, 'cost' => 100]);
-        $store = new InMemoryPaymentAttemptStore();
-        $modx = new class ($order) extends modX {
-            public function __construct(private msOrder $order)
+        $store ??= new InMemoryPaymentAttemptStore();
+        $modx = new class ($order, $ttl) extends modX {
+            public function __construct(private msOrder $order, private int $linkTtl)
             {
                 parent::__construct();
             }
@@ -543,6 +607,7 @@ final class PaymentLifecycleServiceTest extends TestCase
                     'ms3_status_canceled' => 5,
                     'ms3_payment_on_failed_status' => 0,
                     'ms3_payment_on_refunded_status' => 5,
+                    'ms3_payment_link_ttl' => $this->linkTtl,
                     default => $default,
                 };
             }

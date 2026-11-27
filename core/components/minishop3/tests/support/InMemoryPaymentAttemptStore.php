@@ -79,6 +79,14 @@ final class InMemoryPaymentAttemptStore implements PaymentAttemptStoreInterface
         return $this->attempts[$id] ?? null;
     }
 
+    /** Test helper: simulate an attempt stored in the past for TTL checks. */
+    public function touch(int $id, int $timestamp): void
+    {
+        if (isset($this->attempts[$id])) {
+            $this->attempts[$id]['updatedon'] = $timestamp;
+        }
+    }
+
     public function findByExternalId(string $provider, string $externalId, ?int $paymentMethodId = null): ?array
     {
         foreach ($this->attempts as $row) {

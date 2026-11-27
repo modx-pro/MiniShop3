@@ -487,6 +487,11 @@ return [
         'xtype' => 'numberfield',
         'area' => 'ms3_order',
     ],
+    'ms3_payment_link_ttl' => [
+        'value' => 86400, // 24 часа; 0 отключает TTL и оставляет только expirationDate провайдера
+        'xtype' => 'numberfield',
+        'area' => 'ms3_order',
+    ],
     'ms3_snippet_token_secret' => [
         'value' => '', // Генерируется автоматически при первом запуске
         'xtype' => 'textfield',

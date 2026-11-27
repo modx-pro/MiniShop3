@@ -197,6 +197,8 @@ $_lang['setting_ms3_payment_on_failed_status'] = 'Order status after failed/canc
 $_lang['setting_ms3_payment_on_failed_status_desc'] = 'Order status ID applied when a payment attempt fails or is cancelled before paid. 0 leaves the order unchanged. Default is 0.';
 $_lang['setting_ms3_payment_on_refunded_status'] = 'Order status after full refund';
 $_lang['setting_ms3_payment_on_refunded_status_desc'] = 'Order status ID applied after a full refund. 0 leaves the order unchanged. Partial refunds never change order status. Default is the canceled status (5).';
+$_lang['setting_ms3_payment_link_ttl'] = 'Stored payment link lifetime (seconds)';
+$_lang['setting_ms3_payment_link_ttl_desc'] = 'An open attempt reuses its stored link until this time passes since it was saved; a new invoice is requested afterwards. 0 disables the TTL fallback and relies only on the provider-supplied expirationDate. Default is 86400 (24 hours).';
 
 // Currency and Formatting Settings
 $_lang['setting_ms3_currency_symbol'] = 'Currency symbol';

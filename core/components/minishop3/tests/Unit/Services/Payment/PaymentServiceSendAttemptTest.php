@@ -49,6 +49,31 @@ final class PaymentServiceSendAttemptTest extends TestCase
         self::assertSame(31, $row['order_id']);
     }
 
+    public function testSuccessfulSendPersistsProviderInvoiceExpiry(): void
+    {
+        $store = new InMemoryPaymentAttemptStore();
+        $lifecycle = new PaymentLifecycleService($store, new modX(), new CallbackOrderStatusChanger(static fn (int $orderId, int $statusId): bool => true));
+        $service = new PaymentService($this->modxWithLifecycle($lifecycle));
+        $order = new StubMsOrder(['id' => 310, 'cost' => 12.5, 'payment_id' => 9]);
+        $payment = new StubMsPayment(['id' => 9, 'class' => 'AsyncPay']);
+        $expiresAt = time() + 3600;
+
+        $service->sendToPaymentGateway($payment, $this->sender([
+            'success' => true,
+            'data' => [
+                'external_id' => 'gw-310',
+                'payment_link' => 'https://pay.example/310',
+                'expirationDate' => $expiresAt,
+            ],
+        ]), $order);
+
+        $row = $store->findByExternalId('AsyncPay', 'gw-310', 9);
+        self::assertNotNull($row);
+        self::assertSame($expiresAt, $row['payload']['expirationDate']);
+        self::assertGreaterThan(0, $row['payload']['payment_link_saved_at']);
+        self::assertSame('https://pay.example/310', $lifecycle->storedPaymentLink(310, 9));
+    }
+
     public function testSendWithoutExternalIdDoesNotInitiate(): void
     {
         $store = new InMemoryPaymentAttemptStore();
