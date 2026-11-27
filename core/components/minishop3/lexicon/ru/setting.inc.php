@@ -261,6 +261,8 @@ $_lang['setting_ms3_password_require_special_desc'] = 'Пароль должен
 // Order Settings
 $_lang['setting_ms3_order_success_page_id'] = 'ID страницы успешной оплаты';
 $_lang['setting_ms3_order_success_page_id_desc'] = 'ID страницы, на которую перенаправляется клиент после успешной оплаты заказа. 0 = редирект на страницу заказа.';
+$_lang['setting_ms3_catalog_page_id'] = 'ID страницы каталога';
+$_lang['setting_ms3_catalog_page_id_desc'] = 'ID ресурса каталога для ссылок «Продолжить покупки» на странице заказа. 0 = использовать главную страницу (site_start).';
 
 // Import Settings
 $_lang['setting_ms3_import_upload_path'] = 'Путь для загрузки файлов импорта';

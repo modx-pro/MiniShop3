@@ -39,7 +39,11 @@
                                     </svg>
                                     На главную
                                 </a>
-                                <a href="[[~[[++ms3.page_id.catalog:default=`0`]]]]" class="btn btn-primary">
+                                {* ms3.page_id.catalog does not exist; use the package setting with a site_start fallback (#817) *}
+                                {set $catalog_page_id = 'ms3_catalog_page_id' | option}
+                                {set $site_start_id = 'site_start' | option}
+                                {set $continue_page_id = $catalog_page_id > 0 ? $catalog_page_id : $site_start_id}
+                                <a href="{$continue_page_id | url}" class="btn btn-primary">
                                     <svg class="me-2" width="16" height="16" fill="currentColor">
                                         <use xlink:href="#icon-cart"/>
                                     </svg>
