@@ -96,7 +96,7 @@
         <field key="description" dbtype="text" phptype="string" null="true"/>
         <field key="properties" dbtype="text" phptype="json" null="true"/>
 
-        <aggregate alias="Products" class="MiniShop3\Model\msProduct" local="id" foreign="vendor_id" cardinality="many" owner="foreign"/>
+        <aggregate alias="Products" class="MiniShop3\Model\msProductData" local="id" foreign="vendor_id" cardinality="many" owner="foreign"/>
         <aggregate alias="Resource" class="MODX\Revolution\modResource" local="resource_id" foreign="id" cardinality="one" owner="local"/>
     </object>
 

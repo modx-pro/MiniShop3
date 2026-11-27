@@ -104,7 +104,7 @@ class msVendor extends \MiniShop3\Model\msVendor
             [
                 'Products' =>
                     [
-                        'class' => 'MiniShop3\\Model\\msProduct',
+                        'class' => 'MiniShop3\\Model\\msProductData',
                         'local' => 'id',
                         'foreign' => 'vendor_id',
                         'cardinality' => 'many',
