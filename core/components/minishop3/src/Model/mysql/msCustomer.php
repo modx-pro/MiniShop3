@@ -339,6 +339,14 @@ class msCustomer extends \MiniShop3\Model\msCustomer
                         'owner' => 'local',
                         'cardinality' => 'many',
                     ],
+                'Addresses' =>
+                    [
+                        'class' => 'MiniShop3\\Model\\msCustomerAddress',
+                        'local' => 'id',
+                        'foreign' => 'customer_id',
+                        'owner' => 'local',
+                        'cardinality' => 'many',
+                    ],
             ],
     ];
 }

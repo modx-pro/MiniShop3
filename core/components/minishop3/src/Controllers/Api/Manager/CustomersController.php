@@ -256,16 +256,7 @@ class CustomersController
             return Response::error('Customer not found', HttpStatus::NOT_FOUND)->getData();
         }
 
-        $addresses = $this->modx->getIterator(\MiniShop3\Model\msCustomerAddress::class, ['customer_id' => $id]);
-        foreach ($addresses as $address) {
-            $address->remove();
-        }
-
-        $tokens = $this->modx->getIterator(\MiniShop3\Model\msCustomerToken::class, ['customer_id' => $id]);
-        foreach ($tokens as $token) {
-            $token->remove();
-        }
-
+        // Addresses and tokens are removed via msCustomer composite relations (Addresses -> msCustomerAddress, Tokens -> msCustomerToken) on remove().
         if (!$customer->remove()) {
             return Response::error('Failed to delete customer', HttpStatus::INTERNAL_SERVER_ERROR)->getData();
         }
@@ -308,18 +299,7 @@ class CustomersController
                 continue;
             }
 
-            // Delete related addresses
-            $addresses = $this->modx->getIterator(\MiniShop3\Model\msCustomerAddress::class, ['customer_id' => $id]);
-            foreach ($addresses as $address) {
-                $address->remove();
-            }
-
-            // Delete related tokens
-            $tokens = $this->modx->getIterator(\MiniShop3\Model\msCustomerToken::class, ['customer_id' => $id]);
-            foreach ($tokens as $token) {
-                $token->remove();
-            }
-
+            // Addresses and tokens are removed via msCustomer composite relations (Addresses -> msCustomerAddress, Tokens -> msCustomerToken) on remove().
             if ($customer->remove()) {
                 $deleted++;
             } else {

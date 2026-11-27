@@ -492,6 +492,7 @@
         <aggregate alias="User" class="MODX\Revolution\modUser" local="user_id" foreign="id" owner="foreign" cardinality="one"/>
         <aggregate alias="CustomerGroup" class="MiniShop3\Model\msCustomerGroup" local="customer_group_id" foreign="id" owner="foreign" cardinality="one"/>
         <composite alias="Tokens" class="MiniShop3\Model\msCustomerToken" local="id" foreign="customer_id" cardinality="many" owner="local"/>
+        <composite alias="Addresses" class="MiniShop3\Model\msCustomerAddress" local="id" foreign="customer_id" cardinality="many" owner="local"/>
     </object>
 
     <object class="msCustomerAddress" table="ms3_customer_addresses" extends="xPDO\Om\xPDOSimpleObject">
