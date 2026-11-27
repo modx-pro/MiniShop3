@@ -22,13 +22,20 @@ if (!empty($input) && empty($product)) {
     $product = $input;
 }
 
-$_ms3LoadedById = !empty($product) && (int) $product !== (int) $modx->resource->id;
+// $product from snippet props may be an id (int|string) or an object, not an msProduct yet.
+// The snippet can also be called outside of a resource context, where $modx->resource is null.
+$_ms3HasProduct = !empty($product);
+$_ms3RequestedId = $_ms3HasProduct
+    ? (is_object($product) ? (int) ($product->id ?? 0) : (int) $product)
+    : 0;
+$_ms3ResourceId = is_object($modx->resource) ? (int) ($modx->resource->id ?? 0) : 0;
+$_ms3LoadedById = $_ms3HasProduct && $_ms3RequestedId !== $_ms3ResourceId;
 $product = $_ms3LoadedById
-    ? $modx->getObject(msProduct::class, ['id' => (int) $product])
+    ? $modx->getObject(msProduct::class, ['id' => $_ms3RequestedId])
     : $modx->resource;
 if (!($product instanceof msProduct)) {
     return $modx->lexicon('ms3_err_options_is_not_msproduct', [
-        'id' => $product->id
+        'id' => $_ms3LoadedById ? $_ms3RequestedId : $_ms3ResourceId
     ]);
 }
 if ($_ms3LoadedById && !(new CatalogResourceGroupVisibility($modx))->isVisibleForRequest((int) $product->id)) {
