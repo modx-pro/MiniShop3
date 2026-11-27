@@ -34,6 +34,41 @@ $assertTrue(str_contains($migration, "'unique' => \$unique"), 'idx_token_hash un
 $assertTrue(str_contains($migration, 'duplicate token_hash'), 'duplicate hashes keep the migration runnable');
 $assertTrue(str_ends_with($migration, "\n"), 'migration file ends with a newline');
 
+// #1069: the one-shot fallback used by the migration above must be catchable later.
+$followupPath = $component . '/migrations/20261127120000_enforce_unique_customer_token_hash.php';
+$followup = (string) file_get_contents($followupPath);
+
+$assertTrue(
+    str_contains($followup, 'HAVING COUNT(*) > 1'),
+    'follow-up detects duplicate hashes set-wise'
+);
+$assertTrue(
+    str_contains($followup, "COALESCE(MIN(CASE WHEN `token` <> '' THEN `id` END), MIN(`id`))"),
+    'a row with a plaintext token is preferred as the keeper'
+);
+$assertTrue(
+    str_contains($followup, 'SET `t`.`token_hash` = NULL'),
+    'extra hashes are cleared instead of deleting rows'
+);
+$assertTrue(!str_contains($followup, 'DELETE FROM'), 'follow-up never deletes token rows');
+$assertTrue(
+    str_contains($followup, 'Duplicate token_hash values remain'),
+    'follow-up refuses to add UNIQUE while duplicates remain'
+);
+$assertTrue(
+    str_contains($followup, "'unique' => true"),
+    'follow-up creates the unique index unconditionally'
+);
+$assertTrue(
+    str_contains($followup, "hasIndexByName('idx_token_hash')"),
+    'follow-up replaces an index left by the fallback'
+);
+$assertTrue(
+    str_contains($followup, "'unique' => false"),
+    'down() restores the non-unique index'
+);
+$assertTrue(str_ends_with($followup, "\n"), 'follow-up migration file ends with a newline');
+
 $schema = (string) file_get_contents($component . '/schema/minishop3.mysql.schema.xml');
 $assertTrue(
     str_contains($schema, '<index alias="idx_token_hash" name="idx_token_hash" primary="false" unique="true"'),
