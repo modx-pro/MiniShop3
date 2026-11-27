@@ -261,6 +261,8 @@ $_lang['setting_ms3_password_require_special_desc'] = 'Password must contain at 
 // Order Settings
 $_lang['setting_ms3_order_success_page_id'] = 'Successful payment page ID';
 $_lang['setting_ms3_order_success_page_id_desc'] = 'Page ID to redirect customer after successful order payment. 0 = redirect to order page.';
+$_lang['setting_ms3_catalog_page_id'] = 'Catalog page ID';
+$_lang['setting_ms3_catalog_page_id_desc'] = 'Catalog resource ID used by the "Continue shopping" link on the thank-you page. 0 falls back to the site start page (site_start).';
 
 // Import Settings
 $_lang['setting_ms3_import_upload_path'] = 'Import file upload path';

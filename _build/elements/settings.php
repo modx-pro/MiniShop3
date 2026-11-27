@@ -196,6 +196,11 @@ return [
         'xtype' => 'numberfield',
         'area' => 'ms3_order',
     ],
+    'ms3_catalog_page_id' => [
+        'value' => 0,
+        'xtype' => 'numberfield',
+        'area' => 'ms3_frontend',
+    ],
     'ms3_order_register_user_on_submit' => [
         'value' => false,
         'xtype' => 'combo-boolean',
