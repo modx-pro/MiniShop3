@@ -388,6 +388,25 @@ class AuthManagerLifecycleTest extends TestCase
         self::assertNotEmpty($customer->get('blocked_until'));
     }
 
+    public function testHandleFailedLoginUsesInstallerDefaultDurationWhenSettingMissing(): void
+    {
+        $customer = $this->seedCustomer([
+            'email' => 'default-lockout@example.com',
+            'is_active' => 1,
+            'is_blocked' => 0,
+            'failed_login_attempts' => 4,
+        ]);
+        $auth = $this->makeAuthManager($this->makeModx());
+
+        $before = time();
+        $auth->handleFailedLogin($customer);
+
+        $blockedUntil = strtotime((string) $customer->get('blocked_until'));
+        self::assertNotFalse($blockedUntil);
+        self::assertGreaterThanOrEqual($before + 300, $blockedUntil);
+        self::assertLessThanOrEqual(time() + 300, $blockedUntil);
+    }
+
     public function testHandleFailedLoginClearsExpiredLockoutAndResetsAttempts(): void
     {
         $customer = $this->seedCustomer([
@@ -609,8 +628,8 @@ class AuthManagerLifecycleTest extends TestCase
 
                 return match ($name) {
                     'ms3_customer_token_ttl' => 604800,
-                    'ms3_customer_max_login_attempts' => 5,
-                    'ms3_customer_block_duration' => 3600,
+                    // Login defaults come from the production getOption() call (#898):
+                    // the stub must not hardcode them or it hides a fallback regression.
                     'session_cookie_domain' => '',
                     'session_cookie_path' => '/',
                     'session_cookie_secure' => false,
