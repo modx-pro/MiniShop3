@@ -149,17 +149,38 @@ class msCategory extends modResource
     }
 
     /**
+     * class_key as stored in the database, before this object's changes.
+     */
+    protected function getStoredClassKey(): string
+    {
+        $id = (int) $this->get('id');
+        if ($id <= 0 || !$this->xpdo instanceof xPDO) {
+            return '';
+        }
+
+        $stored = $this->xpdo->getObject(modResource::class, $id);
+
+        return $stored ? (string) $stored->get('class_key') : '';
+    }
+
+    /**
      * @param bool|int|null $cacheFlag
      *
      * @return bool
      */
     public function save($cacheFlag = null)
     {
-        $oldClassKey = parent::get('class_key');
-
-        // Handle category type change via service
-        if (!$this->isNew() && $oldClassKey != 'msCategory') {
-            $this->getCategoryService()->handleCategorySave($this, $oldClassKey);
+        // Both parent::get() and $this->get() read the same field, so the
+        // original class_key must come from the stored row (#855 review).
+        $storedClassKey = $this->getStoredClassKey();
+        if (
+            CategoryService::shouldResetOnSave(
+                $storedClassKey,
+                (string) $this->get('class_key'),
+                $this->isNew()
+            )
+        ) {
+            $this->getCategoryService()->handleCategorySave($this, $storedClassKey);
         }
 
         return parent::save($cacheFlag);
