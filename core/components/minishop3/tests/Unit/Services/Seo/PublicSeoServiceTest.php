@@ -151,6 +151,21 @@ final class PublicSeoServiceTest extends TestCase
         self::assertSame('TV meta title', $out['seo']['title']);
     }
 
+    public function testBrokenTvMapSettingIsLoggedWithoutChangingPayload(): void
+    {
+        $sink = $this->logSink();
+        $out = $this->service(null, [], [], [], '{bad json', $sink)->maybeAttachProduct(
+            ['id' => 42, 'pagetitle' => 'Kettle'],
+            [],
+        );
+
+        self::assertSame('Kettle', $out['seo']['title']);
+        self::assertCount(1, $sink->logs);
+        self::assertSame(modX::LOG_LEVEL_WARN, $sink->logs[0]['level']);
+        self::assertStringContainsString(PublicSeoTvMap::SETTING_KEY, $sink->logs[0]['message']);
+        self::assertStringContainsString('invalid JSON', $sink->logs[0]['message']);
+    }
+
     public function testTvOgTitleSurvivesMirrorOgTextWhenDifferentFromTitle(): void
     {
         $out = $this->service(null, [], [], [
@@ -247,12 +262,20 @@ final class PublicSeoServiceTest extends TestCase
         self::assertSame('Child', $out[0]['children'][0]['seo']['title']);
     }
 
+    private function logSink(): object
+    {
+        return new class {
+            public array $logs = [];
+        };
+    }
+
     /**
      * @param array<string, mixed>|null $seoPatch
      * @param array<string, string> $contextUrls
      * @param array<string, string> $makeUrls "id@context" => url
      * @param array<string, string> $tvValues tvName => rendered value
      * @param string|null $tvMapSetting raw ms3_public_seo_tv_map JSON
+     * @param object|null $logSink object with a public `logs` array
      */
     private function service(
         ?array $seoPatch = null,
@@ -260,8 +283,9 @@ final class PublicSeoServiceTest extends TestCase
         array $makeUrls = [],
         array $tvValues = [],
         ?string $tvMapSetting = null,
+        ?object $logSink = null,
     ): PublicSeoService {
-        return new PublicSeoService($this->modx($seoPatch, $contextUrls, $makeUrls, $tvValues, $tvMapSetting));
+        return new PublicSeoService($this->modx($seoPatch, $contextUrls, $makeUrls, $tvValues, $tvMapSetting, $logSink));
     }
 
     /**
@@ -269,6 +293,7 @@ final class PublicSeoServiceTest extends TestCase
      * @param array<string, string> $contextUrls
      * @param array<string, string> $makeUrls
      * @param array<string, string> $tvValues
+     * @param object|null $logSink object with a public `logs` array
      */
     private function modx(
         ?array $seoPatch = null,
@@ -276,8 +301,9 @@ final class PublicSeoServiceTest extends TestCase
         array $makeUrls = [],
         array $tvValues = [],
         ?string $tvMapSetting = null,
+        ?object $logSink = null,
     ): modX {
-        return new class ($seoPatch, $contextUrls, $makeUrls, $tvValues, $tvMapSetting) extends modX {
+        return new class ($seoPatch, $contextUrls, $makeUrls, $tvValues, $tvMapSetting, $logSink) extends modX {
             public object $event;
 
             /**
@@ -292,9 +318,17 @@ final class PublicSeoServiceTest extends TestCase
                 private array $makeUrls,
                 private array $tvValues,
                 private ?string $tvMapSetting,
+                private ?object $logSink,
             ) {
                 parent::__construct();
                 $this->event = (object) ['returnedValues' => null];
+            }
+
+            public function log($level, $message): void
+            {
+                if ($this->logSink !== null) {
+                    $this->logSink->logs[] = ['level' => $level, 'message' => $message];
+                }
             }
 
             public function getOption(string $key, $options = null, $default = null)

@@ -294,7 +294,7 @@ $_lang['setting_ms3_rate_limit_redis_database_desc'] = 'Номер БД Redis (0
 $_lang['setting_ms3_rate_limit_memcached_servers'] = 'Memcached servers (rate limit)';
 $_lang['setting_ms3_rate_limit_memcached_servers_desc'] = 'Список серверов host:port через запятую для memcached-драйвера. Env: MS3_RATE_LIMIT_MEMCACHED_SERVERS. Требует ext-memcached.';
 $_lang['setting_ms3_public_seo_tv_map'] = 'Карта TV для публичного SEO';
-$_lang['setting_ms3_public_seo_tv_map_desc'] = 'Необязательный JSON: allowlisted-ключи seo → TV, например {"title":"tv.seo_title","robots":"tv.robots"}. Некорректный JSON игнорируется. Для product/category get и list/tree при include_seo=1.';
+$_lang['setting_ms3_public_seo_tv_map_desc'] = 'Необязательный JSON: ключи seo → TV, например {"title":"tv.seo_title","robots":"tv.robots"}. Разрешены title, description, canonical, robots и og.title, og.description, og.image, og.type; остальные пары игнорируются. Некорректный JSON, неверный тип значения, невалидные пары и ненайденные TV пишутся в лог MODX с уровнем WARN. Для product/category get и list/tree при include_seo=1.';
 
 // Notifications
 $_lang['setting_ms3_telegram_bot_token'] = 'Токен Telegram бота';
