@@ -9,6 +9,7 @@ use MiniShop3\Model\msOrderProduct;
 use MiniShop3\Model\msProduct;
 use MiniShop3\Model\msProductData;
 use MiniShop3\Services\Cart\CartItemManager;
+use MiniShop3\Utils\StoredTokenHash;
 use MODX\Revolution\modSystemEvent;
 use MODX\Revolution\modX;
 use Ramsey\Uuid\Uuid;
@@ -41,8 +42,7 @@ class OrderDraftManager
 
         $statusDraft = (int) $this->modx->getOption('ms3_status_draft', null, 1) ?: 1;
 
-        return $this->modx->getObject(msOrder::class, [
-            'token' => $token,
+        return StoredTokenHash::find($this->modx, msOrder::class, $token, [
             'status_id' => $statusDraft,
             'context' => $ctx,
         ]);
@@ -84,9 +84,9 @@ class OrderDraftManager
             if ($draft) {
                 // Sync token: update draft token to match current session token
                 // This ensures future lookups will find it by token
-                $oldToken = $draft->get('token');
-                if ($oldToken !== $token) {
-                    $draft->set('token', $token);
+                $oldToken = (string) $draft->get('token');
+                if ($oldToken !== StoredTokenHash::hash($token)) {
+                    StoredTokenHash::set($draft, $token);
                     $draft->save();
                     $this->modx->log(
                         modX::LOG_LEVEL_INFO,
@@ -110,7 +110,7 @@ class OrderDraftManager
         /** @var msOrder $msOrder */
         $msOrder = $this->modx->newObject(msOrder::class);
         $data = [
-            'token' => $token,
+            'token' => StoredTokenHash::hash($token),
             'uuid' => \Ramsey\Uuid\Uuid::uuid4()->toString(),
             'status_id' => $status_draft,
             'context' => $ctx,
@@ -410,19 +410,19 @@ class OrderDraftManager
      */
     public function syncToken(msOrder $draft, string $newToken): bool
     {
-        $oldToken = $draft->get('token');
+        $oldToken = (string) $draft->get('token');
 
-        if ($oldToken === $newToken) {
+        if ($oldToken === StoredTokenHash::hash($newToken)) {
             return false;
         }
 
-        $draft->set('token', $newToken);
+        StoredTokenHash::set($draft, $newToken);
         $saved = $draft->save();
 
         if ($saved) {
             $this->modx->log(
                 modX::LOG_LEVEL_DEBUG,
-                "[OrderDraftManager] Token synced: draft #{$draft->get('id')}, {$oldToken} -> {$newToken}"
+                "[OrderDraftManager] Token synced for draft #{$draft->get('id')}"
             );
         }
 
@@ -524,8 +524,7 @@ class OrderDraftManager
 
         $statusDraft = (int)$this->modx->getOption('ms3_status_draft', null, 1) ?: 1;
 
-        $draft = $this->modx->getObject(msOrder::class, [
-            'token' => $token,
+        $draft = StoredTokenHash::find($this->modx, msOrder::class, $token, [
             'status_id' => $statusDraft,
             'context' => $ctx,
         ]);
@@ -576,8 +575,7 @@ class OrderDraftManager
 
         $statusDraft = (int)$this->modx->getOption('ms3_status_draft', null, 1) ?: 1;
 
-        $draft = $this->modx->getObject(msOrder::class, [
-            'token' => $fromToken,
+        $draft = StoredTokenHash::find($this->modx, msOrder::class, $fromToken, [
             'status_id' => $statusDraft,
             'context' => $ctx,
         ]);
@@ -597,7 +595,7 @@ class OrderDraftManager
         }
 
         $draft->set('customer_id', $customerId);
-        $draft->set('token', $toToken);
+        StoredTokenHash::set($draft, $toToken);
         if (!$draft->save()) {
             $this->modx->log(
                 modX::LOG_LEVEL_ERROR,

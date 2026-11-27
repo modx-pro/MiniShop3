@@ -11,6 +11,7 @@ use MiniShop3\Model\msCustomer;
 use MiniShop3\Services\Customer\CustomerAddressManager;
 use MiniShop3\Services\Customer\CustomerFieldManager;
 use MiniShop3\Services\Customer\CustomerOrderResolver;
+use MiniShop3\Utils\StoredTokenHash;
 use MODX\Revolution\modX;
 
 /**
@@ -194,7 +195,7 @@ class Customer
             return null;
         }
 
-        return $this->modx->getObject(msCustomer::class, ['token' => $token]) ?: null;
+        return StoredTokenHash::find($this->modx, msCustomer::class, $token);
     }
 
     public function set(array $data = []): array
