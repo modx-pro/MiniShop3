@@ -4,6 +4,7 @@ use MiniShop3\MiniShop3;
 use MiniShop3\Model\msProduct;
 use MiniShop3\Model\msProductData;
 use MiniShop3\Services\Catalog\CatalogResourceGroupVisibility;
+use MiniShop3\Utils\ValuePresence;
 use ModxPro\PdoTools\CoreTools;
 
 /** @var \MODX\Revolution\modX $modx */
@@ -76,7 +77,8 @@ foreach ($optionKeys as $key) {
 
     if (!$skip) {
         $option['value'] = $product->get($key);
-        if (!empty($option['value'])) {
+        // Only null/blank strings hide an option; 0 and "0" are valid values (#859).
+        if (!ValuePresence::isBlank($option['value'] ?? null)) {
             $options[$key] = $option;
         }
     }

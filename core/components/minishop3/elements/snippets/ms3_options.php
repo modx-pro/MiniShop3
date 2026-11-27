@@ -3,6 +3,7 @@
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msProduct;
 use MiniShop3\Services\Catalog\CatalogResourceGroupVisibility;
+use MiniShop3\Utils\ValuePresence;
 use ModxPro\PdoTools\CoreTools;
 
 /** @var \MODX\Revolution\modX $modx */
@@ -25,9 +26,14 @@ if (!empty($name) && empty($options)) {
     $options = $name;
 }
 
-$_ms3LoadedById = !empty($product) && (int) $product !== (int) $modx->resource->id;
+// $product may be an id or an already loaded object; casting an object to int
+// emits a PHP 8 warning, so take its id explicitly.
+$passedProductId = empty($product)
+    ? 0
+    : ($product instanceof msProduct ? (int) $product->get('id') : (int) $product);
+$_ms3LoadedById = $passedProductId > 0 && $passedProductId !== (int) $modx->resource->id;
 $product = $_ms3LoadedById
-    ? $modx->getObject(msProduct::class, ['id' => (int) $product])
+    ? $modx->getObject(msProduct::class, ['id' => $passedProductId])
     : $modx->resource;
 if (!($product instanceof msProduct)) {
     return $modx->lexicon('ms3_err_options_is_not_msproduct', [
@@ -41,13 +47,20 @@ if ($_ms3LoadedById && !(new CatalogResourceGroupVisibility($modx))->isVisibleFo
 $names = array_map('trim', explode(',', $options));
 $options = [];
 foreach ($names as $name) {
-    if (!empty($name) && $option = $product->get($name)) {
-        if (!is_array($option)) {
-            $option = [$option];
-        }
-        if (isset($option[0]) and (trim($option[0]) != '')) {
-            $options[$name] = $option;
-        }
+    if ($name === '') {
+        continue;
+    }
+    $option = $product->get($name);
+    // Assignment inside empty() dropped 0 and "0"; blank scalars/arrays stay hidden (#859).
+    if (ValuePresence::isBlank($option)) {
+        continue;
+    }
+    if (!is_array($option)) {
+        $option = [$option];
+    }
+    $firstValue = reset($option);
+    if (!ValuePresence::isBlank($firstValue)) {
+        $options[$name] = $option;
     }
 }
 
