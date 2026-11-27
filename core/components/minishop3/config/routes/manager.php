@@ -114,7 +114,7 @@ $router->group('/api/mgr', function ($router) use ($modx) {
                 ]);
             } catch (\Exception $e) {
                 $modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[FieldConfigManager] ' . $e->getMessage());
-                return Response::error('Failed to load model fields: ' . $e->getMessage(), HttpStatus::INTERNAL_SERVER_ERROR);
+                return Response::error('Failed to load model fields', HttpStatus::INTERNAL_SERVER_ERROR);
             }
         });
 

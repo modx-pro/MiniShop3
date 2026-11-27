@@ -34,7 +34,7 @@ class ConfigController extends BaseApiController
             return Response::success($config);
         } catch (\Exception $e) {
             $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ConfigController] ' . $e->getMessage());
-            return Response::error('Failed to load config: ' . $e->getMessage(), HttpStatus::INTERNAL_SERVER_ERROR);
+            return Response::error('Failed to load config', HttpStatus::INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -62,7 +62,7 @@ class ConfigController extends BaseApiController
             return Response::success($result);
         } catch (\Exception $e) {
             $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ConfigController] ' . $e->getMessage());
-            return Response::error('Failed to load fields: ' . $e->getMessage(), HttpStatus::INTERNAL_SERVER_ERROR);
+            return Response::error('Failed to load fields', HttpStatus::INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -102,7 +102,7 @@ class ConfigController extends BaseApiController
             return Response::error('Failed to save configuration', HttpStatus::INTERNAL_SERVER_ERROR);
         } catch (\Exception $e) {
             $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ConfigController] ' . $e->getMessage());
-            return Response::error('Failed to save config: ' . $e->getMessage(), HttpStatus::INTERNAL_SERVER_ERROR);
+            return Response::error('Failed to save config', HttpStatus::INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -132,7 +132,7 @@ class ConfigController extends BaseApiController
             ]);
         } catch (\Exception $e) {
             $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ConfigController] ' . $e->getMessage());
-            return Response::error('Failed to load sections: ' . $e->getMessage(), HttpStatus::INTERNAL_SERVER_ERROR);
+            return Response::error('Failed to load sections', HttpStatus::INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -172,7 +172,7 @@ class ConfigController extends BaseApiController
             }
         } catch (\Exception $e) {
             $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ConfigController] ' . $e->getMessage());
-            return Response::error('Failed to save sections: ' . $e->getMessage(), HttpStatus::INTERNAL_SERVER_ERROR);
+            return Response::error('Failed to save sections', HttpStatus::INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -207,7 +207,7 @@ class ConfigController extends BaseApiController
             }
         } catch (\Exception $e) {
             $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ConfigController] ' . $e->getMessage());
-            return Response::error('Failed to delete section: ' . $e->getMessage(), HttpStatus::INTERNAL_SERVER_ERROR);
+            return Response::error('Failed to delete section', HttpStatus::INTERNAL_SERVER_ERROR);
         }
     }
 }

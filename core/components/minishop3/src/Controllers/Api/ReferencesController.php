@@ -71,7 +71,7 @@ class ReferencesController extends BaseApiController
             ]);
         } catch (\Exception $e) {
             $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ReferencesController] ' . $e->getMessage());
-            return Response::error('Failed to load vendors: ' . $e->getMessage(), HttpStatus::INTERNAL_SERVER_ERROR);
+            return Response::error('Failed to load vendors', HttpStatus::INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -149,7 +149,7 @@ class ReferencesController extends BaseApiController
             ]);
         } catch (\Exception $e) {
             $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ReferencesController] ' . $e->getMessage());
-            return Response::error('Failed to load autocomplete: ' . $e->getMessage(), HttpStatus::INTERNAL_SERVER_ERROR);
+            return Response::error('Failed to load autocomplete', HttpStatus::INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -222,7 +222,7 @@ class ReferencesController extends BaseApiController
             ]);
         } catch (\Exception $e) {
             $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ReferencesController] ' . $e->getMessage());
-            return Response::error('Failed to load options: ' . $e->getMessage(), HttpStatus::INTERNAL_SERVER_ERROR);
+            return Response::error('Failed to load options', HttpStatus::INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -273,7 +273,7 @@ class ReferencesController extends BaseApiController
             ]);
         } catch (\Exception $e) {
             $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ReferencesController] ' . $e->getMessage());
-            return Response::error('Failed to load product option fields: ' . $e->getMessage(), HttpStatus::INTERNAL_SERVER_ERROR);
+            return Response::error('Failed to load product option fields', HttpStatus::INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -385,7 +385,7 @@ class ReferencesController extends BaseApiController
             ]);
         } catch (\Exception $e) {
             $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ReferencesController] ' . $e->getMessage());
-            return Response::error('Failed to load field values: ' . $e->getMessage(), HttpStatus::INTERNAL_SERVER_ERROR);
+            return Response::error('Failed to load field values', HttpStatus::INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -410,7 +410,7 @@ class ReferencesController extends BaseApiController
             $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ReferencesController] ' . $e->getMessage());
 
             return Response::error(
-                'Failed to load link types: ' . $e->getMessage(),
+                'Failed to load link types',
                 HttpStatus::INTERNAL_SERVER_ERROR
             );
         }
@@ -499,7 +499,7 @@ class ReferencesController extends BaseApiController
             ]);
         } catch (\Exception $e) {
             $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ReferencesController] ' . $e->getMessage());
-            return Response::error('Failed to search products: ' . $e->getMessage(), HttpStatus::INTERNAL_SERVER_ERROR);
+            return Response::error('Failed to search products', HttpStatus::INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -587,7 +587,7 @@ class ReferencesController extends BaseApiController
             ]);
         } catch (\Exception $e) {
             $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ReferencesController] ' . $e->getMessage());
-            return Response::error('Failed to search customers: ' . $e->getMessage(), HttpStatus::INTERNAL_SERVER_ERROR);
+            return Response::error('Failed to search customers', HttpStatus::INTERNAL_SERVER_ERROR);
         }
     }
 }

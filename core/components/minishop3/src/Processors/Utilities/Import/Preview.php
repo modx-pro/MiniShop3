@@ -90,7 +90,7 @@ class Preview extends Processor
         } catch (\Throwable $e) {
             $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR,
                 "[Import Preview] Error: " . $e->getMessage() . "\n" . $e->getTraceAsString());
-            return $this->failure('Preview error: ' . $e->getMessage());
+            return $this->failure('Preview error');
         }
     }
 
