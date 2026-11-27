@@ -17,7 +17,8 @@ namespace MiniShop3\Services\Events;
  *
  * Reserved (documented bindings only — not emitted until a future issue wires them):
  * - order.created — msOnCreateOrder, msOnMgrCreateOrder (OrderSubmitHandler, OrderFinalizeService)
- * - order.saved — msOnSaveOrder (msOrder::save)
+ * - order.saved — msOnSaveOrder (msOrder::save; mode distinguishes a new order from an
+ *   update: modSystemEvent::MODE_UPD replaces the retired msOnUpdateOrder pair, #844)
  * - order.removed — msOnRemoveOrder (msOrder::remove)
  * - order.product.created — msOnCreateOrderProduct (OrderDraftManager, ManagerOrderProductsService)
  * - order.product.updated — msOnUpdateOrderProduct (ManagerOrderProductsService)
@@ -44,7 +45,9 @@ namespace MiniShop3\Services\Events;
  * msOn* with no reserved semantic binding yet (before/veto, read, or manager-only):
  * msOnBefore*, msOnGet*, msOnValidate*, msOnError*, msOnProductsLoad, msOnProductPrepare,
  * msOnGetPublicSeo, msOnRegisterNotificationChannels, msOnManagerCustomCssJs, msOnImportRow,
- * msOnBeforeImport, vendor CRUD events, msOnBeforeUpdateOrder / msOnUpdateOrder (declared, no emit site).
+ * msOnBeforeImport, vendor CRUD events.
+ * msOnBeforeUpdateOrder / msOnUpdateOrder were declared without an emit site and are no longer
+ * registered (#844); updating an order is covered by the Save pair with mode = MODE_UPD.
  * msOnSubmitOrder is a veto point inside OrderSubmitHandler::submit before the order is processed,
  * not an after-success hook, so it has no semantic event_type.
  */
