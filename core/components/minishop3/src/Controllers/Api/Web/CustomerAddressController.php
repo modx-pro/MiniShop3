@@ -110,13 +110,8 @@ class CustomerAddressController
 
         $input = $this->getRequestData();
 
-        $required = ['name', 'city', 'street'];
-        $missing = [];
-        foreach ($required as $field) {
-            if (empty($input[$field])) {
-                $missing[$field] = $this->modx->lexicon('ms3_customer_err_field_required');
-            }
-        }
+        // name is an optional label: the storefront builds a display name from the address parts.
+        $missing = $this->missingRequiredFields($input);
         if ($missing !== []) {
             return Response::errorWithCode(
                 ApiErrorCode::VALIDATION_FAILED,
@@ -193,6 +188,17 @@ class CustomerAddressController
         }
 
         $input = $this->getRequestData();
+
+        // Validate the effective record: partial updates must not erase required fields.
+        $missing = $this->missingRequiredFields(array_merge($address->toArray(), $input));
+        if ($missing !== []) {
+            return Response::errorWithCode(
+                ApiErrorCode::VALIDATION_FAILED,
+                $this->modx->lexicon('ms3_customer_err_field_required'),
+                HttpStatus::UNPROCESSABLE_ENTITY,
+                $missing,
+            );
+        }
 
         $fields = ['name', 'country', 'index', 'region', 'city', 'metro', 'street', 'building', 'entrance', 'floor', 'room', 'comment'];
         $hasChanges = false;
@@ -356,6 +362,25 @@ class CustomerAddressController
         ]);
 
         return md5(mb_strtolower($string));
+    }
+
+    /**
+     * Fields the storefront form and the API both require (#816).
+     *
+     * @param array<string, mixed> $data
+     * @return array<string, string>
+     */
+    protected function missingRequiredFields(array $data): array
+    {
+        $missing = [];
+        foreach (['city', 'street'] as $field) {
+            $value = $data[$field] ?? null;
+            if (!is_scalar($value) || trim((string) $value) === '') {
+                $missing[$field] = $this->modx->lexicon('ms3_customer_err_field_required');
+            }
+        }
+
+        return $missing;
     }
 
     /**
