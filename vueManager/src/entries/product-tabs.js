@@ -12,6 +12,11 @@ import 'primeicons/primeicons.css'
 import ProductTabs from '../components/product/ProductTabs.vue'
 import { createMs3VueApp } from '../theme/createMs3VueApp.js'
 import { injectFormStylesOverride } from '../utils/formStyles.js'
+import {
+  adoptPendingTabs,
+  snapshotPluginTabConfigForQueue,
+  validateProductPluginTabConfig,
+} from '../utils/pluginTab.js'
 
 /**
  * Plugin Registry for third-party tabs
@@ -59,8 +64,13 @@ class ProductTabsRegistry {
    * })
    */
   register(tabConfig) {
-    if (!tabConfig.key || !tabConfig.title) {
-      console.error('[ProductTabsRegistry] Tab must have key and title', tabConfig)
+    if (this._mounted && this._instance) {
+      return this._instance.registerPluginTab(tabConfig)
+    }
+
+    const validation = validateProductPluginTabConfig(tabConfig)
+    if (!validation.ok) {
+      console.error(`[ProductTabsRegistry] ${validation.reason}`, tabConfig)
       return false
     }
 
@@ -71,13 +81,8 @@ class ProductTabsRegistry {
       return false
     }
 
-    // If already mounted, register directly
-    if (this._mounted && this._instance) {
-      return this._instance.registerPluginTab(tabConfig)
-    }
-
-    // Store for later registration
-    this.pendingTabs.push(tabConfig)
+    // Snapshot the config so later mutations by the plugin cannot change a queued tab
+    this.pendingTabs.push(snapshotPluginTabConfigForQueue(tabConfig))
     return true
   }
 
@@ -107,8 +112,9 @@ class ProductTabsRegistry {
   }
 }
 
-// Create global registry instance
-window.MS3ProductTabsRegistry = window.MS3ProductTabsRegistry || new ProductTabsRegistry()
+// Replace an early plugin stub with the real registry, moving its queued tabs over.
+// Same handoff as MS3OrderTabsRegistry — a stub has no _onMounted and must not stay installed.
+adoptPendingTabs('MS3ProductTabsRegistry', ProductTabsRegistry)
 
 /**
  * Initialize Product Tabs Vue application

@@ -3,6 +3,7 @@ import { useLexicon } from '@vuetools/useLexicon'
 import { Tab, TabList, TabPanel, TabPanels, Tabs, Toast, useToast } from 'primevue'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
+import { normalizeProductPluginTab } from '../../utils/pluginTab.js'
 import ProductGallery from '../gallery/ProductGallery.vue'
 import ProductDataFields from '../ProductDataFields.vue'
 import ProductCategoriesTab from './ProductCategoriesTab.vue'
@@ -250,29 +251,21 @@ function destroyExtComponents() {
  * Register plugin tab
  */
 function registerPluginTab(tabData) {
-  // Validate tab data
-  if (!tabData.key || !tabData.title) {
-    console.warn('[ProductTabs] Invalid plugin tab data:', tabData)
+  // Same rules as the pre-mount registry: reserved keys, type and component/xtype
+  const validation = normalizeProductPluginTab(tabData)
+  if (!validation.ok) {
+    console.warn(`[ProductTabs] ${validation.reason}`, tabData)
     return false
   }
 
   // Check for duplicates
-  const exists = pluginTabs.value.some(t => t.key === tabData.key)
+  const exists = pluginTabs.value.some(t => t.key === validation.tab.key)
   if (exists) {
-    console.warn(`[ProductTabs] Tab with key "${tabData.key}" already registered`)
+    console.warn(`[ProductTabs] Tab with key "${validation.tab.key}" already registered`)
     return false
   }
 
-  pluginTabs.value.push({
-    key: tabData.key,
-    title: tabData.title,
-    type: tabData.type || 'vue',
-    component: tabData.component,
-    xtype: tabData.xtype,
-    extConfig: tabData.extConfig || {},
-    props: tabData.props || {},
-    position: tabData.position || 100,
-  })
+  pluginTabs.value.push(validation.tab)
 
   return true
 }

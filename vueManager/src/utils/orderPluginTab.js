@@ -1,7 +1,10 @@
 /**
  * Validation and normalization for `window.MS3OrderTabsRegistry` / OrderView plugin tabs.
- * Keeps rules in one place for both the pre-mount queue (order.js) and direct registration.
+ * Rules are shared with the product registry via `pluginTab.js`.
  */
+import { normalizePluginTab, validatePluginTabConfig } from './pluginTab.js'
+
+export { snapshotPluginTabConfigForQueue as snapshotOrderTabConfigForQueue } from './pluginTab.js'
 
 /** Keys used by built-in tabs; plugin tabs must use different keys.
  * Built-in shipment tab uses `ms3_shipment` so docs/examples can keep `tracking`.
@@ -15,52 +18,10 @@ export const RESERVED_ORDER_TAB_KEYS = new Set([
 ])
 
 /**
- * Shallow snapshot for the pre-mount queue: top-level fields and nested `extConfig` / `props` are
- * copied so plugins cannot invalidate an already accepted registration by mutating the same object
- * before Vue mounts. The Vue `component` reference is kept as-is (definitions are not cloned).
- *
  * @param {object} tabConfig
- * @returns {object}
- */
-export function snapshotOrderTabConfigForQueue(tabConfig) {
-  if (!tabConfig || typeof tabConfig !== 'object') {
-    return tabConfig
-  }
-  const ext =
-    tabConfig.extConfig != null && typeof tabConfig.extConfig === 'object'
-      ? { ...tabConfig.extConfig }
-      : {}
-  const props =
-    tabConfig.props != null && typeof tabConfig.props === 'object' ? { ...tabConfig.props } : {}
-  return {
-    ...tabConfig,
-    extConfig: ext,
-    props,
-  }
-}
-
-/**
- * @param {object} tabConfig
- * @returns {{ ok: true, type: string } | { ok: false, reason: string }}
  */
 export function validateOrderPluginTabConfig(tabConfig) {
-  if (!tabConfig?.key || !tabConfig?.title) {
-    return { ok: false, reason: 'Tab must have key and title' }
-  }
-  if (RESERVED_ORDER_TAB_KEYS.has(tabConfig.key)) {
-    return { ok: false, reason: `Tab key "${tabConfig.key}" is reserved` }
-  }
-  const type = (tabConfig.type || 'vue').toLowerCase()
-  if (type !== 'vue' && type !== 'extjs') {
-    return { ok: false, reason: `Unsupported tab type "${tabConfig.type}" (use vue or extjs)` }
-  }
-  if (type === 'vue' && !tabConfig.component) {
-    return { ok: false, reason: 'Vue tab requires component (component name or definition)' }
-  }
-  if (type === 'extjs' && !tabConfig.xtype) {
-    return { ok: false, reason: 'ExtJS tab requires xtype' }
-  }
-  return { ok: true, type }
+  return validatePluginTabConfig(tabConfig, RESERVED_ORDER_TAB_KEYS)
 }
 
 /**
@@ -79,22 +40,5 @@ export function validateOrderPluginTabConfig(tabConfig) {
  * @returns {{ ok: true, tab: object } | { ok: false, reason: string }}
  */
 export function normalizeOrderPluginTab(tabConfig) {
-  const validation = validateOrderPluginTabConfig(tabConfig)
-  if (!validation.ok) {
-    return { ok: false, reason: validation.reason }
-  }
-  return {
-    ok: true,
-    tab: {
-      key: tabConfig.key,
-      title: tabConfig.title,
-      type: validation.type,
-      component: tabConfig.component,
-      xtype: tabConfig.xtype,
-      extConfig: tabConfig.extConfig || {},
-      props: tabConfig.props || {},
-      position: tabConfig.position ?? 100,
-      hideOnCreate: !!tabConfig.hideOnCreate,
-    },
-  }
+  return normalizePluginTab(tabConfig, RESERVED_ORDER_TAB_KEYS)
 }

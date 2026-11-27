@@ -12,6 +12,7 @@ import {
   snapshotOrderTabConfigForQueue,
   validateOrderPluginTabConfig,
 } from '../utils/orderPluginTab.js'
+import { adoptPendingTabs } from '../utils/pluginTab.js'
 
 /**
  * Plugin registry for third-party order manager tabs (Vue / ExtJS). See GitHub #166.
@@ -116,9 +117,7 @@ class OrderTabsRegistry {
 }
 
 // Preserve pendingTabs from early registrations (plugins that run before this module)
-const earlyPending = window.MS3OrderTabsRegistry?.pendingTabs || []
-window.MS3OrderTabsRegistry = new OrderTabsRegistry()
-earlyPending.forEach(tab => window.MS3OrderTabsRegistry.register(tab))
+adoptPendingTabs('MS3OrderTabsRegistry', OrderTabsRegistry)
 
 /**
  * Mount OrderView into the tpl node
