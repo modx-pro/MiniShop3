@@ -17,7 +17,6 @@
                     'tpl' => 'tpl.msProducts.row',
                     'includeThumbs' => 'small,medium',
                     'includeVendorFields' => 'name,logo',
-                    'formatPrices' => 1,
                     'withCurrency' => 1,
                     'limit' => 12,
                     'showLog' => 0,

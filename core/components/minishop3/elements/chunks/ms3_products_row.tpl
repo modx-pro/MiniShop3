@@ -135,13 +135,13 @@
             <div class="mt-auto">
                 <div class="d-flex align-items-center justify-content-between mb-2">
                     <div>
-                        {if $old_price? && $old_price > 0}
+                        {if $old_price_formatted}
                             <div class="text-decoration-line-through text-muted small mb-1 product-old-price">
-                                {$old_price}
+                                {$old_price_formatted}
                             </div>
                         {/if}
                         <div class="fw-bold text-primary product-price">
-                            {$price}
+                            {$price_formatted}
                         </div>
                     </div>
                 </div>
