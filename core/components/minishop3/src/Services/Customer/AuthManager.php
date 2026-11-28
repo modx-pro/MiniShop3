@@ -621,21 +621,21 @@ class AuthManager
     /**
      * Clean up expired tokens (for cron)
      *
+     * Batched DELETE with constant memory (#999b): the old getCollection()
+     * hydrated every expired row and issued one DELETE per object, which
+     * OOMs once expired rows outnumber the PHP memory limit — exactly on
+     * the sites where cleanup is most needed.
+     *
      * @return int Number of deleted tokens
      */
-    public function cleanupExpiredTokens(): int
+    public function cleanupExpiredTokens(int $batchSize = 1000): int
     {
         $now = date('Y-m-d H:i:s');
 
-        $tokens = $this->modx->getCollection(msCustomerToken::class, [
-            'expires_at:<' => $now,
-        ]);
-
-        $count = 0;
-        foreach ($tokens as $token) {
-            if ($token->remove()) {
-                $count++;
-            }
+        if ($this->modx->pdo instanceof \PDO) {
+            $count = $this->deleteExpiredTokensBatch($now, $batchSize);
+        } else {
+            $count = $this->deleteExpiredTokensObjects($now, $batchSize);
         }
 
         if ($count > 0) {
@@ -646,6 +646,67 @@ class AuthManager
         }
 
         return $count;
+    }
+
+    private function deleteExpiredTokensBatch(string $now, int $batchSize): int
+    {
+        $batchSize = max(1, $batchSize);
+        // xPDO returns a quoted, prefixed name. Strip quoting (double-quoted
+        // charlist: in single quotes \x60 is literal text, not a backtick).
+        $table = trim((string) $this->modx->getTableName(msCustomerToken::class), "\x60\"[] ");
+        if ($table === '' || !preg_match('/^[A-Za-z0-9_]+$/', $table)) {
+            return $this->deleteExpiredTokensObjects($now, $batchSize);
+        }
+
+        // LIMIT cannot be bound; $batchSize is a validated int. MySQL supports
+        // DELETE ... LIMIT directly; SQLite (used in tests) needs a rowid
+        // subquery. Other drivers fall back to the object path.
+        $driver = strtolower((string) $this->modx->pdo->getAttribute(\PDO::ATTR_DRIVER_NAME));
+        if ($driver === 'mysql') {
+            $sql = "DELETE FROM `{$table}` WHERE expires_at < ? LIMIT {$batchSize}";
+        } elseif ($driver === 'sqlite') {
+            $sql = "DELETE FROM \"{$table}\" WHERE rowid IN ("
+                . "SELECT rowid FROM \"{$table}\" WHERE expires_at < ? LIMIT {$batchSize})";
+        } else {
+            return $this->deleteExpiredTokensObjects($now, $batchSize);
+        }
+
+        try {
+            $stmt = $this->modx->pdo->prepare($sql);
+        } catch (\PDOException $exception) {
+            $this->modx->log(modX::LOG_LEVEL_ERROR, '[AuthManager] batched token cleanup unavailable: ' . $exception->getMessage());
+
+            return $this->deleteExpiredTokensObjects($now, $batchSize);
+        }
+        $total = 0;
+        do {
+            $stmt->execute([$now]);
+            $deleted = $stmt->rowCount();
+            $total += $deleted;
+        } while ($deleted >= $batchSize);
+
+        return $total;
+    }
+
+    private function deleteExpiredTokensObjects(string $now, int $batchSize): int
+    {
+        // Fallback when there is no PDO handle (unit-test stubs): xPDO
+        // getCollection() has no limit parameter, so this hydrates all rows.
+        // The batched DELETE above is the production path.
+        $total = 0;
+        $tokens = $this->modx->getCollection(msCustomerToken::class, [
+            'expires_at:<' => $now,
+        ]);
+        if (!is_iterable($tokens)) {
+            return 0;
+        }
+        foreach ($tokens as $token) {
+            if ($token->remove()) {
+                $total++;
+            }
+        }
+
+        return $total;
     }
 
     /**
