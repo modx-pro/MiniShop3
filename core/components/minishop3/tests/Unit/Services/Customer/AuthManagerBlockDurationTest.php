@@ -21,11 +21,23 @@ final class AuthManagerBlockDurationTest extends TestCase
     /** Путь от корня репозитория. */
     private const SETTINGS_FILE = '/_build/elements/settings.php';
 
+    private string $previousTimezone;
+
     protected function setUp(): void
     {
         if (!class_exists(modX::class, false)) {
             require_once dirname(__DIR__, 3) . '/stubs/ModxStub.php';
         }
+
+        // Production writes a local time string; compare it in a zone without DST
+        // transitions so strtotime() cannot pick the wrong offset.
+        $this->previousTimezone = date_default_timezone_get();
+        date_default_timezone_set('UTC');
+    }
+
+    protected function tearDown(): void
+    {
+        date_default_timezone_set($this->previousTimezone);
     }
 
     public function testShippedBlockDurationIsFiveMinutes(): void
@@ -58,6 +70,15 @@ final class AuthManagerBlockDurationTest extends TestCase
         $this->authManager($this->modx(['ms3_customer_block_duration' => 1800]))->handleFailedLogin($customer);
 
         self::assertEqualsWithDelta(1800, $this->blockedUntil($customer) - time(), 5);
+    }
+
+    public function testNonPositiveDurationIsClamped(): void
+    {
+        $customer = $this->customer();
+
+        $this->authManager($this->modx(['ms3_customer_block_duration' => 0]))->handleFailedLogin($customer);
+
+        self::assertGreaterThan(time(), $this->blockedUntil($customer), 'zero duration must not silently disable lockout');
     }
 
     private function blockedUntil(FakeBlockCustomer $customer): int
@@ -129,7 +150,7 @@ final class FakeBlockCustomer extends msCustomer
         return $this->fields[$k] ?? null;
     }
 
-    public function set($key, $value)
+    public function set($key, $value = null, $vType = '')
     {
         $this->fields[$key] = $value;
 
