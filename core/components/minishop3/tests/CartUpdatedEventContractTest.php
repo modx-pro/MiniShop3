@@ -34,13 +34,13 @@ foreach ($iterator as $file) {
         continue;
     }
     $source = (string) file_get_contents($file->getPathname());
-    if (!preg_match_all("/new CustomEvent\('ms3:cart:updated'([^)]*)\)/s", $source, $found)) {
+    if (!preg_match_all('/new CustomEvent\(\s*[\'"`]ms3:cart:updated[\'"`]\s*,\s*\{(.*?)\}\s*\)/s', $source, $found)) {
         continue;
     }
     foreach ($found[1] as $args) {
         $dispatchCount++;
-        if (!str_contains($args, 'detail')) {
-            $fail($file->getFilename() . ' dispatches ms3:cart:updated without detail (#802)');
+        if (!preg_match('/\bdetail\s*:/', $args)) {
+            $fail($file->getFilename() . ' dispatches ms3:cart:updated without a detail key (#802)');
         }
     }
 }
@@ -55,20 +55,21 @@ if ($orderUi === '') {
 }
 
 // order/clean does not change the cart: OrderUI must not fire the cart event.
-if (preg_match("/new CustomEvent\('ms3:cart:updated'/", $orderUi)) {
+if (preg_match('/new CustomEvent\(\s*[\'"`]ms3:cart:updated[\'"`]/', $orderUi)) {
     $fail('OrderUI must not dispatch ms3:cart:updated: order/clean never touches the cart (#802)');
 }
 
 // The dedicated event carries detail and drives the cost recalculation.
-if (!preg_match("/new CustomEvent\('ms3:order:cleaned',\s*\{[^}]*detail/s", $orderUi)) {
-    $fail('OrderUI must dispatch ms3:order:cleaned with detail (#802)');
+if (!preg_match('/new CustomEvent\(\s*[\'"`]ms3:order:cleaned[\'"`]\s*,\s*\{[^}]*\bdetail\s*:\s*response/s', $orderUi)) {
+    $fail('OrderUI must dispatch ms3:order:cleaned with detail: response (#802)');
 }
-if (!str_contains($orderUi, "addEventListener('ms3:order:cleaned'")) {
-    $fail('OrderUI must subscribe to ms3:order:cleaned to recalculate costs (#802)');
+foreach (['ms3:order:cleaned', 'ms3:cart:updated'] as $event) {
+    if (!preg_match('/addEventListener\(\s*[\'"`]' . preg_quote($event, '/') . '[\'"`]\s*,\s*\(\)\s*=>\s*\{[^}]*updateOrderCosts\(\)/s', $orderUi)) {
+        $fail("OrderUI listener for {$event} must actually recalculate costs (#802)");
+    }
 }
-// Real cart changes still recalculate delivery cost (free delivery threshold).
-if (!str_contains($orderUi, "addEventListener('ms3:cart:updated'")) {
-    $fail('OrderUI must keep subscribing to ms3:cart:updated for real cart changes (#802)');
+if (!str_contains($orderUi, 'orderListenersRegistered')) {
+    $fail('Document listeners must be registered once across repeated init() calls (#802)');
 }
 
 fwrite(STDOUT, "OK CartUpdatedEventContractTest ({$dispatchCount} cart dispatches with detail, #802)\n");
