@@ -32,7 +32,7 @@ $pdoFetch = $modx->services->get(Fetch::class);
 $pdoFetch->addTime('pdoTools loaded.');
 
 $tpl = $modx->getOption('tpl', $scriptProperties, 'tpl.msOrder');
-$return = $modx->getOption('return', $scriptProperties, 'tpl');
+$return = $modx->getOption('return', $scriptProperties, 'tpl', true);
 $includeDeliveryFields = $modx->getOption('includeDeliveryFields', $scriptProperties, 'id');
 $includeDeliveryKeys = array_map('trim', explode(',', $includeDeliveryFields));
 $includeDeliveryKeys = array_unique(array_merge($includeDeliveryKeys, ['id']));

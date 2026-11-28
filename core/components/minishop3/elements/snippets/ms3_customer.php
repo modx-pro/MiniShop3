@@ -46,7 +46,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
 }
 
 $service = $modx->getOption('service', $scriptProperties, 'profile');
-$return = $modx->getOption('return', $scriptProperties, 'tpl');
+$return = $modx->getOption('return', $scriptProperties, 'tpl', true);
 
 try {
     $serviceClass = match ($service) {

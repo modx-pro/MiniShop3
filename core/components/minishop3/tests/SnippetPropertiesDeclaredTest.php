@@ -65,6 +65,9 @@ $allowlist = [
 ];
 
 $declaredCount = 0;
+$returnDefaultsChecked = 0;
+$returnDeclaredSnippets = [];
+$checkedReturnSnippets = [];
 
 foreach ($snippets as $snippetName => $snippet) {
     $file = $snippet['file'] ?? '';
@@ -89,6 +92,54 @@ foreach ($snippets as $snippetName => $snippet) {
     }
     $source = (string)file_get_contents($snippetPath);
 
+    // Canonical `return` default: a fresh install (transport property) and a
+    // call with the property cleared (PHP fallback) must agree (#823).
+    if (isset($properties['return']['value']) && is_string($properties['return']['value'])) {
+        $transportDefault = (string)$properties['return']['value'];
+        $returnDeclaredSnippets[] = $snippetName;
+        $fallback = null;
+        $skipEmpty = true;
+        if (
+            preg_match(
+                "/getOption\(\s*'return'\s*,\s*\\\$scriptProperties\s*,\s*'([^']*)'\s*(?:,\s*(true|false))?/",
+                $source,
+                $found
+            )
+        ) {
+            $fallback = $found[1];
+            $skipEmpty = ($found[2] ?? '') !== 'false';
+        } elseif (
+            preg_match(
+                "/\\\$scriptProperties\[\s*'return'\s*\]\s*!==\s*''\s*\?\s*\(string\)\s*\\\$scriptProperties\[\s*'return'\s*\]\s*:\s*'([^']*)'/",
+                $source,
+                $found
+            )
+        ) {
+            // Direct read with an explicit empty check (msGallery).
+            $fallback = $found[1];
+        } elseif (
+            preg_match(
+                "/!empty\(\\\$scriptProperties\[\s*'return'\s*\]\)\s*\?\s*\\\$scriptProperties\[\s*'return'\s*\]\s*:\s*'([^']*)'/",
+                $source,
+                $found
+            )
+        ) {
+            $fallback = $found[1];
+        }
+        if ($fallback !== null) {
+            $returnDefaultsChecked++;
+            $checkedReturnSnippets[] = $snippetName;
+            if ($fallback !== $transportDefault) {
+                $fail(
+                    "{$file} falls back to return='{$fallback}' but transport declares '{$transportDefault}' (#823)"
+                );
+            }
+            if ($transportDefault !== '' && !$skipEmpty) {
+                $fail("{$file} must skip an empty return property to use its declared default (#823)");
+            }
+        }
+    }
+
     $read = [];
     if (preg_match_all("/\\\$scriptProperties\[\s*'([^']+)'/", $source, $found)) {
         $read = array_merge($read, $found[1]);
@@ -112,9 +163,22 @@ foreach ($snippets as $snippetName => $snippet) {
     }
 }
 
+// Those two snippets read `return` through other forms; skip them explicitly
+// instead of letting an aggregate count hide newly unchecked snippets (#823).
+$returnSkip = ['msProducts', 'msProductOptions'];
+$expected = array_values(array_diff($returnDeclaredSnippets, $returnSkip));
+sort($expected);
+$actual = array_values(array_unique($checkedReturnSnippets));
+sort($actual);
+if ($expected !== $actual) {
+    $fail('return-default guard checked ' . implode(',', $actual)
+        . ' but expected ' . implode(',', $expected) . ' (#823)');
+}
+
 fwrite(
     STDOUT,
     'OK SnippetPropertiesDeclaredTest (' . count($snippets) . " snippets,"
-    . " {$declaredCount} declared properties × 2 langs)\n"
+    . " {$declaredCount} declared properties × 2 langs,"
+    . " {$returnDefaultsChecked} return defaults)\n"
 );
 exit(0);

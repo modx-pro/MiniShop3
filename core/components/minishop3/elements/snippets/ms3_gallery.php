@@ -74,7 +74,13 @@
         'return' => 'data',
         'nestedChunkPrefix' => 'minishop3_',
     ];
-    $returnType = !empty($scriptProperties['return']) ? $scriptProperties['return'] : 'data';
+    // Canonical default is the declared transport property value (tpl), so a
+    // fresh install and a snippet call with the property cleared behave alike (#823).
+    // Read the snippet property directly: getOption() with skipEmpty would
+    // consult a system/context setting named `return` before our default (#823).
+    $returnType = isset($scriptProperties['return']) && $scriptProperties['return'] !== ''
+        ? (string) $scriptProperties['return']
+        : 'tpl';
     if ($returnType === 'tpl') {
         unset($scriptProperties['return']);
     }

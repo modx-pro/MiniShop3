@@ -75,7 +75,7 @@ $pdoFetch = $modx->services->get(Fetch::class);
 $pdoFetch->addTime('pdoTools loaded.');
 
 $tpl = $modx->getOption('tpl', $scriptProperties, 'tpl.msCart');
-$return = $modx->getOption('return', $scriptProperties, 'tpl');
+$return = $modx->getOption('return', $scriptProperties, 'tpl', true);
 $response = $ms3->cart->get();
 $cart = $response['data']['cart'];
 $status = $response['data']['status'];
