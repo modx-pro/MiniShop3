@@ -197,10 +197,15 @@
                         </div>
                     </div>
                 {/if}
-                {if $order.comment?}
+                {if $address.comment || $order.order_comment}
                     <div class="col-12">
-                        <div class="small text-muted">Комментарий к заказу</div>
-                        <div class="fw-semibold">{$order.comment}</div>
+                        <div class="small text-muted">{'ms3_frontend_comment' | lexicon}</div>
+                        {if $address.comment}
+                            <div class="fw-semibold">{$address.comment | e}</div>
+                        {/if}
+                        {if $order.order_comment}
+                            <div class="fw-semibold">{$order.order_comment | e}</div>
+                        {/if}
                     </div>
                 {/if}
             </div>

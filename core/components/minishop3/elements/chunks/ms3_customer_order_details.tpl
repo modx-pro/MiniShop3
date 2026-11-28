@@ -177,7 +177,7 @@
     </div>
 
     {* Комментарий *}
-    {if $order.comment}
+    {if $address.comment || $order.order_comment}
     <div class="card shadow-sm mb-4">
         <div class="card-header bg-light">
             <h6 class="mb-0">
@@ -188,7 +188,12 @@
             </h6>
         </div>
         <div class="card-body">
-            <p class="mb-0">{$order.comment}</p>
+            {if $address.comment}
+                <p class="mb-0"><strong>{'ms3_frontend_comment' | lexicon}:</strong> {$address.comment | e}</p>
+            {/if}
+            {if $order.order_comment}
+                <p class="mb-0"><strong>{'ms3_order_comment' | lexicon}:</strong> {$order.order_comment | e}</p>
+            {/if}
         </div>
     </div>
     {/if}
