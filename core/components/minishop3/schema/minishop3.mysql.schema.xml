@@ -469,7 +469,7 @@
         <field key="last_order_at" dbtype="datetime" phptype="datetime" null="true"/>
         <field key="privacy_accepted_at" dbtype="datetime" phptype="datetime" null="true"/>
         <field key="privacy_ip" dbtype="varchar" precision="45" phptype="string" null="true"/>
-        <field key="telegram_chat_id" dbtype="varchar" precision="255" phptype="string" null="true" default=""/>
+        <field key="telegram_chat_id" dbtype="varchar" precision="255" phptype="string" null="true"/>
 
         <index alias="user_id" name="user_id" primary="false" unique="false" type="BTREE">
             <column key="user_id" length="" collation="A" null="false"/>

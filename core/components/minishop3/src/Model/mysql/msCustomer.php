@@ -36,6 +36,7 @@ class msCustomer extends \MiniShop3\Model\msCustomer
                 'last_order_at' => null,
                 'privacy_accepted_at' => null,
                 'privacy_ip' => null,
+                'telegram_chat_id' => null,
             ],
         'fieldMeta' =>
             [
@@ -191,6 +192,13 @@ class msCustomer extends \MiniShop3\Model\msCustomer
                     [
                         'dbtype' => 'varchar',
                         'precision' => '45',
+                        'phptype' => 'string',
+                        'null' => true,
+                    ],
+                'telegram_chat_id' =>
+                    [
+                        'dbtype' => 'varchar',
+                        'precision' => '255',
                         'phptype' => 'string',
                         'null' => true,
                     ],

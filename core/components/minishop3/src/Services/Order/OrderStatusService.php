@@ -532,6 +532,12 @@ class OrderStatusService implements OrderStatusChanger
             }
             // Guest customers have no modUserProfile, therefore we read the native field.
             $telegramChatId = $customer->get('telegram_chat_id');
+            if (empty($telegramChatId)) {
+                // Legacy installations stored the chat id in the customer's
+                // extended data; keep them working after the upgrade.
+                $extended = $customer->get('extended');
+                $telegramChatId = is_array($extended) ? ($extended['telegram_chat_id'] ?? null) : null;
+            }
             if (!empty($telegramChatId)) {
                 $recipient['telegram_chat_id'] = $telegramChatId;
                 $hasContact = true;
