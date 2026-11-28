@@ -16,7 +16,7 @@ class msOrder extends \MiniShop3\Model\msOrder
         'fields' =>
             [
                 'user_id' => 0,
-                'customer_id' => 0,
+                'customer_id' => null,
                 'token' => '',
                 'uuid' => '',
                 'idempotency_key' => null,
@@ -52,7 +52,7 @@ class msOrder extends \MiniShop3\Model\msOrder
                         'attributes' => 'unsigned',
                         'phptype' => 'integer',
                         'null' => true,
-                        'default' => 0,
+                        'default' => null,
                     ],
                 'token' =>
                     [
@@ -206,7 +206,7 @@ class msOrder extends \MiniShop3\Model\msOrder
                                     [
                                         'length' => '',
                                         'collation' => 'A',
-                                        'null' => false,
+                                        'null' => true,
                                     ],
                             ],
                     ],

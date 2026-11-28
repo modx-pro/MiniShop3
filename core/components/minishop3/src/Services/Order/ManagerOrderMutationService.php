@@ -34,10 +34,13 @@ class ManagerOrderMutationService
     {
         $createCustomer = !empty($params['create_customer']);
         $forceCreateCustomer = !empty($params['force_create_customer']);
-        $customerId = (int)($params['customer_id'] ?? 0);
+        // Guest/new orders must use NULL: 0 is not a valid ms3_customers.id and violates the FK.
+        $customerId = !empty($params['customer_id']) && (int) $params['customer_id'] > 0
+            ? (int) $params['customer_id']
+            : null;
 
         // Handle customer creation
-        if ($createCustomer && $customerId === 0) {
+        if ($createCustomer && $customerId === null) {
             // Validate customer data - need at least email or phone
             $email = trim((string)($params['email'] ?? ''));
             $phone = trim((string)($params['phone'] ?? ''));
@@ -174,7 +177,7 @@ class ManagerOrderMutationService
         // Return created order with address data
         $orderData = $order->toArray();
         $orderData = $this->presenter->mergeAddressIntoOrderData($orderData, $address);
-        $orderData['customer_created'] = $createCustomer && $customerId > 0;
+        $orderData['customer_created'] = $createCustomer && $customerId !== null;
 
         return $this->success(
             $this->presenter->formatOrder($orderData),
@@ -197,6 +200,13 @@ class ManagerOrderMutationService
         $order = $this->modx->getObject(msOrder::class, $id);
         if (!$order) {
             return $this->error('Order not found', HttpStatus::NOT_FOUND);
+        }
+
+        // The manager UI may send 0 for "no customer"; normalize to NULL before any write.
+        if (array_key_exists('customer_id', $params)) {
+            $params['customer_id'] = !empty($params['customer_id']) && (int) $params['customer_id'] > 0
+                ? (int) $params['customer_id']
+                : null;
         }
 
         // Store old values for logging

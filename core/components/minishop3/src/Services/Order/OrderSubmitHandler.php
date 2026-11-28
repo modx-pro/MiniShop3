@@ -171,6 +171,9 @@ class OrderSubmitHandler
             // If no customer created (no email/phone), order proceeds with data in msOrderAddress only
         }
 
+        // Guest orders must store NULL, never the legacy 0 sentinel (ms3_orders.customer_id has an FK).
+        $customerId = !empty($customerId) ? (int) $customerId : null;
+
         // Register MODX user if configured
         $registerUser = $this->modx->getOption('ms3_order_register_user_on_submit', null, false);
         $userId = 0;

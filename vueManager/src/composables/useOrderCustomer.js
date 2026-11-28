@@ -70,7 +70,7 @@ export function useOrderCustomer(deps) {
   function clearCustomer() {
     selectedCustomer.value = null
     if (order.value) {
-      order.value.customer_id = 0
+      order.value.customer_id = null
     }
   }
 

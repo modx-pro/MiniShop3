@@ -243,7 +243,7 @@
 
     <object class="msOrder" table="ms3_orders" extends="xPDO\Om\xPDOSimpleObject">
         <field key="user_id" dbtype="int" precision="10" attributes="unsigned" phptype="integer" null="false"/>
-        <field key="customer_id" dbtype="int" precision="10" attributes="unsigned" phptype="integer" null="false"/>
+        <field key="customer_id" dbtype="int" precision="10" attributes="unsigned" phptype="integer" null="true"/>
         <field key="token" dbtype="varchar" precision="128" phptype="string" null="false" default=""/>
         <field key="uuid" dbtype="char" precision="36" phptype="string" null="false" default=""/>
         <field key="idempotency_key" dbtype="varchar" precision="128" phptype="string" null="true"/>
@@ -268,7 +268,7 @@
             <column key="user_id" length="" collation="A" null="false"/>
         </index>
         <index alias="customer_id" name="customer_id" primary="false" unique="false" type="BTREE">
-            <column key="customer_id" length="" collation="A" null="false"/>
+            <column key="customer_id" length="" collation="A" null="true"/>
         </index>
         <index alias="token" name="token" primary="false" unique="false" type="BTREE">
             <column key="token" length="" collation="A" null="false"/>

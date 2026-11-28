@@ -622,7 +622,7 @@ class OrderDraftManager
      *
      * @param array{
      *     context?: string,
-     *     customer_id?: int,
+     *     customer_id?: int|null,
      *     delivery_id?: int,
      *     payment_id?: int,
      *     delivery_cost?: float|int,
@@ -651,7 +651,11 @@ class OrderDraftManager
         $order->set('createdon', time());
         $order->set('updatedon', time());
         $order->set('user_id', 0);
-        $order->set('customer_id', (int) ($data['customer_id'] ?? 0));
+        // Guests must be NULL: the legacy 0 sentinel is not a valid ms3_customers.id.
+        $customerId = !empty($data['customer_id']) && (int) $data['customer_id'] > 0
+            ? (int) $data['customer_id']
+            : null;
+        $order->set('customer_id', $customerId);
         $order->set('delivery_id', (int) ($data['delivery_id'] ?? 0));
         $order->set('payment_id', (int) ($data['payment_id'] ?? 0));
         $order->set('order_comment', (string) ($data['order_comment'] ?? ''));
