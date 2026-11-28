@@ -170,7 +170,9 @@ class RegisterService
         }
 
         $requireEmailVerification = (bool)$this->modx->getOption('ms3_customer_require_email_verification', null, false);
-        $customer->set('email_verified_at', null);
+        // Without verification the address is implicitly confirmed; leave the
+        // flag null only when a confirmation link is actually required.
+        $customer->set('email_verified_at', $requireEmailVerification ? null : date('Y-m-d H:i:s'));
 
         if (!$customer->save()) {
             return [
