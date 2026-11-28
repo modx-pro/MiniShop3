@@ -1,4 +1,7 @@
 <form class="ms3_customer_form" method="post" data-ms3-form="customer">
+    <!-- Submit-button name/value pairs are excluded from new FormData(form),
+         so the action must be a hidden field (#880). -->
+    <input type="hidden" name="ms3_action" value="customer/update-profile">
     <div class="row">
         <h4>{'ms3_frontend_customer' | lexicon}:</h4>
         {foreach ['first_name','last_name','email', 'phone'] as $field}
@@ -17,7 +20,7 @@
     </div>
 
     <div class="d-flex flex-column flex-md-row align-items-center justify-content-center justify-content-md-end mt-4">
-        <button type="submit" name="ms3_action" value="customer/update-profile" class="btn btn-lg btn-primary ml-md-2 ms3_link">
+        <button type="submit" class="btn btn-lg btn-primary ml-md-2 ms3_link">
             {'ms3_frontend_save' | lexicon}
         </button>
     </div>
