@@ -54,7 +54,9 @@ class Register extends Processor
         $rateLimiter = $this->modx->services->get('ms3_rate_limiter');
 
         $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
-        if (!$rateLimiter->check('register', $ip, 3, 3600)) {
+        $maxAttempts = max(1, (int)$this->modx->getOption('ms3_customer_login_rate_limit_attempts', null, 5));
+        $windowSeconds = max(1, (int)$this->modx->getOption('ms3_customer_login_rate_limit_window', null, 300));
+        if (!$rateLimiter->check('register', $ip, $maxAttempts, $windowSeconds)) {
             return $this->failure(
                 $this->modx->lexicon('ms3_customer_err_register_rate_limit'),
                 ['code' => HttpStatus::TOO_MANY_REQUESTS]

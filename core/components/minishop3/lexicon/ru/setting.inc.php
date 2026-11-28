@@ -247,6 +247,10 @@ $_lang['setting_ms3_customer_max_login_attempts'] = 'Максимум попыт
 $_lang['setting_ms3_customer_max_login_attempts_desc'] = 'Максимальное количество неудачных попыток входа перед блокировкой. По умолчанию 5.';
 $_lang['setting_ms3_customer_block_duration'] = 'Длительность блокировки (сек)';
 $_lang['setting_ms3_customer_block_duration_desc'] = 'Время блокировки в секундах после превышения лимита попыток входа. По умолчанию 300 (5 минут).';
+$_lang['setting_ms3_customer_login_rate_limit_attempts'] = 'Лимит запросов к авторизации клиента';
+$_lang['setting_ms3_customer_login_rate_limit_attempts_desc'] = 'Максимум запросов с одного IP за окно ограничения. По умолчанию 5. Не зависит от блокировки аккаунта.';
+$_lang['setting_ms3_customer_login_rate_limit_window'] = 'Окно ограничения запросов к авторизации (сек)';
+$_lang['setting_ms3_customer_login_rate_limit_window_desc'] = 'Длина окна ограничения по IP для входа, регистрации и сброса пароля. По умолчанию 300 (5 минут).';
 
 // Password Requirements
 $_lang['setting_ms3_password_min_length'] = 'Минимальная длина пароля';
