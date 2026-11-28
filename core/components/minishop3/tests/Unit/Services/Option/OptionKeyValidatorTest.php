@@ -34,6 +34,10 @@ final class OptionKeyValidatorTest extends TestCase
             ['tags'],
             ['pagetitle'],
             ['id'],
+            ['stock'],
+            ['vendor_id'],
+            ['source_id'],
+            ['preview_file_id'],
         ];
     }
 

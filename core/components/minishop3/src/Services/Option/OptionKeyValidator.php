@@ -20,9 +20,11 @@ final class OptionKeyValidator
     {
         $rules = msOptionMeta::$metaMap['validation']['rules']['key'] ?? [];
         if (!is_array($rules)) {
-            return null;
+            // Fail closed: without rules we cannot prove the key is safe.
+            return 'ms3_option_err_invalid_key';
         }
 
+        $checked = 0;
         foreach ($rules as $rule) {
             if (!is_array($rule) || ($rule['type'] ?? '') !== 'preg_match') {
                 continue;
@@ -32,12 +34,17 @@ final class OptionKeyValidator
             if ($pattern === '') {
                 continue;
             }
+            $checked++;
 
             if (@preg_match($pattern, $key) !== 1) {
                 $message = (string) ($rule['message'] ?? 'ms3_option_err_invalid_key');
 
                 return $message !== '' ? $message : 'ms3_option_err_invalid_key';
             }
+        }
+
+        if ($checked === 0) {
+            return 'ms3_option_err_invalid_key';
         }
 
         return null;
