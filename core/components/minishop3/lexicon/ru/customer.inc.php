@@ -13,6 +13,8 @@ $_lang['ms3_err_token_expired'] = 'Срок действия токена ист
 $_lang['ms3_customer_addresses'] = 'Адреса покупателя';
 $_lang['ms3_customer_key_empty'] = 'Отсутствует ключ запроса';
 $_lang['ms3_err_customer_nf'] = 'Профиль покупателя не найден';
+$_lang['ms3_err_customer_required'] = 'Для выбора сохранённого адреса необходимо войти в аккаунт покупателя';
+$_lang['ms3_err_address_not_found'] = 'Сохранённый адрес не найден';
 
 $_lang['ms3_customer_comment'] = 'Комментарий';
 $_lang['ms3_customer_first_name'] = 'Имя';
