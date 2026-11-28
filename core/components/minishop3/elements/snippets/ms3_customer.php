@@ -41,10 +41,8 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
         }
     }
 
-    $loginUrl = CustomerPageService::resolvePageUrl($modx, 'ms3_customer_login_page_id');
-    if ($loginUrl !== '') {
-        $modx->sendRedirect($loginUrl);
-    }
+    // Always redirect: an empty target would leave the visitor on a blank page.
+    $modx->sendRedirect(CustomerPageService::resolveLogoutUrl($modx));
     exit;
 }
 

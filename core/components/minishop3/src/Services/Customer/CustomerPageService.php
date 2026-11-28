@@ -228,18 +228,36 @@ abstract class CustomerPageService
             self::warnOnce($modx, "{$settingKey} is not configured ({$pageId})");
         }
 
+        return self::siteStartUrl($modx);
+    }
+
+    /** Last-resort redirect target for logout: never leave a blank page (#820). */
+    public static function resolveLogoutUrl(modX $modx): string
+    {
+        $loginUrl = self::resolvePageUrl($modx, 'ms3_customer_login_page_id');
+
+        return $loginUrl !== '' ? $loginUrl : (self::siteStartUrl($modx) ?: '/');
+    }
+
+    private static function siteStartUrl(modX $modx): string
+    {
         $fallbackId = (int)$modx->getOption('site_start', null, 1);
         if ($fallbackId <= 0) {
             return '';
         }
-
         $url = $modx->makeUrl($fallbackId);
 
-        return is_string($url) ? $url : '';
+        return is_string($url) && $url !== '' ? $url : '';
     }
 
-    /** @var array<string, true> Warnings already emitted in this request. */
+    /** @var array<string, true> Warnings already emitted, scoped per modX instance + context. */
     private static array $warnedAbout = [];
+
+    /** Test hook: dedup state is otherwise keyed by instance/context. */
+    public static function resetWarningCache(): void
+    {
+        self::$warnedAbout = [];
+    }
 
     /**
      * Both page settings ship as 0, so warn once per reason instead of on every
@@ -248,12 +266,19 @@ abstract class CustomerPageService
     private static function warnOnce(modX $modx, string $reason): void
     {
         $fallbackId = (int)$modx->getOption('site_start', null, 1);
-        $message = "[CustomerPageService] {$reason}; using site start page {$fallbackId}";
-        if (isset(self::$warnedAbout[$message])) {
+        $outcome = $fallbackId > 0
+            ? "using site start page {$fallbackId}"
+            : 'site start page is not configured';
+        $message = "[CustomerPageService] {$reason}; {$outcome}";
+        $contextKey = isset($modx->context) && is_object($modx->context)
+            ? (string) ($modx->context->key ?? '')
+            : '';
+        $key = spl_object_id($modx) . ':' . $contextKey . ':' . $message;
+        if (isset(self::$warnedAbout[$key])) {
             return;
         }
 
-        self::$warnedAbout[$message] = true;
+        self::$warnedAbout[$key] = true;
         $modx->log(modX::LOG_LEVEL_WARN, $message);
     }
 

@@ -19,6 +19,7 @@ final class CustomerPageServiceFallbackTest extends TestCase
         if (!class_exists(modX::class, false)) {
             require_once dirname(__DIR__, 3) . '/stubs/ModxStub.php';
         }
+        CustomerPageService::resetWarningCache();
     }
 
     public function testZeroLoginPageFallsBackToSiteStartAndWarns(): void
@@ -98,6 +99,17 @@ final class CustomerPageServiceFallbackTest extends TestCase
         self::assertCount(1, $logs->items);
     }
 
+    public function testLogoutNeverHasAnEmptyTarget(): void
+    {
+        $logs = $this->logCollector();
+        $modx = $this->modx([
+            'ms3_customer_login_page_id' => 0,
+            'site_start' => 0,
+        ], $logs);
+
+        self::assertSame('/', CustomerPageService::resolveLogoutUrl($modx));
+    }
+
     public function testUnauthorizedUrlsUseTheSameResolver(): void
     {
         $logs = $this->logCollector();
@@ -130,8 +142,9 @@ final class CustomerPageServiceFallbackTest extends TestCase
         $snippet = file_get_contents(dirname(__DIR__, 4) . '/elements/snippets/ms3_customer.php');
         self::assertIsString($snippet);
 
-        self::assertStringContainsString('CustomerPageService::resolvePageUrl', $snippet);
+        self::assertStringContainsString('CustomerPageService::resolveLogoutUrl', $snippet);
         self::assertStringContainsString('CustomerPageService::getUnauthorizedUrls', $snippet);
+        self::assertStringNotContainsString("if (\$loginUrl !== '')", $snippet);
         self::assertStringNotContainsString(
             "getOption('ms3_customer_login_page_id', null, 1)",
             $snippet
