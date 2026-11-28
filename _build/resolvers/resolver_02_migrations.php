@@ -53,9 +53,32 @@ if ($transport->xpdo) {
         case xPDOTransport::ACTION_INSTALL:
         case xPDOTransport::ACTION_UPGRADE:
 
-            // Увеличиваем лимиты для миграций
-            @ini_set('max_execution_time', 300);  // 5 минут
-            @ini_set('memory_limit', '256M');
+            // Увеличиваем лимиты для миграций (только если текущий меньше нужного)
+            // Issue #1023: не понижать лимит если он уже больше или равен -1 (без ограничений)
+            $toBytes = static function (string $v): int {
+                $v = trim($v);
+                if ($v === '' || $v === '-1') {
+                    return -1;
+                }
+                $n = (int)$v;
+                return match (strtolower(substr($v, -1))) {
+                    'g' => $n * 1024 ** 3,
+                    'm' => $n * 1024 ** 2,
+                    'k' => $n * 1024,
+                    default => $n,
+                };
+            };
+
+            $currentMemory = $toBytes((string)ini_get('memory_limit'));
+            if ($currentMemory !== -1 && $currentMemory < 256 * 1024 ** 2) {
+                @ini_set('memory_limit', '256M');
+            }
+
+            // 0 and -1 both mean "no time limit" in PHP.
+            $currentTime = (int)ini_get('max_execution_time');
+            if ($currentTime > 0 && $currentTime < 300) {
+                @ini_set('max_execution_time', 300);
+            }
 
             $componentPath = MODX_CORE_PATH . 'components/minishop3/';
             $vendorAutoload = $componentPath . 'vendor/autoload.php';
