@@ -42,6 +42,12 @@ trait EnsureTargetClassKeyTrait
         if (!$this->modx->getCount($this->classKey, ['id' => $primaryKey, 'class_key' => $this->classKey])) {
             $res = $this->modx->getObject(modResource::class, ['id' => $primaryKey]);
             if ($res) {
+                // The object loaded later will already see the new class_key,
+                // so keep the original for msCategory::save() (#855 review).
+                \MiniShop3\Services\Category\CategoryService::rememberConversion(
+                    (int) $primaryKey,
+                    (string) $res->get('class_key')
+                );
                 $res->set('class_key', $this->classKey);
                 $res->save();
             }

@@ -149,17 +149,45 @@ class msCategory extends modResource
     }
 
     /**
+     * class_key as stored in the database, before this object's changes.
+     */
+    protected function getStoredClassKey(): string
+    {
+        $id = (int) $this->get('id');
+        if ($id <= 0 || !$this->xpdo instanceof xPDO) {
+            return '';
+        }
+
+        // Bypass the shared modResource object cache: it stores derivative
+        // snapshots and can return a stale class_key (#855 review).
+        $stored = $this->xpdo->getObject(modResource::class, $id, false);
+
+        return $stored ? (string) $stored->get('class_key') : '';
+    }
+
+    /**
      * @param bool|int|null $cacheFlag
      *
      * @return bool
      */
     public function save($cacheFlag = null)
     {
-        $oldClassKey = parent::get('class_key');
-
-        // Handle category type change via service
-        if (!$this->isNew() && $oldClassKey != 'msCategory') {
-            $this->getCategoryService()->handleCategorySave($this, $oldClassKey);
+        // Both parent::get() and $this->get() read the same field. The manager
+        // processor may have converted the stored row before loading this
+        // object, so its remembered original wins; otherwise query only when
+        // class_key is dirty (#855 review).
+        $storedClassKey = CategoryService::consumeConversion((int) $this->get('id'));
+        if ($storedClassKey === '' && $this->isDirty('class_key')) {
+            $storedClassKey = $this->getStoredClassKey();
+        }
+        if (
+            CategoryService::shouldResetOnSave(
+                $storedClassKey,
+                (string) $this->get('class_key'),
+                $this->isNew()
+            )
+        ) {
+            $this->getCategoryService()->handleCategorySave($this, $storedClassKey);
         }
 
         return parent::save($cacheFlag);

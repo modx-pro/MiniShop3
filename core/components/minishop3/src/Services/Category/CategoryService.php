@@ -27,6 +27,54 @@ class CategoryService
         $this->modx = $modx;
     }
 
+    /** @var array<int, string> Original class_key of resources converted before the object was loaded (#855 review). */
+    private static array $convertedFrom = [];
+
+    /** Remember the pre-conversion class_key set by the manager processor. */
+    public static function rememberConversion(int $resourceId, string $oldClassKey): void
+    {
+        if ($resourceId > 0 && $oldClassKey !== '') {
+            self::$convertedFrom[$resourceId] = $oldClassKey;
+        }
+    }
+
+    /** Consume (once) the remembered pre-conversion class_key. */
+    public static function consumeConversion(int $resourceId): string
+    {
+        $old = self::$convertedFrom[$resourceId] ?? '';
+        unset(self::$convertedFrom[$resourceId]);
+
+        return $old;
+    }
+
+    /**
+     * MODX 3 keeps FQCN in class_key; older installs used short names (#855).
+     */
+    public static function isCategoryClassKey(string $classKey): bool
+    {
+        return $classKey === msCategory::class || $classKey === 'msCategory';
+    }
+
+    public static function isProductClassKey(string $classKey): bool
+    {
+        return $classKey === msProduct::class || $classKey === 'msProduct';
+    }
+
+    /**
+     * Reset the flag only when a non-category resource becomes a category.
+     */
+    public static function shouldResetOnSave(
+        string $storedClassKey,
+        string $newClassKey,
+        bool $isNew = false
+    ): bool {
+        // An unknown/empty stored key is not proof of a type conversion.
+        return !$isNew
+            && $storedClassKey !== ''
+            && !self::isCategoryClassKey($storedClassKey)
+            && self::isCategoryClassKey($newClassKey);
+    }
+
     /**
      * Handle category save
      *
@@ -39,7 +87,7 @@ class CategoryService
      */
     public function handleCategorySave(msCategory $category, string $oldClassKey): bool
     {
-        if (!$category->isNew() && $oldClassKey !== 'msCategory') {
+        if (self::shouldResetOnSave($oldClassKey, (string) $category->get('class_key'), $category->isNew())) {
             $category->set('hide_children_in_tree', false);
 
             $this->showChildProductsInTree($category->get('id'));
@@ -61,7 +109,8 @@ class CategoryService
         $query->command('UPDATE');
         $query->where([
             'parent' => $categoryId,
-            'class_key' => 'msProduct',
+            // MODX 3 stores FQCN; legacy rows still hold the short name (#855).
+            'class_key:IN' => [msProduct::class, 'msProduct'],
         ]);
         $query->set([
             'show_in_tree' => true,
@@ -130,7 +179,7 @@ class CategoryService
     {
         $query = $this->modx->newQuery(msCategory::class, [
             'parent' => $category->get('parent'),
-            'class_key' => 'msCategory'
+            'class_key:IN' => [msCategory::class, 'msCategory'],
         ]);
         $query->sortby('menuindex', 'ASC');
         $query->select('id');

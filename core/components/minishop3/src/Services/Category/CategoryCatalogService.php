@@ -274,7 +274,7 @@ class CategoryCatalogService
     private function publicCriteria(array $extra = []): array
     {
         return array_merge([
-            'class_key' => msCategory::class,
+            'class_key:IN' => [msCategory::class, 'msCategory'],
             'published' => 1,
             'deleted' => 0,
         ], $extra);

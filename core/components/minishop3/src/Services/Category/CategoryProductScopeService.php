@@ -287,7 +287,7 @@ class CategoryProductScopeService
 
             $query = $this->modx->newQuery(msCategory::class);
             $query->where([
-                'class_key' => msCategory::class,
+                'class_key:IN' => [msCategory::class, 'msCategory'],
                 'parent:IN' => $currentLevel,
                 'published' => 1,
                 'deleted' => 0,
