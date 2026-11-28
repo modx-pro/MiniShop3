@@ -6,8 +6,8 @@
  *
  * `ms3_customer_api_token_ttl` was never read after the httpOnly cookie transition,
  * yet it sat in settings.php next to `ms3_customer_token_ttl` with the same value and
- * area, so admins edited the wrong one. The code fallback (604800) also drifted from
- * the shipped setting (86400), leaving two numbers for one meaning.
+ * area, so admins edited the wrong one. The code fallback had also drifted from
+ * the shipped setting, leaving two numbers for one meaning.
  *
  * Run: php tests/CustomerTokenTtlSettingTest.php
  */
@@ -31,15 +31,16 @@ if (str_contains($settingsSource, "'ms3_customer_api_token_ttl'")) {
     $fail('settings.php must not ship the unread ms3_customer_api_token_ttl (#797)');
 }
 
-if (!preg_match("/'ms3_customer_token_ttl' => \[\s*'value' => (\d+)/", $settingsSource, $m)) {
+$settings = require $settingsPath;
+if (!is_array($settings) || !isset($settings['ms3_customer_token_ttl']['value'])
+    || !is_numeric($settings['ms3_customer_token_ttl']['value'])) {
     $fail('settings.php must ship ms3_customer_token_ttl with a numeric value');
 }
 
-$shippedTtl = (int)$m[1];
+$shippedTtl = (int) $settings['ms3_customer_token_ttl']['value'];
 
 // Every shipped setting keeps a localized title + description in both languages.
-preg_match_all("/^\s{4}'([a-z0-9_]+)' => \[/m", $settingsSource, $settingKeys);
-$shippedKeys = $settingKeys[1] ?: [];
+$shippedKeys = array_keys($settings);
 
 if ($shippedKeys === []) {
     $fail('settings.php must define settings');
@@ -79,7 +80,7 @@ foreach ($codeRoots as $codeRoot) {
             continue;
         }
         $source = (string)file_get_contents($file->getPathname());
-        if (preg_match_all("/getOption\(\s*'ms3_customer_token_ttl'\s*,\s*null\s*,\s*(\d+)\s*\)/", $source, $found)) {
+        if (preg_match_all("/getOption\(\s*'ms3_customer_token_ttl'\s*,\s*[^,)]+\s*,\s*(\d+)\s*\)/", $source, $found)) {
             foreach ($found[1] as $default) {
                 $readSites[$file->getPathname()][] = (int)$default;
             }
@@ -104,7 +105,7 @@ foreach ($readSites as $path => $defaults) {
 
 // Installed sites must lose the dangling setting row on upgrade.
 $migrationFound = false;
-foreach (glob("{$root}/core/components/minishop3/migrations/[0-9]*remove*api_token_ttl*.php") ?: [] as $migration) {
+foreach (glob("{$root}/core/components/minishop3/migrations/*.php") ?: [] as $migration) {
     $source = (string)file_get_contents($migration);
     if (str_contains($source, "'ms3_customer_api_token_ttl'")
         && str_contains($source, 'DELETE FROM')
