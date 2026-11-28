@@ -64,7 +64,7 @@ final class ResolveApiTokenTest extends TestCase
         self::assertTrue($token->removed);
     }
 
-    public function testBlockedCustomerTokenIsMissing(): void
+    public function testBlockedCustomerTokenIsDenied(): void
     {
         $token = new FakeCustomerToken([
             'token' => 'blocked-token',
@@ -81,12 +81,12 @@ final class ResolveApiTokenTest extends TestCase
         $service = new TokenService($this->modxWithTokens(['blocked-token' => $token], [42 => $customer]));
 
         $resolved = $service->resolveApiToken('blocked-token');
-        self::assertSame('missing', $resolved['reason']);
+        self::assertSame('denied', $resolved['reason']);
         self::assertNull($resolved['token']);
         self::assertFalse($token->removed);
     }
 
-    public function testInactiveCustomerTokenIsMissing(): void
+    public function testInactiveCustomerTokenIsDenied(): void
     {
         $token = new FakeCustomerToken([
             'token' => 'inactive-token',
@@ -102,7 +102,7 @@ final class ResolveApiTokenTest extends TestCase
         $service = new TokenService($this->modxWithTokens(['inactive-token' => $token], [43 => $customer]));
 
         $resolved = $service->resolveApiToken('inactive-token');
-        self::assertSame('missing', $resolved['reason']);
+        self::assertSame('denied', $resolved['reason']);
         self::assertNull($resolved['token']);
     }
 

@@ -94,6 +94,7 @@ class TokenMiddleware implements MiddlewareInterface
 
         /** @var TokenService $tokenService */
         $tokenService = $this->modx->services->get('ms3_token_service');
+        $sessionToken = $_SESSION['ms3']['customer_token'] ?? '';
 
         // Hydrate request token from session cache (still validated below).
         if (
@@ -112,10 +113,36 @@ class TokenMiddleware implements MiddlewareInterface
             $resolved = $tokenService->resolveApiToken($token);
 
             if ($resolved['reason'] === 'ok') {
+                // A valid DB token is accepted regardless of its origin: Bearer,
+                // MS3TOKEN header, cookie after session loss, or session cache.
                 $tokenService->syncSessionFromToken($resolved['token']);
                 $_REQUEST['ms3_token'] = $token;
 
                 return null;
+            }
+
+            // Lazy anonymous token (#1000): issued into session + cookie by a
+            // snippet, not yet in DB. Persist that very token on its first
+            // protected API hit instead of rejecting it. Only a token still
+            // marked as unpersisted in the session is eligible: revoked or
+            // previously persisted tokens are never recreated. Promotion is
+            // guest-only — an authenticated session must bind the customer id
+            // through the regular token minting path.
+            if (
+                $resolved['reason'] === 'missing'
+                && !$isPublic
+                && !empty($sessionToken)
+                && hash_equals($sessionToken, $token)
+                && $tokenService->isSessionTokenLazy()
+                && empty($_SESSION['ms3']['customer_id'])
+            ) {
+                $persisted = $tokenService->ensureTokenPersisted($token, 0);
+                if ($persisted !== null) {
+                    $tokenService->syncSessionFromToken($persisted);
+                    $_REQUEST['ms3_token'] = $token;
+
+                    return null;
+                }
             }
 
             $this->clearClientTokenState();
@@ -178,6 +205,7 @@ class TokenMiddleware implements MiddlewareInterface
             $_REQUEST['ms3_token'],
             $_SESSION['ms3']['customer_token'],
             $_SESSION['ms3']['customer_token_expires'],
+            $_SESSION['ms3']['customer_token_lazy'],
             $_SESSION['ms3']['customer_id']
         );
     }
