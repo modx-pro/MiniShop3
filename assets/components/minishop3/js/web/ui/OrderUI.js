@@ -3,6 +3,11 @@
  *
  * Manages order forms: auto-save fields, validation, submission.
  */
+
+// ms3.init() may create a fresh OrderUI repeatedly. Register document-level
+// listeners once so repeated init() calls do not multiply cost recalculations.
+let orderListenersRegistered = false
+
 class OrderUI {
   /**
    * @param {OrderAPI} orderAPI - Order API instance
@@ -29,11 +34,21 @@ class OrderUI {
       this.initForm(form)
     })
 
-    // Listen for cart updates to recalculate delivery cost
-    // (e.g., free delivery threshold may be reached)
-    document.addEventListener('ms3:cart:updated', () => {
-      this.updateOrderCosts()
-    })
+    if (!orderListenersRegistered) {
+      orderListenersRegistered = true
+      // Listen for cart updates to recalculate delivery cost
+      // (e.g., free delivery threshold may be reached)
+      document.addEventListener('ms3:cart:updated', () => {
+        this.updateOrderCosts()
+      })
+
+      // order/clean resets the draft, not the cart: recalculate costs on the
+      // dedicated event instead of a bogus ms3:cart:updated (#802).
+      // Public DOM event: ms3:order:cleaned, detail = response payload.
+      document.addEventListener('ms3:order:cleaned', () => {
+        this.updateOrderCosts()
+      })
+    }
   }
 
   /**
@@ -291,7 +306,12 @@ class OrderUI {
         document.querySelectorAll(this.selectors.formOrder).forEach(form => {
           form.reset()
         })
-        document.dispatchEvent(new CustomEvent('ms3:cart:updated'))
+        // order/clean never touches the cart, so ms3:cart:updated must not
+        // fire here: subscribers would see a cart change that never happened,
+        // and the old dispatch had no detail at all (#802).
+        document.dispatchEvent(new CustomEvent('ms3:order:cleaned', {
+          detail: response,
+        }))
       }
 
       return response
