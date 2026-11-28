@@ -52,7 +52,7 @@ class msProductCreateManagerController extends msResourceCreateController
         $placeholders = parent::process($scriptProperties);
 
         $this->resourceArray['show_in_tree'] = (int)$this->getOption('ms3_product_show_in_tree_default');
-        $this->resourceArray['source'] = (int)$this->getOption('ms3_product_source_default');
+        $this->resourceArray['source'] = (int)$this->getOption('ms3_product_source_default', null, 1);
 
         return $placeholders;
     }

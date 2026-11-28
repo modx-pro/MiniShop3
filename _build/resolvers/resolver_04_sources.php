@@ -117,9 +117,10 @@ if ($transport->xpdo) {
             $setting = $modx->getObject(modSystemSetting::class, $settings_properties) ?:
                 $modx->newObject(modSystemSetting::class, $settings_properties);
 
+            // Match strictly by name: a default value of 1 must not latch onto
+            // MODX's built-in "FileSystem" source and overwrite its properties (#873).
             $c = $modx->newQuery(modMediaSource::class);
-            $c->where(['id' => $setting->get('value')]);
-            $c->orCondition(['name' => $properties['name']]);
+            $c->where(['name' => $properties['name']]);
             /** @var $source modMediaSource */
             if (!$source = $modx->getObject(modMediaSource::class, $c)) {
                 $source = $modx->newObject(modMediaSource::class, $properties);
