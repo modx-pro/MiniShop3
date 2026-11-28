@@ -29,6 +29,7 @@ use xPDO\Om\xPDOSimpleObject;
  * @property string $last_order_at
  * @property string $privacy_accepted_at
  * @property string $privacy_ip
+ * @property string|null $telegram_chat_id
  *
  * @package MiniShop3\Model
  */

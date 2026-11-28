@@ -33,6 +33,7 @@ final class CustomerPublicDto
         'total_spent',
         'last_order_at',
         'privacy_accepted_at',
+        // Internal routing PII stays out of public payloads.
     ];
 
     /**
@@ -71,6 +72,7 @@ final class CustomerPublicDto
         'last_order_at',
         'privacy_accepted_at',
         'privacy_ip',
+        'telegram_chat_id',
     ];
 
     /**
