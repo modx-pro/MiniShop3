@@ -102,6 +102,8 @@ class ManagerOrderCostRecalculator
 
         $warnings = array_merge($warnings, $paymentResult['warnings']);
         $paymentFee = $paymentResult['payment_fee'];
+        // Remember the authoritative fee so later provider failures can reuse it.
+        $this->rememberPaymentFee($order, $paymentFee);
 
         /** @var OrderService $orderService */
         $orderService = $this->modx->services->get('ms3_order_service');
@@ -298,18 +300,18 @@ class ManagerOrderCostRecalculator
         $msPayment = $this->modx->getObject(msPayment::class, ['id' => $paymentId]);
 
         if (!$msPayment) {
+            // In force mode a missing provider is a failure, not "no fee": keep
+            // whatever the order already had (like the delivery path does).
             return [
                 'success' => true,
-                'payment_fee' => 0.0,
+                'payment_fee' => $mode === self::MODE_FORCE_PROVIDER
+                    ? $this->persistedPaymentFee($order)
+                    : 0.0,
                 'warnings' => $warnings,
             ];
         }
 
-        // Persisted payment fee from the order (cost - cart_cost - delivery_cost)
-        $persistedPaymentFee = round(
-            (float)$order->get('cost') - (float)$order->get('cart_cost') - (float)$order->get('delivery_cost'),
-            6
-        );
+        $persistedPaymentFee = $this->persistedPaymentFee($order);
 
         if ($mode === self::MODE_FORCE_PROVIDER) {
             try {
@@ -363,6 +365,39 @@ class ManagerOrderCostRecalculator
             'payment_fee' => 0.0,
             'warnings' => $warnings,
         ];
+    }
+
+    /**
+     * Authoritative persisted fee, with a residual fallback for legacy orders.
+     *
+     * The residual is only trusted when the stored cost is consistent with the
+     * stored cart/delivery sums; a clamped cost (0) must not invent a fee.
+     */
+    protected function persistedPaymentFee(msOrder $order): float
+    {
+        $properties = $order->get('properties');
+        if (is_array($properties) && array_key_exists('payment_fee', $properties)) {
+            return round((float) $properties['payment_fee'], 6);
+        }
+
+        $cartCost = (float) $order->get('cart_cost');
+        $deliveryCost = (float) $order->get('delivery_cost');
+        $cost = (float) $order->get('cost');
+        if ($cost < $cartCost + $deliveryCost) {
+            // Cost was clamped or sums are stale: no reliable fee to preserve.
+            return 0.0;
+        }
+
+        return round($cost - $cartCost - $deliveryCost, 6);
+    }
+
+    /** Store the fee in properties so it survives later provider failures. */
+    protected function rememberPaymentFee(msOrder $order, float $fee): void
+    {
+        $properties = $order->get('properties');
+        $properties = is_array($properties) ? $properties : [];
+        $properties['payment_fee'] = round($fee, 6);
+        $order->set('properties', $properties);
     }
 
     protected function isSimpleDelivery(msDelivery $delivery): bool
