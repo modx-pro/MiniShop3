@@ -25,9 +25,10 @@ if (!empty($name) && empty($options)) {
     $options = $name;
 }
 
-$_ms3LoadedById = !empty($product) && (int) $product !== (int) $modx->resource->id;
+$passedProductId = empty($product) ? 0 : \MiniShop3\Utils\SnippetProductResolver::resolveId($product);
+$_ms3LoadedById = $passedProductId > 0 && $passedProductId !== (int) $modx->resource->id;
 $product = $_ms3LoadedById
-    ? $modx->getObject(msProduct::class, ['id' => (int) $product])
+    ? $modx->getObject(msProduct::class, ['id' => $passedProductId])
     : $modx->resource;
 if (!($product instanceof msProduct)) {
     return $modx->lexicon('ms3_err_options_is_not_msproduct', [

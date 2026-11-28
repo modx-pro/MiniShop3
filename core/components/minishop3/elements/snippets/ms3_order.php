@@ -34,11 +34,15 @@ $pdoFetch->addTime('pdoTools loaded.');
 $tpl = $modx->getOption('tpl', $scriptProperties, 'tpl.msOrder');
 $return = $modx->getOption('return', $scriptProperties, 'tpl');
 $includeDeliveryFields = $modx->getOption('includeDeliveryFields', $scriptProperties, 'id');
-$includeDeliveryKeys = array_map('trim', explode(',', $includeDeliveryFields));
-$includeDeliveryKeys = array_unique(array_merge($includeDeliveryKeys, ['id']));
+$includeDeliveryKeys = array_values(array_unique(array_merge(
+    \MiniShop3\Utils\CommaList::parse($includeDeliveryFields),
+    ['id']
+)));
 $includePaymentFields = $modx->getOption('includePaymentFields', $scriptProperties, '*');
-$includePaymentKeys = array_map('trim', explode(',', $includePaymentFields));
-$includePaymentKeys = array_unique(array_merge($includePaymentKeys, ['id']));
+$includePaymentKeys = array_values(array_unique(array_merge(
+    \MiniShop3\Utils\CommaList::parse($includePaymentFields),
+    ['id']
+)));
 $includeCustomerAddresses = $modx->getOption('includeCustomerAddresses', $scriptProperties, true);
 
 // Check if customer is authenticated
