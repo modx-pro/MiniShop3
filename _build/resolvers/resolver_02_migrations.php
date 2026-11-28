@@ -74,8 +74,9 @@ if ($transport->xpdo) {
                 @ini_set('memory_limit', '256M');
             }
 
+            // 0 and -1 both mean "no time limit" in PHP.
             $currentTime = (int)ini_get('max_execution_time');
-            if ($currentTime !== 0 && $currentTime < 300) {
+            if ($currentTime > 0 && $currentTime < 300) {
                 @ini_set('max_execution_time', 300);
             }
 
