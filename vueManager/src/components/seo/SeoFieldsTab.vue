@@ -3,8 +3,8 @@ import { useLexicon } from '@vuetools/useLexicon'
 import { Button, InputText, Select, Textarea, Toast, useToast } from 'primevue'
 import { computed, onMounted, ref } from 'vue'
 
-import { useGroupedToast, useUiGroup } from '../composables/uiGroup.js'
-import request from '../request.js'
+import { useGroupedToast, useUiGroup } from '../../composables/uiGroup.js'
+import request from '../../request.js'
 
 const props = defineProps({
   resourceId: {

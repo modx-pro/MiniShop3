@@ -341,3 +341,5 @@ $_lang['ms3_customer_group_deleted'] = 'Customer group deleted';
 $_lang['ms3_err_seo_save_failed'] = 'Failed to save SEO data';
 $_lang['ms3_err_seo_class_key_mismatch'] = 'SEO overrides are only available for products and categories';
 $_lang['ms3_err_resource_not_found'] = 'Resource not found';
+$_lang['ms3_err_resource_id_required'] = 'Resource id is required';
+$_lang['ms3_err_seo_service_unavailable'] = 'SEO service is not available';

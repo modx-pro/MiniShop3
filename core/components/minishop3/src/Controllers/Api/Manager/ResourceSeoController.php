@@ -45,7 +45,12 @@ class ResourceSeoController
             return $verify;
         }
 
-        return Response::success($this->service()->get($resourceId));
+        $service = $this->service();
+        if ($service === null) {
+            return $this->serviceUnavailable();
+        }
+
+        return Response::success($service->get($resourceId));
     }
 
     /**
@@ -63,8 +68,13 @@ class ResourceSeoController
             return $verify;
         }
 
+        $service = $this->service();
+        if ($service === null) {
+            return $this->serviceUnavailable();
+        }
+
         $data = $this->getRequestData();
-        $result = $this->service()->save($resourceId, $data);
+        $result = $service->save($resourceId, $data);
         if (empty($result['ok'])) {
             return $this->lexiconError('ms3_err_seo_save_failed', HttpStatus::UNPROCESSABLE_ENTITY);
         }
@@ -72,10 +82,21 @@ class ResourceSeoController
         return Response::success($result['data']);
     }
 
-    protected function service(): ResourceSeoService
+    protected function service(): ?ResourceSeoService
     {
+        if (!$this->modx->services->has('ms3_resource_seo')) {
+            return null;
+        }
+
         /** @var ResourceSeoService */
         return $this->modx->services->get('ms3_resource_seo');
+    }
+
+    private function serviceUnavailable(): Response
+    {
+        $this->modx->log(modX::LOG_LEVEL_ERROR, '[MiniShop3] ms3_resource_seo service is not registered');
+
+        return $this->lexiconError('ms3_err_seo_service_unavailable', HttpStatus::INTERNAL_SERVER_ERROR);
     }
 
     /**
@@ -84,7 +105,7 @@ class ResourceSeoController
     private function verifyResource(int $resourceId, string $expectedClassKey): ?Response
     {
         if ($resourceId <= 0) {
-            return Response::error('resource_id is required', HttpStatus::BAD_REQUEST);
+            return $this->lexiconError('ms3_err_resource_id_required', HttpStatus::BAD_REQUEST);
         }
 
         /** @var modResource|null $resource */

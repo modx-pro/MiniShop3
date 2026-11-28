@@ -111,9 +111,12 @@ Ext.extend(ms3.panel.UpdateCategory, ms3.panel.Category, {
             const item = originals[i];
             if (item.id === 'modx-resource-tabs') {
                 const tabs = [
-                    this.getProducts(config),
-                    this.getSeo(config)
+                    this.getProducts(config)
                 ];
+                // Read-only managers must not see an editable SEO form (#790).
+                if (config.canSave !== 0 && config.canSave !== false) {
+                    tabs.push(this.getSeo(config));
+                }
                 let pageSettingsTab, accessPermissionsTab;
                 for (const i2 in item.items) {
                     if (!item.items.hasOwnProperty(i2)) {

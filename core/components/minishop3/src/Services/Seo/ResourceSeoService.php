@@ -69,17 +69,27 @@ final class ResourceSeoService
     public function save(int $resourceId, array $data): array
     {
         if ($resourceId <= 0) {
-            return ['ok' => false, 'errors' => ['resource_id' => 'resource_id is required']];
+            $this->modx->lexicon->load('minishop3:default');
+
+            return ['ok' => false, 'errors' => ['resource_id' => $this->modx->lexicon('ms3_err_resource_id_required')]];
         }
 
         $clean = $this->sanitize($data);
-        $hasValue = array_filter($clean, static fn (?string $v) => $v !== null) !== [];
+        // PUT is a partial update: only fields actually present in the payload are
+        // written. Omitted fields keep their stored value instead of being cleared.
+        $present = [];
+        foreach (self::FIELDS as $field) {
+            if (array_key_exists($field, $data)) {
+                $present[$field] = $clean[$field];
+            }
+        }
+        $hasValue = array_filter($present, static fn (?string $v) => $v !== null) !== [];
 
         $row = $this->modx->getObject(msResourceSeo::class, ['resource_id' => $resourceId]);
 
-        // Empty payload = unset / fall back to defaults. Drop the row so the public
-        // projection falls through to the builder defaults (no opaque null-vs-empty games).
-        if (!$hasValue) {
+        // A fully empty payload (or all fields supplied as empty) means "unset":
+        // drop the row so the public projection falls through to builder defaults.
+        if ($data === [] || (!$hasValue && count($present) === count(self::FIELDS))) {
             if ($row !== null) {
                 $row->remove();
             }
@@ -88,11 +98,14 @@ final class ResourceSeoService
         }
 
         if ($row === null) {
+            if (!$hasValue) {
+                return ['ok' => true, 'data' => $this->emptyShape()];
+            }
             $row = $this->modx->newObject(msResourceSeo::class);
             $row->set('resource_id', $resourceId);
         }
 
-        foreach ($clean as $field => $value) {
+        foreach ($present as $field => $value) {
             $row->set($field, $value);
         }
 
@@ -158,8 +171,11 @@ final class ResourceSeoService
                 continue;
             }
             $value = $data[$field];
-            if ($value !== null && !is_string($value)) {
-                $value = (string) $value;
+            // Arrays/objects cannot be represented as a scalar override value;
+            // casting them would emit a warning and persist the literal "Array".
+            if ($value !== null && !is_scalar($value)) {
+                $clean[$field] = null;
+                continue;
             }
             if ($value === null) {
                 $clean[$field] = null;
@@ -214,7 +230,13 @@ final class ResourceSeoService
             return $value;
         }
 
-        // Protocol-relative and other schemes (mailto:, javascript:, …) are not allowed.
+        // Protocol-relative URLs are not allowed: without this guard they would be
+        // rewritten to a local path such as /cdn.example/og.jpg.
+        if (str_starts_with($value, '//')) {
+            return null;
+        }
+
+        // Other schemes (mailto:, javascript:, …) are not allowed.
         if (preg_match('#^[a-z][a-z0-9+.-]*:#i', $value) === 1) {
             return null;
         }

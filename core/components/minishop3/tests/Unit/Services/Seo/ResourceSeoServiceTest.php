@@ -154,6 +154,48 @@ final class ResourceSeoServiceTest extends TestCase
         self::assertSame('/assets/og.jpg', $capture['set']['og_image']);
     }
 
+    public function testSaveRejectsProtocolRelativeUrls(): void
+    {
+        $capture = $this->captureNewObject();
+        $service = new ResourceSeoService($this->modx(null, $capture));
+
+        $service->save(42, [
+            'canonical' => '//cdn.example/canonical',
+            'og_image' => '//cdn.example/og.jpg',
+        ]);
+
+        self::assertNull($capture['instance']);
+    }
+
+    public function testSaveRejectsNonScalarValuesWithoutWarning(): void
+    {
+        $capture = $this->captureNewObject();
+        $service = new ResourceSeoService($this->modx(null, $capture));
+
+        $result = $service->save(42, ['title' => ['nested' => 'value']]);
+
+        self::assertTrue($result['ok']);
+        self::assertNull($capture['instance']);
+    }
+
+    public function testSavePartialPayloadKeepsOmittedFields(): void
+    {
+        $existing = $this->fakeRow([
+            'resource_id' => 42,
+            'title' => 'Old title',
+            'description' => 'Keep me',
+            'canonical' => 'https://shop.example/kettle',
+        ]);
+        $service = new ResourceSeoService($this->modx($existing));
+
+        $result = $service->save(42, ['title' => 'New title']);
+
+        self::assertTrue($result['ok']);
+        self::assertSame('New title', $existing->get('title'));
+        self::assertSame('Keep me', $existing->get('description'));
+        self::assertSame('https://shop.example/kettle', $existing->get('canonical'));
+    }
+
     public function testSaveRequiresResourceId(): void
     {
         $service = new ResourceSeoService($this->modx(null));

@@ -14,6 +14,7 @@ import { injectFormStylesOverride } from '../utils/formStyles.js'
 const MOUNT_ID = 'ms3-vue-category-seo'
 
 let app = null
+let pollTimer = null
 
 function mountApp() {
   const container = document.getElementById(MOUNT_ID)
@@ -36,6 +37,10 @@ function mountApp() {
 }
 
 function unmountApp() {
+  if (pollTimer !== null) {
+    clearInterval(pollTimer)
+    pollTimer = null
+  }
   if (app) {
     app.unmount()
     app = null
@@ -51,12 +56,14 @@ if (document.readyState === 'loading') {
 if (typeof Ext !== 'undefined') {
   Ext.onReady(function () {
     mountApp()
-    setInterval(() => {
-      const container = document.getElementById(MOUNT_ID)
-      if (container && container.offsetParent !== null) {
-        mountApp()
-      }
-    }, 500)
+    if (pollTimer === null) {
+      pollTimer = setInterval(() => {
+        const container = document.getElementById(MOUNT_ID)
+        if (container && container.offsetParent !== null) {
+          mountApp()
+        }
+      }, 500)
+    }
   })
 }
 

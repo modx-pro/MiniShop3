@@ -372,6 +372,40 @@ final class PublicSeoServiceTest extends TestCase
         self::assertSame('Native wins', $out['seo']['title']);
     }
 
+    public function testNativeSeoListUsesSingleBatchCall(): void
+    {
+        $GLOBALS['ms3_native_batch_calls'] = 0;
+        $out = $this->serviceWithNative(['title' => 'Batched'])->attachSeoToProductList(
+            [
+                ['id' => 42, 'pagetitle' => 'Kettle'],
+                ['id' => 43, 'pagetitle' => 'Pan'],
+            ],
+            ['include_seo' => true],
+        );
+
+        self::assertSame(1, $GLOBALS['ms3_native_batch_calls']);
+        self::assertSame('Batched', $out[0]['seo']['title']);
+        self::assertSame('Batched', $out[1]['seo']['title']);
+    }
+
+    public function testNativeSeoTreeUsesSingleBatchCall(): void
+    {
+        $GLOBALS['ms3_native_batch_calls'] = 0;
+        $out = $this->serviceWithNative(['title' => 'Tree native'])->attachSeoToCategoryTree(
+            [
+                [
+                    'id' => 1,
+                    'pagetitle' => 'Root',
+                    'children' => [['id' => 2, 'pagetitle' => 'Child']],
+                ],
+            ],
+            ['include_seo' => true],
+        );
+
+        self::assertSame(1, $GLOBALS['ms3_native_batch_calls']);
+        self::assertSame('Tree native', $out[0]['children'][0]['seo']['title']);
+    }
+
     public function testNativeSeoMissingServiceFallsThrough(): void
     {
         // Service container does not advertise ms3_resource_seo → native overlay is a no-op.
@@ -452,6 +486,21 @@ final class PublicSeoServiceTest extends TestCase
                                 public function get(int $resourceId): array
                                 {
                                     return $this->native;
+                                }
+
+                                /**
+                                 * @param list<int> $resourceIds
+                                 * @return array<int, array<string, string|null>>
+                                 */
+                                public function batchByIds(array $resourceIds): array
+                                {
+                                    $GLOBALS['ms3_native_batch_calls'] = ($GLOBALS['ms3_native_batch_calls'] ?? 0) + 1;
+                                    $out = [];
+                                    foreach ($resourceIds as $id) {
+                                        $out[$id] = $this->native;
+                                    }
+
+                                    return $out;
                                 }
                             };
                         }

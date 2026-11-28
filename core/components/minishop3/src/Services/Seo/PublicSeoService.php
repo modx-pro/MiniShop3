@@ -110,12 +110,47 @@ final class PublicSeoService
      */
     private function attachSeoToCategoryTreeNodes(array $nodes, array $params): array
     {
+        $ids = [];
+        $collectIds = static function (array $items) use (&$collectIds, &$ids): void {
+            foreach ($items as $item) {
+                $id = (int) ($item['id'] ?? 0);
+                if ($id > 0) {
+                    $ids[] = $id;
+                }
+                if (isset($item['children']) && is_array($item['children'])) {
+                    $collectIds($item['children']);
+                }
+            }
+        };
+        $collectIds($nodes);
+
+        return $this->attachSeoToCategoryTreeWithPreload(
+            $nodes,
+            $params,
+            $this->nativeSeoBatch($ids),
+        );
+    }
+
+    /**
+     * @param list<array<string, mixed>> $nodes
+     * @param array<string, mixed> $params
+     * @param array<int, array<string, string|null>> $nativeBatch
+     * @return list<array<string, mixed>>
+     */
+    private function attachSeoToCategoryTreeWithPreload(array $nodes, array $params, array $nativeBatch): array
+    {
         $result = [];
         foreach ($nodes as $node) {
             if (isset($node['children']) && is_array($node['children'])) {
-                $node['children'] = $this->attachSeoToCategoryTreeNodes($node['children'], $params);
+                $node['children'] = $this->attachSeoToCategoryTreeWithPreload($node['children'], $params, $nativeBatch);
             }
-            $result[] = $this->attach($node, $params, PublicSeoBuilder::OG_TYPE_CATEGORY);
+            $id = (int) ($node['id'] ?? 0);
+            $result[] = $this->attach(
+                $node,
+                $params,
+                PublicSeoBuilder::OG_TYPE_CATEGORY,
+                $nativeBatch[$id] ?? null,
+            );
         }
 
         return $result;
