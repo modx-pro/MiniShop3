@@ -566,13 +566,22 @@ class OptionsController
     protected function isCategoriesIdListPayload($payload): bool
     {
         if (is_string($payload)) {
-            $decoded = json_decode($payload, true);
+            $trimmed = trim($payload);
+            // "{}" is the legacy empty map, not an empty list of ids.
+            if ($trimmed === '{}') {
+                return false;
+            }
+            $decoded = json_decode($trimmed, true);
             if (!is_array($decoded)) {
                 return false;
             }
             $payload = $decoded;
         }
-        if (!is_array($payload) || $payload === []) {
+        // Non-array scalars are invalid input, not a request to detach all.
+        if (!is_array($payload)) {
+            return false;
+        }
+        if ($payload === []) {
             return true;
         }
 
@@ -620,28 +629,6 @@ class OptionsController
             $categoryService = $this->optionService->getCategory();
             $categoryService->removeFromCategories($optionId, $disabled);
         }
-    }
-
-    /**
-     * Whether the payload is a flat list of category ids (modern Vue shape) rather
-     * than an assoc {id: bool} map (legacy ExtJS shape).
-     *
-     * @param mixed $payload
-     */
-    protected function isCategoriesIdListPayload($payload): bool
-    {
-        if (is_string($payload)) {
-            $decoded = json_decode($payload, true);
-            if (!is_array($decoded)) {
-                return false;
-            }
-            $payload = $decoded;
-        }
-        if (!is_array($payload) || $payload === []) {
-            return true;
-        }
-
-        return array_keys($payload) === range(0, count($payload) - 1);
     }
 
     /**

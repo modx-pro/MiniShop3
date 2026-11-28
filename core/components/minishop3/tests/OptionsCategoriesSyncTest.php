@@ -34,10 +34,29 @@ if (!str_contains($source, 'array_diff($current, $enabled)')) {
 if (!str_contains($source, 'removeFromCategories($optionId, $detach)')) {
     $fail('list sync must call removeFromCategories with the detach set (#869)');
 }
-// Legacy map path may still use $disabled — that's fine. Only assert the list
-// branch computes its own detach set via $enabled.
-if (!str_contains($source, 'array_diff($current, $enabled)')) {
-    $fail('list sync must compute detach as current links minus enabled ids (#869)');
+// Exercise the shape detector itself: invalid scalars must not be mistaken for
+// an empty list (which would detach every category) (#869 review).
+require dirname(__DIR__) . '/vendor/autoload.php';
+$method = new \ReflectionMethod(
+    \MiniShop3\Controllers\Api\Manager\OptionsController::class,
+    'isCategoriesIdListPayload'
+);
+$controller = (new \ReflectionClass(\MiniShop3\Controllers\Api\Manager\OptionsController::class))
+    ->newInstanceWithoutConstructor();
+$cases = [
+    [[], true],
+    [[3, 5], true],
+    ['[3,5]', true],
+    [['3' => true], false],
+    ['{}', false],
+    ['invalid-json', false],
+    [5, false],
+    [null, false],
+];
+foreach ($cases as [$payload, $expected]) {
+    if ($method->invoke($controller, $payload) !== $expected) {
+        $fail('unexpected payload classification for ' . var_export($payload, true));
+    }
 }
 
 fwrite(STDOUT, "OK OptionsCategoriesSyncTest (#869)\n");
