@@ -172,7 +172,8 @@ if (isset($_ms3CategoryIds) && $_ms3CategoryIds !== []) {
     }
 }
 $_ms3SortBy = $scriptProperties['sortby'] ?? '';
-if (!is_array($_ms3SortBy)) {
+$_ms3IsIdsSort = is_string($_ms3SortBy) && strtolower(trim($_ms3SortBy)) === 'ids';
+if (!is_array($_ms3SortBy) && !$_ms3IsIdsSort) {
     $_ms3SortBy = (string) $_ms3SortBy;
     // Whitelist + qualify bare columns before menuindex / sortbyOptions inject expressions (#755).
     $_ms3Passthrough = [];
@@ -241,6 +242,20 @@ if (!is_array($_ms3SortBy)) {
         );
     }
     $scriptProperties['sortby'] = $_ms3SortBy;
+} elseif ($_ms3IsIdsSort && !empty($scriptProperties['resources'])) {
+    // Sort by the order of IDs in &resources parameter (pdoTools-style #912).
+    // Every alias.field reference MUST be backticked: pdoTools::addSort() rewrites
+    // bare "alias.field " with a regex that otherwise mangles the whole CASE.
+    $resources = is_array($scriptProperties['resources'])
+        ? array_values($scriptProperties['resources'])
+        : array_map('trim', explode(',', (string) $scriptProperties['resources']));
+    $caseParts = [];
+    foreach ($resources as $index => $id) {
+        $caseParts[] = 'WHEN `msProduct`.`id` = ' . (int) $id . ' THEN ' . (int) $index;
+    }
+    $scriptProperties['sortby'] = 'CASE ' . implode(' ', $caseParts) . ' ELSE ' . count($caseParts) . ' END';
+    // pdoTools ignores &sortdir for ids; reversed order would defeat &resources.
+    $scriptProperties['sortdir'] = '';
 }
 if ($_ms3MenuindexCategoryIds !== [] && CategoryProductMenuindexService::sortbyRefersToMenuindex($_ms3SortBy)) {
     $memberAlias = CategoryProductMenuindexService::MEMBER_JOIN_ALIAS;
