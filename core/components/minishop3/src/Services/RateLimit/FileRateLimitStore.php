@@ -56,9 +56,18 @@ class FileRateLimitStore implements RateLimitStoreInterface
             fwrite($fp, (string) $attempts);
             fflush($fp);
 
-            // Read/write reset time
-            $resetAt = time() + $windowSeconds;
-            file_put_contents($resetFile, (string) $resetAt);
+            // Fixed window: set reset time only on the first hit. Re-writing it
+            // on every increment makes the window slide and never reset (#926).
+            if ($attempts === 1) {
+                $resetAt = time() + $windowSeconds;
+                file_put_contents($resetFile, (string) $resetAt);
+            } else {
+                $resetAt = $this->readResetTime($key);
+                if ($resetAt <= 0) {
+                    $resetAt = time() + $windowSeconds;
+                    file_put_contents($resetFile, (string) $resetAt);
+                }
+            }
 
             return [
                 'attempts' => $attempts,

@@ -62,17 +62,22 @@ class RateLimiter
     {
         $key = $this->getKey($action, $identifier);
 
-        // Try to atomically add counter with value 1 (first attempt)
-        // add() returns false if key already exists, which is expected for subsequent attempts
+        // Fixed window: the reset timestamp is stored once and the counter TTL
+        // is derived from it, so repeated hits cannot slide the window (#926).
+        $resetKey = $key . '_reset';
+        $resetAt = (int) $this->modx->cacheManager->get($resetKey);
+        if ($resetAt <= 0) {
+            $resetAt = time() + $windowSeconds;
+            $this->modx->cacheManager->set($resetKey, $resetAt, $windowSeconds);
+        }
+        $ttl = max(1, $resetAt - time());
+
+        // Atomically add the first hit. add() returns false when the key exists.
         $value = 1;
-        $added = $this->modx->cacheManager->add($key, $value, $windowSeconds);
-        
-        if ($added === true) {
-            // First attempt: counter was set to 1
-            return true;
+        if ($this->modx->cacheManager->add($key, $value, $ttl) === true) {
+            return 1 < $maxAttempts;
         }
 
-        // Key exists: read current value
         $attempts = (int)$this->modx->cacheManager->get($key);
 
         if ($attempts >= $maxAttempts) {
@@ -83,11 +88,8 @@ class RateLimiter
             return false;
         }
 
-        // Increment: race condition window exists for file-based cache,
-        // but acceptable for typical single-server deployments.
-        // For high-concurrency, use Redis/Memcached store with atomic INCR.
-        $i = $attempts + 1;
-        $this->modx->cacheManager->set($key, $i, $windowSeconds);
+        $next = $attempts + 1;
+        $this->modx->cacheManager->set($key, $next, $ttl);
 
         return true;
     }

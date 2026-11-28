@@ -661,12 +661,7 @@ class AuthManager
     {
         if (CustomerAccess::isLockoutExpired($customer)) {
             CustomerAccess::liftTimedLockout($customer);
-            // Reset counter atomically via SQL
-            $table = $this->modx->getTableName(msCustomer::class);
-            $sql = "UPDATE {$table}
-                     SET failed_login_attempts = 0, is_blocked = 0, blocked_until = NULL
-                     WHERE id = {$customer->id}";
-            $this->modx->exec($sql);
+            $customer->set('failed_login_attempts', 0);
         }
 
         // Permanent manager block must keep empty blocked_until so ForgotPassword
@@ -678,30 +673,77 @@ class AuthManager
         $maxAttempts = (int)$this->modx->getOption('ms3_customer_max_login_attempts', null, 5);
         $blockDuration = (int)$this->modx->getOption('ms3_customer_block_duration', null, 3600);
 
-        // Atomic update via SQL
-        $table = $this->modx->getTableName(msCustomer::class);
-        $blockedUntil = date('Y-m-d H:i:s', time() + $blockDuration);
-        $sql = "UPDATE {$table}
-                SET
-                    failed_login_attempts = failed_login_attempts + 1,
-                    is_blocked = CASE WHEN failed_login_attempts + 1 >= {$maxAttempts} THEN 1 ELSE is_blocked END,
-                    blocked_until = CASE WHEN failed_login_attempts + 1 >= {$maxAttempts} THEN '{$blockedUntil}' ELSE blocked_until END
-                WHERE id = {$customer->id}";
-        $this->modx->exec($sql);
-
-        // Re-fetch customer to get updated values
-        $customer = $this->modx->getObject(msCustomer::class, $customer->id);
-        if (!$customer) {
-            return;
+        // Atomic SQL increment when a real PDO handle is available (#926).
+        $updated = $this->incrementFailedAttemptsAtomically((int) $customer->id, $maxAttempts, $blockDuration);
+        if ($updated !== null) {
+            // Hydrate the caller's object: re-fetching into a local variable
+            // would leave callers with stale attempt/block state.
+            $customer->fromArray($updated);
+            $attempts = (int) $customer->get('failed_login_attempts');
+        } else {
+            // Object path for stubs/legacy installs without a PDO handle.
+            $attempts = (int) $customer->get('failed_login_attempts') + 1;
+            $customer->set('failed_login_attempts', $attempts);
+            if ($attempts >= $maxAttempts) {
+                $customer->set('is_blocked', true);
+                $customer->set('blocked_until', date('Y-m-d H:i:s', time() + $blockDuration));
+            }
+            if (!$customer->save()) {
+                $this->modx->log(
+                    modX::LOG_LEVEL_ERROR,
+                    "[AuthManager] Failed to persist failed_login_attempts for customer #{$customer->id}"
+                );
+            }
         }
 
-        $attempts = (int)$customer->get('failed_login_attempts');
         if ($attempts >= $maxAttempts) {
             $this->modx->log(
                 modX::LOG_LEVEL_WARN,
                 "[AuthManager] Customer #{$customer->id} blocked due to {$attempts} failed attempts"
             );
         }
+    }
+
+    /**
+     * Atomically increment failed_login_attempts in one SQL statement (#926).
+     *
+     * @return array<string, mixed>|null New values, or null when unavailable.
+     */
+    private function incrementFailedAttemptsAtomically(int $customerId, int $maxAttempts, int $blockDuration): ?array
+    {
+        if ($customerId <= 0 || !isset($this->modx->pdo) || !($this->modx->pdo instanceof \PDO)
+            || !method_exists($this->modx, 'getTableName')) {
+            return null;
+        }
+
+        $table = trim((string) $this->modx->getTableName(msCustomer::class), "\x60\"[] ");
+        if ($table === '' || !preg_match('/^[A-Za-z0-9_]+$/', $table)) {
+            return null;
+        }
+
+        $blockedUntil = date('Y-m-d H:i:s', time() + max(1, $blockDuration));
+        $sql = "UPDATE `{$table}` SET"
+            . ' `failed_login_attempts` = `failed_login_attempts` + 1,'
+            . ' `is_blocked` = CASE WHEN `failed_login_attempts` + 1 >= ' . $maxAttempts . ' THEN 1 ELSE `is_blocked` END,'
+            . ' `blocked_until` = CASE WHEN `failed_login_attempts` + 1 >= ' . $maxAttempts
+            . " THEN '{$blockedUntil}' ELSE `blocked_until` END"
+            . " WHERE `id` = {$customerId}";
+
+        try {
+            if ($this->modx->pdo->exec($sql) === false) {
+                return null;
+            }
+        } catch (\PDOException $exception) {
+            $this->modx->log(modX::LOG_LEVEL_ERROR, '[AuthManager] atomic failed-login update failed: ' . $exception->getMessage());
+
+            return null;
+        }
+
+        $stmt = $this->modx->pdo->query(
+            "SELECT `failed_login_attempts`, `is_blocked`, `blocked_until` FROM `{$table}` WHERE `id` = {$customerId}"
+        );
+
+        return $stmt === false ? null : ($stmt->fetch(\PDO::FETCH_ASSOC) ?: null);
     }
 
     /**
