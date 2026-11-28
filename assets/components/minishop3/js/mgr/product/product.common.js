@@ -9,37 +9,43 @@ Ext.extend(ms3.panel.Product, MODx.panel.Resource, {
    * `beforeSave` does not exist in MODX — the real hook is the `submit()`
    * method of `MODx.FormPanel` (`fireEvent('beforeSubmit') && fm.submit(...)`).
    * `beforeSubmit` is synchronous, so the async Vue save cannot run inside it:
-   * cancel the first submit, save the Vue tab, then re-submit.
+   * defer the first submit, save the Vue tab, then call the parent once.
    *
-   * Guard flag avoids the second pass intercepting itself.
-   * On Vue failure the standard save still proceeds (no silent data loss).
+   * An in-flight save is cached so repeated Save clicks cannot bypass the Vue
+   * step or double-submit. If the Vue save fails, the resource form is NOT
+   * submitted: a partial save would silently lose the product data (#871).
    */
   submit: function (o) {
-    if (this.__ms3ProductDataSaving) {
-      return ms3.panel.Product.superclass.submit.call(this, o)
+    const parentSubmit = ms3.panel.Product.superclass.submit
+    if (this.__ms3ProductDataPromise) {
+      // A save is already in progress; ignore additional clicks.
+      return false
     }
     if (typeof window.MS3_saveProductData === 'function') {
-      this.__ms3ProductDataSaving = true
-      const self = this
-      const proceed = function () {
-        self.__ms3ProductDataSaving = false
-        ms3.panel.Product.superclass.submit.call(self, o)
+      const form = typeof this.getForm === 'function' ? this.getForm() : null
+      if (form && typeof form.isValid === 'function' && !form.isValid()) {
+        // Let the parent submit display the validation errors; do not save Vue data.
+        return parentSubmit.call(this, o)
       }
-      window.MS3_saveProductData().then(
+      const self = this
+      this.__ms3ProductDataPromise = window.MS3_saveProductData()
+      this.__ms3ProductDataPromise.then(
         function (result) {
+          self.__ms3ProductDataPromise = null
           if (result && result.ok === false) {
             console.warn('[ProductPanel] Vue product data not saved:', result.message || result)
+            return
           }
-          proceed()
+          parentSubmit.call(self, o)
         },
         function (error) {
+          self.__ms3ProductDataPromise = null
           console.error('[ProductPanel] Vue product data save failed:', error)
-          proceed()
         },
       )
       return false
     }
-    return ms3.panel.Product.superclass.submit.call(this, o)
+    return parentSubmit.call(this, o)
   },
 
   getFields: function (config) {

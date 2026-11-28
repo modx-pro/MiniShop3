@@ -13,6 +13,13 @@ import ProductTabs from '../components/product/ProductTabs.vue'
 import { createMs3VueApp } from '../theme/createMs3VueApp.js'
 import { injectFormStylesOverride } from '../utils/formStyles.js'
 
+/** Clear the ExtJS save hook, but never a newer panel's hook (#871). */
+function clearSaveHook(instance) {
+  if (window.MS3_saveProductData && (!instance || window.MS3_saveProductData.__ms3Instance === instance)) {
+    delete window.MS3_saveProductData
+  }
+}
+
 /**
  * Plugin Registry for third-party tabs
  * Allows plugins to register additional tabs before or after Vue mount
@@ -146,6 +153,7 @@ window.MS3_initProductTabs = function (config) {
       app: container.__vueApp__,
       instance: container.__vueInstance__,
       destroy: () => {
+        clearSaveHook(container.__vueInstance__)
         container.__vueApp__.unmount()
         delete container.__vueApp__
         delete container.__vueInstance__
@@ -188,16 +196,17 @@ window.MS3_initProductTabs = function (config) {
   // Expose saveProductData globally for ExtJS integration
   if (instance && typeof instance.saveProductData === 'function') {
     window.MS3_saveProductData = () => instance.saveProductData()
+    window.MS3_saveProductData.__ms3Instance = instance
   }
 
   return {
     app,
     instance,
     destroy: () => {
+      clearSaveHook(instance)
       app.unmount()
       delete container.__vueApp__
       delete container.__vueInstance__
-      delete window.MS3_saveProductData
       window.MS3ProductTabsRegistry._onUnmounted()
     },
   }
@@ -211,6 +220,7 @@ window.MS3_initProductTabs = function (config) {
 window.MS3_destroyProductTabs = function (containerId = 'ms3-vue-product-tabs') {
   const container = document.getElementById(containerId)
   if (container && container.__vueApp__) {
+    clearSaveHook(container.__vueInstance__)
     container.__vueApp__.unmount()
     delete container.__vueApp__
     delete container.__vueInstance__

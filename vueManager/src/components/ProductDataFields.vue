@@ -29,6 +29,8 @@ const { _ } = useLexicon()
 // Loading state
 const loading = ref(false)
 const saving = ref(false)
+/** Shared load promise so an early Save cannot PUT an empty fieldValues (#871). */
+let loadPromise = null
 
 // Fields and sections configuration
 const fieldsConfig = ref({
@@ -143,6 +145,9 @@ async function loadConfig() {
  * Save product data
  */
 async function saveProductData() {
+  if (loadPromise) {
+    await loadPromise
+  }
   saving.value = true
   try {
     const response = await request.put(
@@ -157,22 +162,26 @@ async function saveProductData() {
         detail: _('ms3_vue_product_data_saved'),
         life: 3000,
       })
-    } else {
-      toast.add({
-        severity: 'error',
-        summary: _('ms3_vue_error'),
-        detail: _('ms3_vue_error_save_product_data'),
-        life: 5000,
-      })
+      return { ok: true }
     }
-  } catch (error) {
-    console.error('Error saving product data:', error)
+    const message = _('ms3_vue_error_save_product_data')
     toast.add({
       severity: 'error',
       summary: _('ms3_vue_error'),
-      detail: error.message || _('ms3_vue_error_saving_data'),
+      detail: message,
       life: 5000,
     })
+    return { ok: false, message }
+  } catch (error) {
+    console.error('Error saving product data:', error)
+    const message = error.message || _('ms3_vue_error_saving_data')
+    toast.add({
+      severity: 'error',
+      summary: _('ms3_vue_error'),
+      detail: message,
+      life: 5000,
+    })
+    return { ok: false, message }
   } finally {
     saving.value = false
   }
@@ -202,7 +211,7 @@ const fieldsBySections = computed(() => {
 
 // Load configuration on mount
 onMounted(() => {
-  loadConfig()
+  loadPromise = loadConfig()
 })
 
 // Expose save method for external calls (ExtJS Save button)
