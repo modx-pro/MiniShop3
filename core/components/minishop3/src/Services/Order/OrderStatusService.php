@@ -8,6 +8,8 @@ use MiniShop3\Model\msOrderAddress;
 use MiniShop3\Model\msOrderStatus as msOrderStatusModel;
 use MiniShop3\Model\msCustomer;
 use MiniShop3\Notifications\NotificationManager;
+use MiniShop3\Notifications\Notification;
+use MiniShop3\Notifications\Order\OrderCreatedNotification;
 use MiniShop3\Notifications\Order\StatusChangedNotification;
 use MiniShop3\Services\Customer\CustomerPublicDto;
 use MiniShop3\Services\Events\DomainEvent;
@@ -453,14 +455,47 @@ class OrderStatusService implements OrderStatusChanger
         $this->modx->setOption('cultureKey', $lang);
         $this->modx->lexicon->load($lang . ':minishop3:default', $lang . ':minishop3:cart');
 
-        // Create notification
-        $notification = new StatusChangedNotification(
-            $this->modx,
-            $msOrder,
-            $newStatus,
-            $oldStatus
-        );
+        // The order left the draft state — the order itself was created (#811).
+        // Send only the order_created notification on this transition: firing
+        // both events would duplicate customer/manager messages.
+        if ($this->isCreatedFromDraft($oldStatus)) {
+            $notification = new OrderCreatedNotification(
+                $this->modx,
+                $msOrder,
+                $newStatus
+            );
+        } else {
+            $notification = new StatusChangedNotification(
+                $this->modx,
+                $msOrder,
+                $newStatus,
+                $oldStatus
+            );
+        }
 
+        $this->dispatchNotification($notification, $msOrder);
+    }
+
+    /**
+     * Was the order a draft before the change? Only such a transition creates
+     * the order: a draft is a cart of the storefront, not an order yet.
+     */
+    protected function isCreatedFromDraft(?msOrderStatusModel $oldStatus): bool
+    {
+        if (!$oldStatus instanceof msOrderStatusModel) {
+            return false;
+        }
+
+        $draftStatusId = (int) $this->modx->getOption('ms3_status_draft', null, 1) ?: 1;
+
+        return (int) $oldStatus->get('id') === $draftStatusId;
+    }
+
+    /**
+     * Send one notification to the customer and to the managers.
+     */
+    protected function dispatchNotification(Notification $notification, msOrder $msOrder): void
+    {
         $notificationManager = $this->getNotificationManager();
 
         // Send to customer (channels determined by notification config)

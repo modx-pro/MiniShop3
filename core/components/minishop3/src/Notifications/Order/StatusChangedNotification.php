@@ -18,6 +18,10 @@ use MiniShop3\Notifications\Messages\SmsMessage;
  * Notification for order status changes
  *
  * Sent when an order transitions from one status to another
+ *
+ * The event key is read through late static binding ({@see static::EVENT}), so a
+ * subclass may serve another event of the same family — {@see OrderCreatedNotification}
+ * reuses this plumbing for the `order_created` event (#811).
  */
 class StatusChangedNotification extends Notification
 {
@@ -63,7 +67,7 @@ class StatusChangedNotification extends Notification
     public function via(string $recipientType): array
     {
         return $this->getConfigService()->getChannels(
-            self::EVENT,
+            static::EVENT,
             $this->newStatus->get('id'),
             $recipientType
         );
@@ -79,7 +83,7 @@ class StatusChangedNotification extends Notification
     protected function getChannelConfig(string $recipientType, string $channel): ?msNotificationConfig
     {
         return $this->getConfigService()->getChannelConfig(
-            self::EVENT,
+            static::EVENT,
             $this->newStatus->get('id'),
             $recipientType,
             $channel
@@ -208,18 +212,26 @@ class StatusChangedNotification extends Notification
 
         $config = $this->getChannelConfig($recipientType, 'sms');
 
-        $orderNum = $this->order->get('num');
-        $statusKey = $this->newStatus->get('name');
-        $statusName = $this->modx->lexicon($statusKey) ?: $statusKey;
-
         // Use template from config or default
         if ($config && $config->get('template')) {
             $content = $this->renderTemplate($config->get('template'));
         } else {
-            $content = $this->modx->lexicon('ms3_telegram_order') . " #{$orderNum}: {$statusName}";
+            $content = $this->buildDefaultSmsMessage();
         }
 
         return (new SmsMessage())->content($content);
+    }
+
+    /**
+     * Default SMS text when the config has no template.
+     */
+    protected function buildDefaultSmsMessage(): string
+    {
+        $orderNum = $this->order->get('num');
+        $statusKey = $this->newStatus->get('name');
+        $statusName = $this->modx->lexicon($statusKey) ?: $statusKey;
+
+        return $this->modx->lexicon('ms3_telegram_order') . " #{$orderNum}: {$statusName}";
     }
 
     /**
@@ -231,7 +243,7 @@ class StatusChangedNotification extends Notification
         $recipientTypes = ['customer', 'manager'];
         foreach ($recipientTypes as $type) {
             $configs = $this->getConfigService()->getConfigs(
-                self::EVENT,
+                static::EVENT,
                 $this->newStatus->get('id'),
                 $type
             );
