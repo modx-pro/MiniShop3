@@ -33,7 +33,8 @@ final class ImportCsvProductUpserter
             'deleted' => 0,
             'class_key' => $data['class_key'],
         ]);
-        $q->select($classAlias . '.id');
+        // context_key is needed on update rows to preserve the product's context.
+        $q->select($classAlias . '.id, ' . $classAlias . '.context_key');
 
         if ($isProduct) {
             $q->innerJoin(msProductData::class, 'Data', $classAlias . '.id = Data.id');

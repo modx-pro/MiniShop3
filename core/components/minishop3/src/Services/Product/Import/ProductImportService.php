@@ -48,10 +48,6 @@ class ProductImportService
         );
         $this->initCollaborators();
 
-        if (($error = $this->validator->validateParams($this->ctx)) !== null) {
-            return $error;
-        }
-
         $fileValidation = $this->validator->validateFilePath($this->ctx, $this->ctx->params['file']);
         if ($fileValidation !== true) {
             return $fileValidation;
@@ -68,6 +64,12 @@ class ProductImportService
         );
         if ($event['cancelled']) {
             return $this->ms3->utils->error($this->modx->lexicon('ms3_utilities_import_cancelled'));
+        }
+
+        // Validate after msOnBeforeImport so a plugin may enable update mode or
+        // add the identifier column through returnedValues (#853 review).
+        if (($error = $this->validator->validateParams($this->ctx)) !== null) {
+            return $error;
         }
 
         $fileValidation = $this->validator->validateFilePath($this->ctx, $this->ctx->params['file']);

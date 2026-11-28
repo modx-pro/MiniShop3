@@ -34,18 +34,36 @@ final class ImportCsvRunValidator
             return $this->ms3->utils->error($error);
         }
 
-        foreach (['parent', 'pagetitle'] as $rf) {
-            $found = false;
-            foreach ($ctx->params['keys'] as $key) {
-                if ($key === $rf) {
-                    $found = true;
-                    break;
-                }
-            }
-            if (!$found) {
-                $error = $this->modx->lexicon('ms3_utilities_import_required_field', ['field' => $rf]);
+        // In update mode the identifier column must be a real (non-aliased)
+        // mapped field, otherwise rows fall into Create and duplicate products
+        // after earlier rows were already written (#853 review).
+        if (!empty($ctx->params['update'])) {
+            $keyColumn = (string) $ctx->params['key'];
+            $nonIdentifierFields = ['remains', 'vendor', 'gallery', 'stock', 'vendor_id'];
+            if (!in_array($keyColumn, $ctx->params['keys'], true)
+                || in_array($keyColumn, $nonIdentifierFields, true)) {
+                $error = $this->modx->lexicon('ms3_utilities_import_required_field', ['field' => $keyColumn]);
 
                 return $this->ms3->utils->error($error);
+            }
+        }
+
+        // With update enabled an existing product is identified by &key alone;
+        // its title and parent already exist in the database (#853).
+        if (empty($ctx->params['update'])) {
+            foreach (['parent', 'pagetitle'] as $rf) {
+                $found = false;
+                foreach ($ctx->params['keys'] as $key) {
+                    if ($key === $rf) {
+                        $found = true;
+                        break;
+                    }
+                }
+                if (!$found) {
+                    $error = $this->modx->lexicon('ms3_utilities_import_required_field', ['field' => $rf]);
+
+                    return $this->ms3->utils->error($error);
+                }
             }
         }
 
