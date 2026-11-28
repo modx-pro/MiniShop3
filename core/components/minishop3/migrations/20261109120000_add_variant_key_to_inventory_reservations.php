@@ -51,6 +51,19 @@ final class AddVariantKeyToInventoryReservations extends AbstractMigration
 
         $table = $this->table('ms3_inventory_reservations');
 
+        // A product can have several SKU rows. Restoring the old UNIQUE
+        // (order_id, product_id) index after dropping variant_key would fail
+        // with "Duplicate entry" and abort the rollback. Check while the
+        // variant column still distinguishes the rows and fall back to a
+        // non-unique index — losing hold rows to make down() pass is worse.
+        $duplicates = $this->fetchAll(
+            'SELECT order_id, product_id, COUNT(*) AS c
+             FROM ms3_inventory_reservations
+             GROUP BY order_id, product_id
+             HAVING c > 1
+             LIMIT 1'
+        );
+
         if ($table->hasIndexByName('order_product_variant')) {
             $table->removeIndexByName('order_product_variant')->save();
         }
@@ -58,10 +71,11 @@ final class AddVariantKeyToInventoryReservations extends AbstractMigration
             $table->removeColumn('variant_key')->save();
         }
 
-        // Restore the original order_product index
+        // Restore the original order_product index (non-unique when SKU rows
+        // were collapsed into product rows by the column drop).
         if (!$table->hasIndexByName('order_product')) {
             $table->addIndex(['order_id', 'product_id'], [
-                'unique' => true,
+                'unique' => $duplicates === [],
                 'name' => 'order_product',
             ])->save();
         }

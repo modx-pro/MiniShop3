@@ -63,7 +63,8 @@ final class InventoryVariantKeyTest extends TestCase
     {
         $store = new InMemoryInventoryStockStore();
         $store->seedStock(7, 0);
-        $inventory = new ProductStockInventory($store);
+        // Variants borrow no product stock: availability must come from SKU addon.
+        $inventory = new ProductStockInventory($store, $this->ms3WithAvailability(5.0));
         $key = new InventoryKey(7, 'sku-red');
 
         $inventory->reserve($key, 5.0, new \MiniShop3\Services\Inventory\InventoryContext(40), false);
@@ -73,5 +74,41 @@ final class InventoryVariantKeyTest extends TestCase
         self::assertCount(1, $rows);
         self::assertSame('sku-red', $rows[0]['variant_key']);
         self::assertSame(5.0, $rows[0]['qty']);
+    }
+
+    /**
+     * Variant stock comes from `msOnInventoryAvailable` returnedValues.
+     */
+    private function ms3WithAvailability(float $available): \MiniShop3\MiniShop3
+    {
+        $modx = new class ($available) extends modX {
+            public $event;
+
+            public function __construct(private float $available)
+            {
+                parent::__construct();
+            }
+
+            public function invokeEvent($eventName, array $params = [])
+            {
+                $value = $this->available;
+                $this->event = new class ($value) {
+                    public $returnedValues;
+
+                    public function __construct(float $available)
+                    {
+                        $this->returnedValues = ['available' => $available];
+                    }
+                };
+
+                return [true];
+            }
+        };
+        $ms3 = $this->getMockBuilder(\MiniShop3\MiniShop3::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+        $ms3->modx = $modx;
+
+        return $ms3;
     }
 }

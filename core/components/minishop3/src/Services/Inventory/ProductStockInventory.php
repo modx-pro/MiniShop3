@@ -12,32 +12,48 @@ use MODX\Revolution\modX;
  * Variant keys (#1001): core stock is NOT touched. Available stock comes from
  * an addon via `msOnInventoryAvailable` (returnedValues['available']);
  * the addon itself decrements its SKU table on the reserve/commit/release
- * events below. Without an addon answer the product stock is used as a
- * fallback, matching pre-variant behaviour.
+ * events below. No addon answer means zero real SKU stock (fail closed):
+ * ms3_products.stock is product-level and is never decremented for a variant,
+ * so falling back to it would allow an undetectable oversell.
  */
 class ProductStockInventory implements InventoryServiceInterface, AdjustableInventoryInterface
 {
+    private readonly KeyedInventoryStockStoreInterface $store;
+
+    /**
+     * True for pre-#1001 int-only stores: they have no SKU ledger and their
+     * stock is product-level, so variant keys must degrade to product rows.
+     */
+    private readonly bool $legacyStore;
+
     public function __construct(
-        private readonly InventoryStockStoreInterface $store,
+        InventoryStockStoreInterface $store,
         private readonly ?MiniShop3 $ms3 = null,
     ) {
+        // Third-party stores keep their original int-productId contract;
+        // adapt them instead of forcing a hard interface break (#1001 review).
+        $this->legacyStore = !$store instanceof KeyedInventoryStockStoreInterface;
+        $this->store = $this->legacyStore
+            ? new InventoryStockStoreKeyAdapter($store)
+            : $store;
     }
 
     public function getAvailable(InventoryKey $key): float
     {
-        if ($key->isVariant()) {
-            $addonAvailable = $this->variantAvailable($key);
-            if ($addonAvailable !== null) {
-                return round($addonAvailable, 3);
-            }
+        // Variant stock never lives in ms3_products.stock for keyed stores.
+        // Legacy int-only stores intentionally degrade to product-level and do
+        // decrement it, so they keep using their own availability logic.
+        if ($key->isVariant() && !$this->legacyStore) {
+            return round($this->variantAvailable($key) ?? 0.0, 3);
         }
 
-        return $this->store->getAvailable($key);
+        return $this->store->getAvailableByKey($key);
     }
 
     /**
      * Ask addons for variant stock via `msOnInventoryAvailable`.
-     * Returns null when no addon answers (caller falls back to product stock).
+     * Returns null when no addon answers — the caller then treats SKU stock
+     * as zero rather than borrowing ms3_products.stock (#1001 review).
      */
     private function variantAvailable(InventoryKey $key): ?float
     {
@@ -85,38 +101,46 @@ class ProductStockInventory implements InventoryServiceInterface, AdjustableInve
 
     public function reserve(InventoryKey $key, float $qty, InventoryContext $ctx, bool $notify = true): void
     {
-        if ($key->isVariant()) {
-            $reserved = $this->reserveLine($key, $qty, $ctx, $notify);
-            if ($notify && $reserved !== null) {
-                $this->fireAfterReserveBatch([$reserved], $ctx);
-            }
-
-            return;
-        }
-        $this->reserveBatch([$key->productId => $qty], $ctx, $notify);
+        $this->reserveKeys([[$key, $qty]], $ctx, $notify);
     }
 
     /**
-     * Reserve every line, then emit after-events only if the whole batch stuck.
-     * Before-events still run per line (plugins may cancel). On failure, prior
-     * lines are released with notify=false so subscribers never see a hold that
-     * the surrounding transaction will roll back (#762).
+     * Backwards-compatible product-level batch entry point.
      *
      * @param array<int, float> $qtyByProduct
      * @throws InventoryException
      */
     public function reserveBatch(array $qtyByProduct, InventoryContext $ctx, bool $notify = true): void
     {
+        $entries = [];
+        foreach ($qtyByProduct as $productId => $qty) {
+            $entries[] = [new InventoryKey((int) $productId), (float) $qty];
+        }
+        $this->reserveKeys($entries, $ctx, $notify);
+    }
+
+    /**
+     * Reserve all keys, then emit `msOnInventoryReserve` only if the whole
+     * batch stuck. Before-events still run per line (plugins may cancel).
+     * Variant stock is owned by addons that act on events, so releasing a
+     * partially reserved batch must also tell them via `msOnInventoryRelease`;
+     * silent SQL rollback alone would leak their SKU stock (#1001 review).
+     *
+     * @param list<array{0: InventoryKey, 1: float}> $entries
+     * @throws InventoryException
+     */
+    public function reserveKeys(array $entries, InventoryContext $ctx, bool $notify = true): void
+    {
         $done = [];
         try {
-            foreach ($qtyByProduct as $productId => $qty) {
-                $reserved = $this->reserveLine(new InventoryKey((int) $productId), (float) $qty, $ctx, $notify);
+            foreach ($entries as [$key, $qty]) {
+                $reserved = $this->reserveLine($key, (float) $qty, $ctx, $notify);
                 if ($reserved !== null) {
                     $done[] = $reserved;
                 }
             }
-        } catch (InventoryException $exception) {
-            $this->silentReleaseBatch($done, $ctx);
+        } catch (\Throwable $exception) {
+            $this->rollbackReservedBatch($done, $ctx, $notify);
             throw $exception;
         }
 
@@ -128,7 +152,7 @@ class ProductStockInventory implements InventoryServiceInterface, AdjustableInve
     public function release(InventoryKey $key, float $qty, InventoryContext $ctx, bool $notify = true): void
     {
         $this->normalizeQty($qty);
-        $existing = $this->store->findReservation($ctx->orderId, $key);
+        $existing = $this->store->findReservationByKey($ctx->orderId, $key);
         if ($existing === null || $existing['state'] !== InventoryReservationState::RESERVED) {
             return;
         }
@@ -139,7 +163,7 @@ class ProductStockInventory implements InventoryServiceInterface, AdjustableInve
         }
         $didRelease = false;
         $this->store->runInTransaction(function () use ($key, $ctx, $held, &$didRelease): void {
-            if (!$this->store->transitionReservation(
+            if (!$this->store->transitionReservationByKey(
                 $ctx->orderId,
                 $key,
                 InventoryReservationState::RESERVED,
@@ -148,8 +172,8 @@ class ProductStockInventory implements InventoryServiceInterface, AdjustableInve
                 return;
             }
             // Variant stock lives in the addon; core product stock is untouched.
-            if (!$key->isVariant()) {
-                $this->store->increment($key, $held);
+            if (!$key->isVariant() || $this->legacyStore) {
+                $this->store->incrementByKey($key, $held);
             }
             $didRelease = true;
         });
@@ -161,13 +185,13 @@ class ProductStockInventory implements InventoryServiceInterface, AdjustableInve
     public function commit(InventoryKey $key, float $qty, InventoryContext $ctx): void
     {
         $qty = $this->normalizeQty($qty);
-        $existing = $this->store->findReservation($ctx->orderId, $key);
+        $existing = $this->store->findReservationByKey($ctx->orderId, $key);
         if ($existing !== null && $existing['state'] === InventoryReservationState::COMMITTED) {
             return;
         }
         if ($existing === null || $existing['state'] !== InventoryReservationState::RESERVED) {
             $this->reserve($key, $qty, $ctx);
-            $existing = $this->store->findReservation($ctx->orderId, $key);
+            $existing = $this->store->findReservationByKey($ctx->orderId, $key);
         }
         if ($existing === null || $existing['state'] !== InventoryReservationState::RESERVED) {
             throw new InventoryException(
@@ -180,7 +204,7 @@ class ProductStockInventory implements InventoryServiceInterface, AdjustableInve
         $this->fire('msOnBeforeInventoryCommit', $key, $held, $ctx);
         $didCommit = false;
         $this->store->runInTransaction(function () use ($key, $ctx, &$didCommit): void {
-            $didCommit = $this->store->transitionReservation(
+            $didCommit = $this->store->transitionReservationByKey(
                 $ctx->orderId,
                 $key,
                 InventoryReservationState::RESERVED,
@@ -188,7 +212,7 @@ class ProductStockInventory implements InventoryServiceInterface, AdjustableInve
             );
         });
         if (!$didCommit) {
-            $again = $this->store->findReservation($ctx->orderId, $key);
+            $again = $this->store->findReservationByKey($ctx->orderId, $key);
             if ($again !== null && $again['state'] === InventoryReservationState::COMMITTED) {
                 return;
             }
@@ -260,7 +284,7 @@ class ProductStockInventory implements InventoryServiceInterface, AdjustableInve
             throw new InventoryException('ms3_err_inventory_invalid_qty', ['qty' => $targetQty]);
         }
 
-        $preview = $this->store->findReservation($ctx->orderId, $key);
+        $preview = $this->store->findReservationByKey($ctx->orderId, $key);
         $previewState = is_array($preview) ? (string) $preview['state'] : null;
         $previewHeld = $this->isAlreadyHeld($previewState) ? round((float) $preview['qty'], 3) : 0.0;
         if ($this->adjustmentIsNoop($targetQty, $previewHeld, $previewState, $this->desiredHoldState($ctx, $previewState))) {
@@ -292,7 +316,7 @@ class ProductStockInventory implements InventoryServiceInterface, AdjustableInve
     public function revertCommitToReserved(InventoryKey $key, InventoryContext $ctx): void
     {
         $this->store->runInTransaction(function () use ($key, $ctx): void {
-            $this->store->transitionReservation(
+            $this->store->transitionReservationByKey(
                 $ctx->orderId,
                 $key,
                 InventoryReservationState::COMMITTED,
@@ -308,21 +332,27 @@ class ProductStockInventory implements InventoryServiceInterface, AdjustableInve
      */
     private function claimReserve(InventoryKey $key, float $qty, InventoryContext $ctx): bool
     {
-        $row = $this->store->findReservation($ctx->orderId, $key);
+        $row = $this->store->findReservationByKey($ctx->orderId, $key);
+        if ($row === null && $key->isVariant()) {
+            // An order reserved before the addon resolved SKUs has a legacy
+            // product-level row. Adopt it instead of inserting a second hold.
+            $this->adoptLegacyReservation($key, $ctx);
+            $row = $this->store->findReservationByKey($ctx->orderId, $key);
+        }
         if ($this->isAlreadyHeld($row['state'] ?? null)) {
             return false;
         }
 
         $inserted = false;
         if ($row === null) {
-            $inserted = $this->store->insertReservation(
+            $inserted = $this->store->insertReservationByKey(
                 $ctx->orderId,
                 $key,
                 $qty,
                 InventoryReservationState::RESERVED
             );
             if (!$inserted) {
-                $row = $this->store->findReservation($ctx->orderId, $key);
+                $row = $this->store->findReservationByKey($ctx->orderId, $key);
                 $state = $row['state'] ?? null;
                 if ($this->isAlreadyHeld($state) || $state !== InventoryReservationState::RELEASED) {
                     return false;
@@ -330,7 +360,7 @@ class ProductStockInventory implements InventoryServiceInterface, AdjustableInve
             }
         }
 
-        if (!$inserted && !$this->store->transitionReservation(
+        if (!$inserted && !$this->store->transitionReservationByKey(
             $ctx->orderId,
             $key,
             InventoryReservationState::RELEASED,
@@ -342,15 +372,16 @@ class ProductStockInventory implements InventoryServiceInterface, AdjustableInve
 
         // Variant stock is owned by the addon (synced via reserve events);
         // the core must not decrement ms3_products.stock for a SKU sale.
-        if ($key->isVariant()) {
+        // Legacy int-only stores have no SKU ledger and stay product-level.
+        if ($key->isVariant() && !$this->legacyStore) {
             return true;
         }
 
-        if (!$this->store->tryDecrement($key, $qty)) {
+        if (!$this->store->tryDecrementByKey($key, $qty)) {
             if ($inserted) {
-                $this->store->deleteReservation($ctx->orderId, $key);
+                $this->store->deleteReservationByKey($ctx->orderId, $key);
             } else {
-                $this->store->transitionReservation(
+                $this->store->transitionReservationByKey(
                     $ctx->orderId,
                     $key,
                     InventoryReservationState::RESERVED,
@@ -364,6 +395,20 @@ class ProductStockInventory implements InventoryServiceInterface, AdjustableInve
     }
 
     /**
+     * Re-key a legacy (variant_key = '') hold on first SKU use. Stores without
+     * variant support simply return false and keep product-level accounting.
+     */
+    private function adoptLegacyReservation(InventoryKey $key, InventoryContext $ctx): void
+    {
+        $legacy = new InventoryKey($key->productId);
+        $row = $this->store->findReservationByKey($ctx->orderId, $legacy);
+        if ($row === null || !$this->isAlreadyHeld($row['state'] ?? null)) {
+            return;
+        }
+        $this->store->rekeyReservation($ctx->orderId, $legacy, $key);
+    }
+
+    /**
      * @return array{0: InventoryKey, 1: float}|null reserved key+qty, or null when idempotent skip
      * @throws InventoryException
      */
@@ -374,9 +419,15 @@ class ProductStockInventory implements InventoryServiceInterface, AdjustableInve
         bool $notify,
     ): ?array {
         $qty = $this->normalizeQty($qty);
-        $existing = $this->store->findReservation($ctx->orderId, $key);
+        $existing = $this->store->findReservationByKey($ctx->orderId, $key);
         if ($this->isAlreadyHeld($existing['state'] ?? null)) {
             return null;
+        }
+        // Variant stock lives in the addon's SKU table; core stock is never
+        // decremented for it, so the atomic tryDecrement in claimReserve() does
+        // not protect variants. Check availability explicitly (#1001 review).
+        if ($key->isVariant()) {
+            $this->assertAvailable($key, $qty);
         }
 
         if ($notify) {
@@ -397,12 +448,36 @@ class ProductStockInventory implements InventoryServiceInterface, AdjustableInve
     }
 
     /**
+     * SQL release is always silent (the surrounding transaction may roll back).
+     * Variant addons that already acted on `msOnBeforeInventoryReserve` still
+     * need an explicit release notification so their SKU stock is restored.
+     * Buffered `msOnInventoryReserve` events were never emitted on this path.
+     *
      * @param list<array{0: InventoryKey, 1: float}> $done
      */
-    private function silentReleaseBatch(array $done, InventoryContext $ctx): void
+    private function rollbackReservedBatch(array $done, InventoryContext $ctx, bool $notify): void
     {
         foreach (array_reverse($done) as [$key, $qty]) {
             $this->release($key, $qty, $ctx, false);
+            if ($notify && $key->isVariant()) {
+                try {
+                    $this->fire('msOnBeforeInventoryRelease', $key, $qty, $ctx);
+                    $this->fire('msOnInventoryRelease', $key, $qty, $ctx);
+                } catch (\Throwable $exception) {
+                    $this->logEventFailure('rollback release event', $exception);
+                }
+            }
+        }
+    }
+
+    private function logEventFailure(string $what, \Throwable $exception): void
+    {
+        $modx = $this->modx();
+        if ($modx !== null) {
+            $modx->log(
+                modX::LOG_LEVEL_ERROR,
+                '[ms3] inventory ' . $what . ' failed: ' . $exception->getMessage()
+            );
         }
     }
 
@@ -453,7 +528,7 @@ class ProductStockInventory implements InventoryServiceInterface, AdjustableInve
     ): void {
         if ($targetQty <= 0.0) {
             if ($this->isAlreadyHeld($currentState)) {
-                $this->store->transitionReservation(
+                $this->store->transitionReservationByKey(
                     $ctx->orderId,
                     $key,
                     (string) $currentState,
@@ -465,10 +540,10 @@ class ProductStockInventory implements InventoryServiceInterface, AdjustableInve
         }
 
         if ($existing === null) {
-            if ($this->store->insertReservation($ctx->orderId, $key, $targetQty, $desired)) {
+            if ($this->store->insertReservationByKey($ctx->orderId, $key, $targetQty, $desired)) {
                 return;
             }
-        } elseif ($this->store->transitionReservation(
+        } elseif ($this->store->transitionReservationByKey(
             $ctx->orderId,
             $key,
             (string) $currentState,
@@ -492,7 +567,7 @@ class ProductStockInventory implements InventoryServiceInterface, AdjustableInve
         float $targetQty,
         bool $force,
     ): ?array {
-        $existing = $this->store->lockReservation($ctx->orderId, $key);
+        $existing = $this->store->lockReservationByKey($ctx->orderId, $key);
         $currentState = is_array($existing) ? (string) $existing['state'] : null;
         $held = $this->isAlreadyHeld($currentState) ? round((float) $existing['qty'], 3) : 0.0;
         $desired = $targetQty === 0.0
@@ -503,10 +578,13 @@ class ProductStockInventory implements InventoryServiceInterface, AdjustableInve
         }
 
         $delta = round($targetQty - $held, 3);
-        if ($delta > 0 && !$key->isVariant()) {
+        if ($delta > 0 && $key->isVariant() && !$this->legacyStore && !$force) {
+            $this->assertAvailable($key, $delta);
+        }
+        if ($delta > 0 && (!$key->isVariant() || $this->legacyStore)) {
             $written = $force
-                ? $this->store->decrement($key, $delta)
-                : $this->store->tryDecrement($key, $delta);
+                ? $this->store->decrementByKey($key, $delta)
+                : $this->store->tryDecrementByKey($key, $delta);
             if (!$written) {
                 throw new InventoryException(
                     'ms3_err_inventory_short',
@@ -514,13 +592,13 @@ class ProductStockInventory implements InventoryServiceInterface, AdjustableInve
                         'id' => $key->productId,
                         'product_id' => $key->productId,
                         'qty' => $delta,
-                        'available' => $this->store->getAvailable($key),
+                        'available' => $this->store->getAvailableByKey($key),
                         'required' => $targetQty,
                     ]
                 );
             }
-        } elseif ($delta < 0 && !$key->isVariant()) {
-            $this->store->increment($key, abs($delta));
+        } elseif ($delta < 0 && (!$key->isVariant() || $this->legacyStore)) {
+            $this->store->incrementByKey($key, abs($delta));
         }
 
         $this->writeAdjustedRow($key, $ctx, $existing, $currentState, $desired, $targetQty);

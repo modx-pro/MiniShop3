@@ -16,9 +16,11 @@ use RuntimeException;
  *
  * Stock table is product-level (ms3_products.stock); variantKey is ignored
  * for stock — variant stock is owned by addons (see ProductStockInventory).
- * Ledger rows carry variant_key ('' = product-level) per #1001.
+ * Ledger rows carry variant_key ('' = product-level) per #1001. The int-product
+ * methods required by InventoryStockStoreInterface delegate to the keyed ones
+ * so pre-#1001 third-party callers keep working.
  */
-final class PdoInventoryStockStore implements InventoryStockStoreInterface
+final class PdoInventoryStockStore implements KeyedInventoryStockStoreInterface
 {
     private string $productsTable;
 
@@ -45,7 +47,12 @@ final class PdoInventoryStockStore implements InventoryStockStoreInterface
         }
     }
 
-    public function getAvailable(InventoryKey $key): float
+    public function getAvailable(int $productId): float
+    {
+        return $this->getAvailableByKey(new InventoryKey($productId));
+    }
+
+    public function getAvailableByKey(InventoryKey $key): float
     {
         $sql = "SELECT stock FROM {$this->productsTable} WHERE id = :id";
         $stmt = $this->prepare($sql);
@@ -58,7 +65,12 @@ final class PdoInventoryStockStore implements InventoryStockStoreInterface
         return round((float) $value, 3);
     }
 
-    public function tryDecrement(InventoryKey $key, float $qty): bool
+    public function tryDecrement(int $productId, float $qty): bool
+    {
+        return $this->tryDecrementByKey(new InventoryKey($productId), $qty);
+    }
+
+    public function tryDecrementByKey(InventoryKey $key, float $qty): bool
     {
         $sql = "UPDATE {$this->productsTable}
             SET stock = stock - :qty
@@ -73,7 +85,12 @@ final class PdoInventoryStockStore implements InventoryStockStoreInterface
         return $stmt->rowCount() === 1;
     }
 
-    public function decrement(InventoryKey $key, float $qty): bool
+    public function decrement(int $productId, float $qty): bool
+    {
+        return $this->decrementByKey(new InventoryKey($productId), $qty);
+    }
+
+    public function decrementByKey(InventoryKey $key, float $qty): bool
     {
         $sql = "UPDATE {$this->productsTable}
             SET stock = stock - :qty
@@ -87,7 +104,12 @@ final class PdoInventoryStockStore implements InventoryStockStoreInterface
         return $stmt->rowCount() === 1;
     }
 
-    public function increment(InventoryKey $key, float $qty): void
+    public function increment(int $productId, float $qty): void
+    {
+        $this->incrementByKey(new InventoryKey($productId), $qty);
+    }
+
+    public function incrementByKey(InventoryKey $key, float $qty): void
     {
         $sql = "UPDATE {$this->productsTable} SET stock = stock + :qty WHERE id = :id";
         $stmt = $this->prepare($sql);
@@ -97,7 +119,12 @@ final class PdoInventoryStockStore implements InventoryStockStoreInterface
         ]);
     }
 
-    public function findReservation(int $orderId, InventoryKey $key): ?array
+    public function findReservation(int $orderId, int $productId): ?array
+    {
+        return $this->findReservationByKey($orderId, new InventoryKey($productId));
+    }
+
+    public function findReservationByKey(int $orderId, InventoryKey $key): ?array
     {
         [$where, $params] = $this->keyWhere($orderId, $key);
         $columns = $this->hasVariantKeyColumn
@@ -116,7 +143,12 @@ final class PdoInventoryStockStore implements InventoryStockStoreInterface
         return $this->mapReservationRow($row);
     }
 
-    public function lockReservation(int $orderId, InventoryKey $key): ?array
+    public function lockReservation(int $orderId, int $productId): ?array
+    {
+        return $this->lockReservationByKey($orderId, new InventoryKey($productId));
+    }
+
+    public function lockReservationByKey(int $orderId, InventoryKey $key): ?array
     {
         [$where, $params] = $this->keyWhere($orderId, $key);
         $columns = $this->hasVariantKeyColumn
@@ -172,7 +204,12 @@ final class PdoInventoryStockStore implements InventoryStockStoreInterface
         return $rows;
     }
 
-    public function saveReservation(int $orderId, InventoryKey $key, float $qty, string $state): void
+    public function saveReservation(int $orderId, int $productId, float $qty, string $state): void
+    {
+        $this->saveReservationByKey($orderId, new InventoryKey($productId), $qty, $state);
+    }
+
+    public function saveReservationByKey(int $orderId, InventoryKey $key, float $qty, string $state): void
     {
         $now = time();
         if ($this->hasVariantKeyColumn) {
@@ -214,7 +251,12 @@ final class PdoInventoryStockStore implements InventoryStockStoreInterface
         ]);
     }
 
-    public function insertReservation(int $orderId, InventoryKey $key, float $qty, string $state): bool
+    public function insertReservation(int $orderId, int $productId, float $qty, string $state): bool
+    {
+        return $this->insertReservationByKey($orderId, new InventoryKey($productId), $qty, $state);
+    }
+
+    public function insertReservationByKey(int $orderId, InventoryKey $key, float $qty, string $state): bool
     {
         $now = time();
         if ($this->hasVariantKeyColumn) {
@@ -266,6 +308,22 @@ final class PdoInventoryStockStore implements InventoryStockStoreInterface
 
     public function transitionReservation(
         int $orderId,
+        int $productId,
+        string $fromState,
+        string $toState,
+        ?float $qty = null
+    ): bool {
+        return $this->transitionReservationByKey(
+            $orderId,
+            new InventoryKey($productId),
+            $fromState,
+            $toState,
+            $qty
+        );
+    }
+
+    public function transitionReservationByKey(
+        int $orderId,
         InventoryKey $key,
         string $fromState,
         string $toState,
@@ -289,12 +347,44 @@ final class PdoInventoryStockStore implements InventoryStockStoreInterface
         return $stmt->rowCount() === 1;
     }
 
-    public function deleteReservation(int $orderId, InventoryKey $key): void
+    public function deleteReservation(int $orderId, int $productId): void
+    {
+        $this->deleteReservationByKey($orderId, new InventoryKey($productId));
+    }
+
+    public function deleteReservationByKey(int $orderId, InventoryKey $key): void
     {
         [$where, $params] = $this->keyWhere($orderId, $key);
         $sql = "DELETE FROM {$this->reservationsTable} WHERE {$where}";
         $stmt = $this->prepare($sql);
         $stmt->execute($params);
+    }
+
+    /**
+     * Adopt a pre-#1001 product-level hold when an addon resolves a variant for
+     * an order that already reserved stock. Only held rows are re-keyed; a
+     * second variant of the same product gets its own new row.
+     */
+    public function rekeyReservation(int $orderId, InventoryKey $from, InventoryKey $to): bool
+    {
+        if (!$this->hasVariantKeyColumn || !$to->isVariant()) {
+            return false;
+        }
+        $sql = "UPDATE {$this->reservationsTable}
+            SET variant_key = :variant_key, updatedon = :updatedon
+            WHERE order_id = :order_id AND product_id = :product_id AND variant_key = ''
+              AND state IN (:reserved, :committed)";
+        $stmt = $this->prepare($sql);
+        $stmt->execute([
+            'variant_key' => $to->ledgerVariantKey(),
+            'updatedon' => time(),
+            'order_id' => $orderId,
+            'product_id' => $from->productId,
+            'reserved' => InventoryReservationState::RESERVED,
+            'committed' => InventoryReservationState::COMMITTED,
+        ]);
+
+        return $stmt->rowCount() === 1;
     }
 
     /**

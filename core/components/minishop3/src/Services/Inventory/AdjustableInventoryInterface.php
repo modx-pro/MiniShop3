@@ -8,11 +8,16 @@ namespace MiniShop3\Services\Inventory;
  * Not part of InventoryServiceInterface: a replaced ms3_inventory may only
  * implement reserve/commit/release. Order line edits fail closed when this
  * interface is missing and the order already holds stock (#829).
+ *
+ * Variant-aware implementations should additionally implement heldByKey()
+ * (see AdjustableInventoryKeyTrait for a product-level default). Declaring it
+ * on this interface would break third-party implementations, so the core
+ * detects it with method_exists() and falls back to heldByProduct().
  */
 interface AdjustableInventoryInterface
 {
     /**
-     * Set the ledger qty for (order, product) and move stock by the same delta.
+     * Set the ledger qty for (order, key) and move stock by the same delta.
      *
      * targetQty 0 releases the hold. Existing reserved/committed state is kept.
      * A new row uses InventoryContext::$holdState (reserved when it is empty).
@@ -29,7 +34,7 @@ interface AdjustableInventoryInterface
     ): void;
 
     /**
-     * Active holds for an order, keyed by product id.
+     * Active holds for an order, keyed by product id (product-level summary).
      *
      * @return array<int, array{qty: float, state: string}>
      */

@@ -146,7 +146,7 @@ final class OrderInventoryReconcileTest extends TestCase
         self::assertSame(-4.0, $inventory->getAvailable(new InventoryKey(7)));
         self::assertSame(5.0, $store->findReservation(40, new InventoryKey(7))['qty']);
         self::assertSame([
-            ['product_id' => 7, 'available' => 1.0, 'required' => 5.0],
+            ['product_id' => 7, 'variant_key' => null, 'available' => 1.0, 'required' => 5.0],
         ], $overrides);
     }
 
@@ -437,7 +437,11 @@ final class NonAdjustableInventory implements InventoryServiceInterface
     }
 }
 
-final class ThrowingInventoryStockStore implements InventoryStockStoreInterface
+/**
+ * Legacy-compatible store double: implements the original int signatures plus
+ * the variant-aware extension, failing on one product's decrement.
+ */
+final class ThrowingInventoryStockStore implements \MiniShop3\Services\Inventory\KeyedInventoryStockStoreInterface
 {
     public function __construct(
         private readonly InMemoryInventoryStockStore $inner,
@@ -445,28 +449,48 @@ final class ThrowingInventoryStockStore implements InventoryStockStoreInterface
     ) {
     }
 
-    public function getAvailable(InventoryKey $key): float
+    public function getAvailable(int $productId): float
     {
-        return $this->inner->getAvailable($key);
+        return $this->inner->getAvailable($productId);
     }
 
-    public function tryDecrement(InventoryKey $key, float $qty): bool
+    public function getAvailableByKey(InventoryKey $key): float
+    {
+        return $this->inner->getAvailableByKey($key);
+    }
+
+    public function tryDecrement(int $productId, float $qty): bool
+    {
+        return $this->inner->tryDecrement($productId, $qty);
+    }
+
+    public function tryDecrementByKey(InventoryKey $key, float $qty): bool
     {
         if ($key->productId === $this->failingProductId) {
             throw new \RuntimeException('store failed');
         }
 
-        return $this->inner->tryDecrement($key, $qty);
+        return $this->inner->tryDecrementByKey($key, $qty);
     }
 
-    public function decrement(InventoryKey $key, float $qty): bool
+    public function decrement(int $productId, float $qty): bool
     {
-        return $this->inner->decrement($key, $qty);
+        return $this->inner->decrement($productId, $qty);
     }
 
-    public function increment(InventoryKey $key, float $qty): void
+    public function decrementByKey(InventoryKey $key, float $qty): bool
     {
-        $this->inner->increment($key, $qty);
+        return $this->inner->decrementByKey($key, $qty);
+    }
+
+    public function increment(int $productId, float $qty): void
+    {
+        $this->inner->increment($productId, $qty);
+    }
+
+    public function incrementByKey(InventoryKey $key, float $qty): void
+    {
+        $this->inner->incrementByKey($key, $qty);
     }
 
     public function listReservations(int $orderId): array
@@ -474,39 +498,79 @@ final class ThrowingInventoryStockStore implements InventoryStockStoreInterface
         return $this->inner->listReservations($orderId);
     }
 
-    public function findReservation(int $orderId, InventoryKey $key): ?array
+    public function findReservation(int $orderId, int $productId): ?array
     {
-        return $this->inner->findReservation($orderId, $key);
+        return $this->inner->findReservation($orderId, $productId);
     }
 
-    public function lockReservation(int $orderId, InventoryKey $key): ?array
+    public function findReservationByKey(int $orderId, InventoryKey $key): ?array
     {
-        return $this->inner->lockReservation($orderId, $key);
+        return $this->inner->findReservationByKey($orderId, $key);
     }
 
-    public function saveReservation(int $orderId, InventoryKey $key, float $qty, string $state): void
+    public function lockReservation(int $orderId, int $productId): ?array
     {
-        $this->inner->saveReservation($orderId, $key, $qty, $state);
+        return $this->inner->lockReservation($orderId, $productId);
     }
 
-    public function insertReservation(int $orderId, InventoryKey $key, float $qty, string $state): bool
+    public function lockReservationByKey(int $orderId, InventoryKey $key): ?array
     {
-        return $this->inner->insertReservation($orderId, $key, $qty, $state);
+        return $this->inner->lockReservationByKey($orderId, $key);
+    }
+
+    public function saveReservation(int $orderId, int $productId, float $qty, string $state): void
+    {
+        $this->inner->saveReservation($orderId, $productId, $qty, $state);
+    }
+
+    public function saveReservationByKey(int $orderId, InventoryKey $key, float $qty, string $state): void
+    {
+        $this->inner->saveReservationByKey($orderId, $key, $qty, $state);
+    }
+
+    public function insertReservation(int $orderId, int $productId, float $qty, string $state): bool
+    {
+        return $this->inner->insertReservation($orderId, $productId, $qty, $state);
+    }
+
+    public function insertReservationByKey(int $orderId, InventoryKey $key, float $qty, string $state): bool
+    {
+        return $this->inner->insertReservationByKey($orderId, $key, $qty, $state);
     }
 
     public function transitionReservation(
+        int $orderId,
+        int $productId,
+        string $fromState,
+        string $toState,
+        ?float $qty = null
+    ): bool {
+        return $this->inner->transitionReservation($orderId, $productId, $fromState, $toState, $qty);
+    }
+
+    public function transitionReservationByKey(
         int $orderId,
         InventoryKey $key,
         string $fromState,
         string $toState,
         ?float $qty = null
     ): bool {
-        return $this->inner->transitionReservation($orderId, $key, $fromState, $toState, $qty);
+        return $this->inner->transitionReservationByKey($orderId, $key, $fromState, $toState, $qty);
     }
 
-    public function deleteReservation(int $orderId, InventoryKey $key): void
+    public function deleteReservation(int $orderId, int $productId): void
     {
-        $this->inner->deleteReservation($orderId, $key);
+        $this->inner->deleteReservation($orderId, $productId);
+    }
+
+    public function deleteReservationByKey(int $orderId, InventoryKey $key): void
+    {
+        $this->inner->deleteReservationByKey($orderId, $key);
+    }
+
+    public function rekeyReservation(int $orderId, InventoryKey $from, InventoryKey $to): bool
+    {
+        return $this->inner->rekeyReservation($orderId, $from, $to);
     }
 
     public function runInTransaction(callable $work): void
