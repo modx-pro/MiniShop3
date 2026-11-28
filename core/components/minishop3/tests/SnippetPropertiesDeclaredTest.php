@@ -5,6 +5,10 @@
  * snippets really read, and every declared property must have a localized
  * description in properties.inc.php (#799).
  *
+ * msOrderTotal declares no pdoTools passthrough, so the reverse holds too:
+ * every declared property must be read by the snippet — dead declarations
+ * like formatPrices/withCurrency are rejected (#825).
+ *
  * MODX shows declared properties in the snippet properties grid and pulls the
  * description from `ms3_prop_<snake_case>` (see resolver_08_snippet_properties.php).
  * A property that works but is not declared is invisible in the manager; a declared
@@ -108,6 +112,19 @@ foreach ($snippets as $snippetName => $snippet) {
                 "{$file} reads &{$name} but {$snippetName} does not declare it"
                 . ' — add it to snippets.php or the allowlist (#799)'
             );
+        }
+    }
+
+    // #825: msOrderTotal passes no properties through to pdoTools, so every
+    // declared property must be read in the snippet itself. formatPrices and
+    // withCurrency were dead declarations left from before the #242 refactor
+    // (float fields + always-formatted *_formatted) and must not come back.
+    if ($snippetName === 'msOrderTotal') {
+        $reads = array_flip(array_unique($read));
+        foreach (array_keys($properties) as $propName) {
+            if (!isset($reads[$propName])) {
+                $fail("msOrderTotal declares &{$propName} but the snippet never reads it (#825)");
+            }
         }
     }
 }

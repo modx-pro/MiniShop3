@@ -346,7 +346,6 @@
                         'parents' => $_modx->resource.parent,
                         'resources' => '-' ~ $_modx->resource.id,
                         'limit' => 4,
-                        'formatPrices' => 1,
                         'withCurrency' => 0
                     ]}
                 </div>

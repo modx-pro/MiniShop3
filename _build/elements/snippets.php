@@ -406,14 +406,9 @@ return [
                 'type' => 'textfield',
                 'value' => 'tpl',
             ],
-            'formatPrices' => [
-                'type' => 'combo-boolean',
-                'value' => false,
-            ],
-            'withCurrency' => [
-                'type' => 'combo-boolean',
-                'value' => false,
-            ],
+            // formatPrices/withCurrency removed (#825): the snippet never read
+            // them after the #242 refactor — numeric fields stay float and
+            // *_formatted are always built with currency/weight unit.
         ],
     ],
 ];
