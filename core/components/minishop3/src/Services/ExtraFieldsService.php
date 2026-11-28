@@ -284,7 +284,7 @@ class ExtraFieldsService
         }
 
         $exists = $this->modx->getObject(msExtraField::class, [
-            'class' => $data['class'],
+            'class:IN' => self::classFilterVariants((string) $data['class']),
             'key' => $data['key']
         ]);
 

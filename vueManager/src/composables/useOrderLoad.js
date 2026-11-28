@@ -226,9 +226,7 @@ export function useOrderLoad(deps) {
    */
   async function loadOrderExtraFields() {
     try {
-      const response = await request.get('/api/mgr/extra-fields', {
-        class: 'MiniShop3\\Model\\msOrder',
-      })
+      const response = await request.get('/api/mgr/extra-fields', { class: 'msOrder' })
       orderExtraFields.value = (response.fields || []).filter(f => f.active)
     } catch (error) {
       console.error('[OrderView] Error loading order extra fields:', error)
@@ -241,9 +239,7 @@ export function useOrderLoad(deps) {
    */
   async function loadAddressExtraFields() {
     try {
-      const response = await request.get('/api/mgr/extra-fields', {
-        class: 'MiniShop3\\Model\\msOrderAddress',
-      })
+      const response = await request.get('/api/mgr/extra-fields', { class: 'msOrderAddress' })
       addressExtraFields.value = (response.fields || []).filter(f => f.active)
     } catch (error) {
       console.error('[OrderView] Error loading address extra fields:', error)

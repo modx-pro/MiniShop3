@@ -245,7 +245,7 @@ class KeyValueFieldService
         $map = [];
         $query = $this->modx->newQuery(msExtraField::class);
         $query->where([
-            'class' => $modelClass,
+            'class:IN' => \MiniShop3\Services\ExtraFieldsService::classFilterVariants($modelClass),
             'xtype' => self::XTYPE,
             'active' => true,
         ]);

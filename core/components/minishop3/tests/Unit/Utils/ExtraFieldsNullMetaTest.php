@@ -74,7 +74,6 @@ final class ExtraFieldsNullMetaTest extends TestCase
     {
         $extra = new ExtraFields(new modX());
         $method = new ReflectionMethod(ExtraFields::class, 'getFieldInfo');
-        $method->setAccessible(true);
 
         return $method->invoke($extra, $field);
     }
