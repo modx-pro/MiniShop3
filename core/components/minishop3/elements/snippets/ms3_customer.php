@@ -41,10 +41,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
         }
     }
 
-    $logoutUrl = CustomerPageService::resolveLogoutUrl($modx);
-    if ($logoutUrl !== '') {
-        $modx->sendRedirect($logoutUrl);
-    }
+    $modx->sendRedirect(CustomerPageService::resolveLogoutUrl($modx));
     exit;
 }
 

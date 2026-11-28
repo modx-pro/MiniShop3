@@ -94,11 +94,11 @@ final class CustomerPageServiceUrlsTest extends TestCase
         self::assertSame('/1', CustomerPageService::resolveLogoutUrl($modx));
     }
 
-    public function testLogoutUrlIsEmptyWhenNothingIsConfigured(): void
+    public function testLogoutFallsBackToSiteRootWhenNothingIsConfigured(): void
     {
         $modx = $this->modx(['ms3_customer_login_page_id' => 0]);
 
-        self::assertSame('', CustomerPageService::resolveLogoutUrl($modx));
+        self::assertSame('/1', CustomerPageService::resolveLogoutUrl($modx));
     }
 
     public function testSnippetUsesResolvedUrlsInsteadOfRawMakeUrl(): void

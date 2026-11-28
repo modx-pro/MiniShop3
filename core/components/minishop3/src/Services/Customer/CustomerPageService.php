@@ -195,8 +195,9 @@ abstract class CustomerPageService
     /**
      * URLs of the login and registration pages for the unauthorized chunk (#820, #887).
      *
-     * A page that is not configured yields an empty string, so the chunk decides
-     * whether to render the link instead of pointing it at the current page.
+     * A page that is not configured yields an empty string in the placeholder;
+     * templates may use `{if $login_url}` / `{if $register_url}` to hide links.
+     * The shipped chunk renders its own forms and does not consume these URLs.
      *
      * @return array{login_url: string, register_url: string}
      */
@@ -210,6 +211,10 @@ abstract class CustomerPageService
 
     /**
      * Build a URL for a customer page system setting.
+     *
+     * These helpers are intentionally static: the logout branch of the snippet runs
+     * before any page service is constructed, and the URL rules do not depend on
+     * service state.
      *
      * The shipped value of ms3_customer_login_page_id / ms3_customer_register_page_id
      * is 0, so getOption()'s fallback never fires: the setting exists and holds a
@@ -241,9 +246,11 @@ abstract class CustomerPageService
             return $loginUrl;
         }
 
-        $siteStart = (int) $modx->getOption('site_start', null, 0);
+        $siteStart = (int) $modx->getOption('site_start', null, 1);
+        $url = $modx->makeUrl($siteStart);
 
-        return $siteStart > 0 ? (string) $modx->makeUrl($siteStart) : '';
+        // A malformed site_start must not leave the visitor on an empty page.
+        return is_string($url) && $url !== '' ? $url : '/';
     }
 
     /**
