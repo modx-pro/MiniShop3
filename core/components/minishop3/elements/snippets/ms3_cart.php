@@ -212,18 +212,48 @@ foreach ($tmp as $row) {
 }
 // Process products in cart
 foreach ($cart as $key => $entry) {
-    if (!isset($rows[$entry['product_id']])) {
-        continue;
+    $catalogRow = $rows[$entry['product_id']] ?? null;
+    if ($catalogRow === null) {
+        // The product was removed from the catalogue but its line is still in
+        // the draft, and the footer follows cart status. Render the line from
+        // the draft itself so visible rows and totals stay consistent (#861).
+        // Keep product_key/cost/properties: the standard chunk uses them for
+        // quantity/option change and remove forms.
+        $product = $entry;
+        // id=0 marks a stale line: the chunk must not link to a deleted resource.
+        $product['id'] = 0;
+        $product['product_id'] = $entry['product_id'];
+        $product['product_key'] = $entry['product_key'] ?? $key;
+        $product['name'] = $entry['name'] ?? '';
+        $product['pagetitle'] = $entry['name'] ?? '';
+        $product['old_price'] = $entry['properties']['old_price'] ?? 0;
+        $catalogPrice = 0.0;
+    } else {
+        // Remember the catalogue price BEFORE merging: $entry overrides it
+        // with the line price, making price > line price impossible (#861).
+        $catalogPrice = (float) ($catalogRow['price'] ?? 0);
+        $product = array_merge($catalogRow, $entry);
     }
-    $product = array_merge($rows[$entry['product_id']], $entry);
 
-    $old_price = $product['old_price'];
-    if ($product['price'] > $entry['price'] && empty($product['old_price'])) {
-        $old_price = $product['price'];
+    // Real lines keep their own old price in properties, not in a top-level
+    // column, and MySQL DECIMAL returns '0.00' (which empty() treats as set).
+    // Compare numerically so both cases behave the same (#861 review).
+    $linePrice = (float) $entry['price'];
+    $lineOldPrice = (float) ($entry['properties']['old_price'] ?? 0);
+    $catalogOldPrice = (float) ($product['old_price'] ?? 0);
+    // Mirror the order view: the current catalog price wins when it is above
+    // the line price, otherwise keep the highest known old price. Never show
+    // a struck-through price below the actual line price (#861 review).
+    $candidates = [$lineOldPrice, $catalogOldPrice];
+    if ($catalogPrice > $linePrice) {
+        $candidates[] = $catalogPrice;
     }
-    $discount_price = $old_price > 0 ? $old_price - $entry['price'] : 0;
+    $old_price = max(0.0, ...$candidates);
+    if ($old_price <= $linePrice) {
+        $old_price = 0;
+    }
+    $discount_price = $old_price > $linePrice ? $old_price - $linePrice : 0;
 
-    $linePrice = (float)$entry['price'];
     $lineWeight = (float)$entry['weight'];
     $oldPriceNum = (float)$old_price;
     $discountPriceNum = (float)$discount_price;
@@ -252,8 +282,10 @@ foreach ($cart as $key => $entry) {
         }
     }
 
-    // Add option values
-    $options = $modx->call(msProductOption::class, 'loadOptions', [$modx, $product['product_id']]);
+    // Add option values (deleted products have no catalog options to load)
+    $options = $catalogRow !== null
+        ? $modx->call(msProductOption::class, 'loadOptions', [$modx, $product['product_id']])
+        : [];
     $products[] = array_merge($product, $options);
 
     // Count total
