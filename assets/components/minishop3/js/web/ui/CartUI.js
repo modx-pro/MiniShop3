@@ -349,11 +349,14 @@ class CartUI {
 
     const cartRenderConfig = this.config.render.cart
 
+    // One root per token within a batch: two unconfigured snippets must not
+    // overwrite each other's HTML in the same fallback container (#804).
+    const claimedRoots = new Set()
     for (const token in renderData) {
       const html = renderData[token]
       const config = cartRenderConfig.find(item => item.token === token)
       const configuredSelector = config && config.selector ? String(config.selector) : ''
-      const element = resolveCartRenderRoot(configuredSelector, token)
+      const element = resolveCartRenderRoot(configuredSelector, token, claimedRoots)
 
       if (element) {
         element.innerHTML = html

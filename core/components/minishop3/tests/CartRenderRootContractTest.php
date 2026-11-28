@@ -54,11 +54,20 @@ if (!str_contains($selectors, '&selector')) {
 if (!str_contains($selectors, 'warnedCartRenderTokens')) {
     $fail('the warning must be deduplicated per token to avoid console spam (#804)');
 }
+if (!str_contains($selectors, 'matched nothing')) {
+    $fail('a missing configured selector must be reported, not replaced by a fallback root (#804)');
+}
+if (!str_contains($selectors, 'identities')) {
+    $fail('the dedup key must include which roots matched (#804)');
+}
 
 // Both callers must use the shared resolver in their renderCart() path.
 foreach (['CartUI' => $cartUi, 'QuantityUI' => $quantityUi] as $module => $source) {
     if (!str_contains($source, 'resolveCartRenderRoot(')) {
         $fail("{$module} must use the shared cart render resolver (#804)");
+    }
+    if (!str_contains($source, 'claimedRoots')) {
+        $fail("{$module} must claim roots so two tokens cannot share one (#804)");
     }
     if (str_contains($source, 'fallbackSelectors')) {
         $fail("{$module} must not keep a private fallback selector list (#804)");

@@ -231,11 +231,12 @@ class QuantityUI {
 
     const cartRenderConfig = this.config.render.cart
 
+    const claimedRoots = new Set()
     for (const token in renderData) {
       const html = renderData[token]
       const config = cartRenderConfig.find(item => item.token === token)
       const configuredSelector = config && config.selector ? String(config.selector) : ''
-      const element = resolveCartRenderRoot(configuredSelector, token)
+      const element = resolveCartRenderRoot(configuredSelector, token, claimedRoots)
 
       if (element) {
         element.innerHTML = html

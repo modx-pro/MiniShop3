@@ -56,24 +56,50 @@ const warnedCartRenderTokens = new Set()
 /**
  * Resolve the DOM root for one rendered cart token (#804).
  *
- * A configured selector always wins. Without it, the fallback roots are
- * collected and used only when exactly one root exists: writing one cart's
- * HTML into another is worse than skipping. Skipping is never silent — the
- * reason is logged once per token, because a cart that stops updating is
- * otherwise impossible to diagnose.
+ * A configured selector wins; if it matches nothing, rendering is skipped —
+ * a typo must not silently send this token's HTML to an unrelated cart.
+ * Without it, the fallback roots are collected and used only when exactly one
+ * root exists and no other token in the same batch has claimed it: writing
+ * one cart's HTML into another is worse than skipping. Skipping is never
+ * silent — the reason is logged once per token/matched-root set.
  *
  * @param {string} configuredSelector - Selector from the snippet call, if any
  * @param {string} token - Render token the HTML belongs to
+ * @param {Set<Element>} [claimed] - Roots already used by this render batch
  * @returns {Element|null} Render target or null when it is ambiguous/missing
  */
-function resolveCartRenderRoot (configuredSelector, token) {
+function resolveCartRenderRoot (configuredSelector, token, claimed) {
   const selector = configuredSelector ? String(configuredSelector) : ''
+
+  const warn = (target) => {
+    const identities = (claimed && claimed.size ? Array.from(claimed) : []).map(
+      node => node.id || node.className || node.tagName
+    ).sort().join('|')
+    const key = `${token}\u0000${selector}\u0000${target}\u0000${identities}`
+    if (warnedCartRenderTokens.has(key)) {
+      return
+    }
+    warnedCartRenderTokens.add(key)
+    console.warn(
+      `[MiniShop3] Cart HTML for "${token}" was not rendered: ${target}. ` +
+      'Add &selector to the msCart or msOrderTotal snippet call to choose the render target.',
+    )
+  }
 
   if (selector !== '') {
     const configured = document.querySelector(selector)
-    if (configured) {
-      return configured
+    if (!configured) {
+      warn(`configured selector "${selector}" matched nothing`)
+      return null
     }
+    if (claimed && claimed.has(configured)) {
+      warn(`configured selector "${selector}" is already used by another token in this batch`)
+      return null
+    }
+    if (claimed) {
+      claimed.add(configured)
+    }
+    return configured
   }
 
   const found = []
@@ -87,21 +113,18 @@ function resolveCartRenderRoot (configuredSelector, token) {
 
   // Avoid writing one cart HTML into another when several roots exist.
   if (found.length === 1) {
-    return found[0]
+    const root = found[0]
+    if (claimed && claimed.has(root)) {
+      warn('the only default cart root is already used by another token in this batch')
+      return null
+    }
+    if (claimed) {
+      claimed.add(root)
+    }
+    return root
   }
 
-  const key = `${token}\u0000${selector}\u0000${found.length}`
-  if (!warnedCartRenderTokens.has(key)) {
-    warnedCartRenderTokens.add(key)
-    const target = selector !== ''
-      ? `selector "${selector}" matched nothing and ${found.length} default cart root(s) matched`
-      : `${found.length} default cart roots matched`
-    console.warn(
-      `[MiniShop3] Cart HTML for "${token}" was not rendered: ${target}. ` +
-      'Add &selector to the msCart or msOrderTotal snippet call to choose the render target.',
-    )
-  }
-
+  warn(`${found.length} default cart roots matched`)
   return null
 }
 
