@@ -21,6 +21,30 @@ use Ramsey\Uuid\Uuid;
  */
 class OrderDraftManager
 {
+    /**
+     * Колонки msOrder, которые переживают clean() (#864).
+     *
+     * Это идентичность черновика: по ней findDraftByToken() находит строку после
+     * очистки, а uuid остаётся NOT NULL. idempotency_key намеренно сбрасывается:
+     * повторный программный заказ с тем же ключом не должен подобрать очищенный
+     * черновик. Всё остальное — состояние оформления, его clean() и сбрасывает.
+     *
+     * Суммы сюда не входят намеренно: cost, cart_cost и weight выводятся из
+     * позиций, которые clean() не удаляет, поэтому после очистки они
+     * пересчитываются через recalculate(). Держать их в списке значило бы
+     * хранить число, которое расходится с позициями.
+     */
+    public const CLEAN_KEEP_FIELDS = [
+        'id',
+        'user_id',
+        'customer_id',
+        'token',
+        'uuid',
+        'createdon',
+        'status_id',
+        'context',
+    ];
+
     protected modX $modx;
     protected MiniShop3 $ms3;
 
@@ -216,7 +240,11 @@ class OrderDraftManager
     }
 
     /**
-     * Clean order data (reset all fields to null)
+     * Сбросить состояние оформления черновика, сохранив его идентичность.
+     *
+     * Очищаются доставка, оплата, комментарий, свойства и адрес. Позиции
+     * остаются, поэтому суммы пересчитываются из них — иначе черновик с
+     * товарами показывал бы пустую стоимость до следующего изменения корзины.
      *
      * @return true|string True on success, plugin error message otherwise
      */
@@ -233,23 +261,29 @@ class OrderDraftManager
         if ($draft->Address) {
             $addressFields = array_keys($draft->Address->toArray());
             foreach ($addressFields as $key) {
-                if (!in_array($key, ['id', 'order_id', 'user_id', 'createdon'])) {
+                if (!in_array($key, ['id', 'order_id', 'createdon'], true)) {
                     $draft->Address->set($key, null);
                 }
             }
             $draft->Address->save();
         }
 
-        // Clean order fields
+        // Clean order fields: всё, что не входит в идентичность черновика.
         $orderFields = array_keys($draft->toArray());
         foreach ($orderFields as $key) {
-            if (!in_array($key, ['id', 'user_id', 'token', 'status_id', 'createdon'])) {
+            if (!in_array($key, self::CLEAN_KEEP_FIELDS, true)) {
                 $draft->set($key, null);
             }
         }
 
-        $draft->set('updatedon', time());
-        $draft->save();
+        // Доставка сброшена — её стоимость тоже, иначе cost останется завышенным.
+        // Одно сохранение делает recalculate(): иначе плагины видят черновик с
+        // пустыми суммами и события заказа срабатывают дважды за одну очистку.
+        $draft->set('delivery_cost', 0);
+
+        // Позиции на месте: восстанавливаем cart_cost / weight / cost из них
+        // и сохраняем итоговое состояние одним вызовом save().
+        $this->recalculate($draft);
 
         $response = $this->ms3->utils->invokeEvent('msOnEmptyOrder', [
             'draft' => $draft,
