@@ -30,14 +30,14 @@
                         <div class="d-flex gap-4">
                             <div class="ms-image mw-100 pr-3">
                                 {if $product.id?}
-                                    <a href="{$product.product_id | url}">{$image}</a>
+                                    <a href="{$product.product_id | url : ['scheme' => 'abs']}">{$image}</a>
                                 {else}
                                     {$image}
                                 {/if}
                             </div>
                             <div class="ms-title">
                                 {if $product.id?}
-                                    <a href="{$product.product_id | url}">{$product.pagetitle}</a>
+                                    <a href="{$product.product_id | url : ['scheme' => 'abs']}">{$product.pagetitle}</a>
                                 {else}
                                     {$product.name}
                                 {/if}

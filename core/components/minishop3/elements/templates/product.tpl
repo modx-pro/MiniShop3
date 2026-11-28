@@ -6,7 +6,7 @@
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="/">Главная</a></li>
                 {if $_modx->resource.parent > 0}
-                    <li class="breadcrumb-item"><a href="/{$_modx->resource.parent | resource : 'uri'}">{$_modx->resource.parent | resource : 'pagetitle'}</a></li>
+                    <li class="breadcrumb-item"><a href="{$_modx->resource.parent | url : ['scheme' => 'abs']}">{$_modx->resource.parent | resource : 'pagetitle'}</a></li>
                 {/if}
                 <li class="breadcrumb-item active" aria-current="page">{$_modx->resource.pagetitle}</li>
             </ol>

@@ -9,7 +9,7 @@
                     <li class="breadcrumb-item"><a href="/">Главная</a></li>
                     {if $cart_page_id > 0}
                         <li class="breadcrumb-item">
-                            <a href="/{$cart_page_id | url}"> {'ms3_frontend_go_to_cart' | lexicon}</a>
+                            <a href="{$cart_page_id | url : ['scheme' => 'abs']}"> {'ms3_frontend_go_to_cart' | lexicon}</a>
                         </li>
                     {/if}
                     <li class="breadcrumb-item active" aria-current="page">{$_modx->resource.pagetitle}</li>

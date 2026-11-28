@@ -1,7 +1,7 @@
 <div class="ms3-customer-order-details" data-api-url="{$api_url|default:''}">
     {* Навигация назад *}
     <div class="mb-3">
-        <a href="{'ms3_customer_orders_page_id' | option | url}" class="btn btn-sm btn-outline-secondary">
+        <a href="{'ms3_customer_orders_page_id' | option | url : ['scheme' => 'abs']}" class="btn btn-sm btn-outline-secondary">
             <svg width="16" height="16" fill="none" stroke="currentColor" class="me-1">
                 <use xlink:href="#icon-arrow-left"/>
             </svg>

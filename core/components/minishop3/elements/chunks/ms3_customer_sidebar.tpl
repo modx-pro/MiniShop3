@@ -88,7 +88,7 @@
         {* Профиль *}
         <li class="nav-item">
             <a class="nav-link {if $current_section == 'profile'}active{/if}"
-               href="{'ms3_customer_profile_page_id' | option | url}">
+               href="{'ms3_customer_profile_page_id' | option | url : ['scheme' => 'abs']}">
                 <svg width="18" height="18" fill="currentColor" class="me-2">
                     <circle cx="9" cy="5" r="3"/>
                     <path d="M3 18 C3 13 6 11 9 11 C12 11 15 13 15 18"/>
@@ -100,7 +100,7 @@
         {* Адреса доставки *}
         <li class="nav-item">
             <a class="nav-link {if $current_section == 'addresses'}active{/if}"
-               href="{'ms3_customer_addresses_page_id' | option | url}">
+               href="{'ms3_customer_addresses_page_id' | option | url : ['scheme' => 'abs']}">
                 <svg width="18" height="18" fill="currentColor" class="me-2">
                     <path d="M9 2 L9 9 M9 2 L5 6 M9 2 L13 6"/>
                     <rect x="4" y="9" width="10" height="8" rx="1"/>
@@ -112,7 +112,7 @@
         {* История заказов *}
         <li class="nav-item">
             <a class="nav-link {if $current_section == 'orders'}active{/if}"
-               href="{'ms3_customer_orders_page_id' | option | url}">
+               href="{'ms3_customer_orders_page_id' | option | url : ['scheme' => 'abs']}">
                 <svg width="18" height="18" fill="currentColor" class="me-2">
                     <rect x="3" y="3" width="12" height="14" rx="1" fill="none" stroke="currentColor" stroke-width="1.5"/>
                     <line x1="6" y1="7" x2="12" y2="7" stroke="currentColor" stroke-width="1.5"/>
