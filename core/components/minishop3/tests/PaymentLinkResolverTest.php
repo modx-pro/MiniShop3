@@ -51,5 +51,47 @@ if (!str_contains($snippetSrc, 'PaymentLinkResolver::parseEligibleStatusIds')) {
     $fail('ms3_get_order.php must parse payStatus via PaymentLinkResolver');
 }
 
+$settings = file_get_contents(__DIR__ . '/../../../../_build/elements/settings.php');
+if ($settings === false || !str_contains($settings, "'ms3_payment_link_statuses'")) {
+    $fail('_build/elements/settings.php must declare ms3_payment_link_statuses');
+}
+if (preg_match("/'ms3_payment_link_statuses' => \[\s*'value' => '',\s*'xtype' => 'textfield'/", $settings) !== 1) {
+    $fail('ms3_payment_link_statuses must be a textfield setting with an empty default');
+}
+
+foreach (['en', 'ru'] as $lang) {
+    $settingLex = file_get_contents(__DIR__ . "/../lexicon/{$lang}/setting.inc.php");
+    if ($settingLex === false) {
+        $fail("unable to read lexicon {$lang}/setting.inc.php");
+    }
+    foreach (
+        [
+            'setting_ms3_payment_link_statuses',
+            'setting_ms3_payment_link_statuses_desc',
+        ] as $key
+    ) {
+        if (!str_contains($settingLex, "\$_lang['{$key}']")) {
+            $fail("lexicon {$lang} must describe {$key}");
+        }
+    }
+}
+
+// The setting must actually be consumed, and the storefront snippet must use
+// it as the fallback rather than hardcoding the draft status (#826).
+$settingKey = 'ms3_payment_link_statuses';
+$resolverSrc = file_get_contents(__DIR__ . '/../src/Services/Payment/PaymentLinkResolver.php');
+if ($resolverSrc === false || !str_contains($resolverSrc, $settingKey)) {
+    $fail('PaymentLinkResolver must read ms3_payment_link_statuses');
+}
+$snippetSrc = file_get_contents(__DIR__ . '/../elements/snippets/ms3_get_order.php');
+if ($snippetSrc === false || !str_contains($snippetSrc, $settingKey)) {
+    $fail('ms3_get_order must fall back to the payment link statuses setting');
+}
+$transport = file_get_contents(__DIR__ . '/../../../../_build/elements/snippets.php');
+if ($transport === false || !str_contains($transport, "'payStatus' => [")
+    || !str_contains($transport, 'ms3_status_new')) {
+    $fail('payStatus default must be status 2, not the draft status 1');
+}
+
 fwrite(STDOUT, "OK PaymentLinkResolverTest\n");
 exit(0);

@@ -341,6 +341,11 @@ return [
         'xtype' => 'textfield',
         'area' => 'ms3_statuses',
     ],
+    'ms3_payment_link_statuses' => [
+        'value' => '',
+        'xtype' => 'textfield',
+        'area' => 'ms3_statuses',
+    ],
     'ms3_use_scheduler' => [
         'value' => false,
         'xtype' => 'combo-boolean',

@@ -285,7 +285,17 @@ try {
 }
 
 if ($payment) {
-    $payStatusCsv = (string) $modx->getOption('payStatus', $scriptProperties, '1');
+    // Explicit &payStatus wins; otherwise use the shared setting so email and
+    // storefront payment links are gated by the same statuses (#826).
+    if (array_key_exists('payStatus', $scriptProperties)) {
+        $payStatusCsv = (string) $scriptProperties['payStatus'];
+    } else {
+        $payStatusCsv = (string) $modx->getOption(
+            'ms3_payment_link_statuses',
+            null,
+            (string) $modx->getOption('ms3_status_new', null, 2)
+        );
+    }
     $eligibleStatusIds = PaymentLinkResolver::parseEligibleStatusIds($payStatusCsv);
 
     /** @var PaymentLinkResolver $paymentLinkResolver */
