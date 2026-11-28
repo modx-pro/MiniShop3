@@ -12,6 +12,7 @@ use MiniShop3\Services\Customer\AuthManager;
 use MiniShop3\Services\Customer\CustomerAccess;
 use MiniShop3\Services\Grid\ManagerListFilterPolicy;
 use MiniShop3\Services\Grid\RelationSqlFragments;
+use MiniShop3\Utils\EventGate;
 use MODX\Revolution\modSystemEvent;
 use MODX\Revolution\modX;
 
@@ -228,6 +229,8 @@ class CustomersController
         if (!$eventResponse['success']) {
             return Response::error((string)$eventResponse['message'], HttpStatus::BAD_REQUEST)->getData();
         }
+        // Plugins may patch payload fields via $modx->event->returnedValues.
+        $data = array_merge($data, $eventResponse['values']);
 
         if (!$customer->save()) {
             return Response::error('Failed to save customer', HttpStatus::INTERNAL_SERVER_ERROR)->getData();
@@ -613,10 +616,18 @@ class CustomersController
     protected function invokeEvent(string $eventName, array $params = []): array
     {
         $params['controller'] = $this;
+        EventGate::clearReturnedValues($this->modx);
         $response = $this->modx->invokeEvent($eventName, $params);
-        $message = is_array($response) ? implode(' ', $response) : ((string) $response);
-        return $message === ''
-            ? ['success' => true, 'message' => '']
-            : ['success' => false, 'message' => $message];
+        $message = EventGate::normalizeMessage($response);
+        $returnedValues = EventGate::getReturnedValues($this->modx);
+
+        return [
+            // false/'cancel' from a plugin is the documented veto signal;
+            // empty plugin output must NOT be treated as a cancellation.
+            'success' => !EventGate::isCancelled($response) && $message === '',
+            'message' => $message,
+            'data' => EventGate::mergeReturnedValues($params, $returnedValues),
+            'values' => $returnedValues,
+        ];
     }
 }

@@ -6,6 +6,7 @@ use MiniShop3\Model\msExtraField;
 use MiniShop3\Model\msVendor;
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
+use MiniShop3\Utils\EventGate;
 use MODX\Revolution\modSystemEvent;
 use MODX\Revolution\modX;
 use MODX\Revolution\modResource;
@@ -197,6 +198,8 @@ class VendorsController
         if (!$eventResponse['success']) {
             return Response::error((string)$eventResponse['message'], HttpStatus::BAD_REQUEST)->getData();
         }
+        // Plugins may patch payload fields via $modx->event->returnedValues.
+        $data = array_merge($data, $eventResponse['values']);
 
         if (!$vendor->save()) {
             return Response::error('Failed to create vendor', HttpStatus::INTERNAL_SERVER_ERROR)->getData();
@@ -253,6 +256,8 @@ class VendorsController
         if (!$eventResponse['success']) {
             return Response::error((string)$eventResponse['message'], HttpStatus::BAD_REQUEST)->getData();
         }
+        // Plugins may patch payload fields via $modx->event->returnedValues.
+        $data = array_merge($data, $eventResponse['values']);
 
         if (!$vendor->save()) {
             return Response::error('Failed to save vendor', HttpStatus::INTERNAL_SERVER_ERROR)->getData();
@@ -289,12 +294,8 @@ class VendorsController
             return Response::error('Vendor not found', HttpStatus::NOT_FOUND)->getData();
         }
 
-        // Fire before event
-        $modeUpd = defined(modSystemEvent::class . '::MODE_UPD')
-            ? modSystemEvent::MODE_UPD
-            : 'upd';
+        // Fire before event (no `mode`: removal is not an update)
         $eventResponse = $this->invokeEvent('msOnBeforeVendorDelete', [
-            'mode' => $modeUpd,
             'object' => $vendor,
         ]);
         if (!$eventResponse['success']) {
@@ -307,7 +308,6 @@ class VendorsController
 
         // Fire after event
         $this->invokeEvent('msOnVendorDelete', [
-            'mode' => $modeUpd,
             'object' => $vendor,
         ]);
 
@@ -368,29 +368,29 @@ class VendorsController
             return Response::error('No valid vendor IDs provided', HttpStatus::BAD_REQUEST)->getData();
         }
 
-        // Fire before bulk delete event
-        $modeUpd = defined(modSystemEvent::class . '::MODE_UPD')
-            ? modSystemEvent::MODE_UPD
-            : 'upd';
+        // Load objects once: plugins written for single-delete events can read
+        // $object/$objects instead of only IDs (#847).
+        $objects = [];
+        foreach ($ids as $id) {
+            $vendor = $this->modx->getObject(msVendor::class, $id);
+            if ($vendor) {
+                $objects[] = $vendor;
+            }
+        }
+
+        // Fire before bulk delete event (no `mode`: removal is not an update).
         $eventResponse = $this->invokeEvent('msOnBeforeVendorDelete', [
-            'mode' => $modeUpd,
             'ids' => $ids,
+            'objects' => $objects,
         ]);
         if (!$eventResponse['success']) {
             return Response::error((string)$eventResponse['message'], HttpStatus::BAD_REQUEST)->getData();
         }
 
         $deleted = 0;
-        $failed = 0;
+        $failed = count($ids) - count($objects);
 
-        foreach ($ids as $id) {
-            $vendor = $this->modx->getObject(msVendor::class, $id);
-
-            if (!$vendor) {
-                $failed++;
-                continue;
-            }
-
+        foreach ($objects as $vendor) {
             if ($vendor->remove()) {
                 $deleted++;
             } else {
@@ -400,8 +400,8 @@ class VendorsController
 
         // Fire after bulk delete event
         $this->invokeEvent('msOnVendorDelete', [
-            'mode' => $modeUpd,
             'ids' => $ids,
+            'objects' => $objects,
             'deleted' => $deleted,
             'failed' => $failed,
         ]);
@@ -438,11 +438,17 @@ class VendorsController
     protected function invokeEvent(string $eventName, array $params = []): array
     {
         $params['controller'] = $this;
+        EventGate::clearReturnedValues($this->modx);
         $response = $this->modx->invokeEvent($eventName, $params);
-        $message = is_array($response) ? implode(' ', $response) : ((string) $response);
-        return $message === ''
-            ? ['success' => true, 'message' => '']
-            : ['success' => false, 'message' => $message];
+        $message = EventGate::normalizeMessage($response);
+        $returnedValues = EventGate::getReturnedValues($this->modx);
+
+        return [
+            'success' => !EventGate::isCancelled($response) && $message === '',
+            'message' => $message,
+            'data' => EventGate::mergeReturnedValues($params, $returnedValues),
+            'values' => $returnedValues,
+        ];
     }
 }
 
