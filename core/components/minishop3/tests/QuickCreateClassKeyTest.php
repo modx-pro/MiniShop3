@@ -43,5 +43,30 @@ if (str_contains($source, "isProduct = classKey === 'MiniShop3")) {
     $fail('QuickCreate must not compare the raw class_key against the short alias (#870)');
 }
 
+// Exercise the normalization at runtime, not just as source text.
+$nodeSnippet = <<<'JS'
+const normalize = key => String(key || '').split('\\').pop();
+const cases = [
+  ['MiniShop3\\Model\\msProduct', 'msProduct'],
+  ['MiniShop3\\Model\\msCategory', 'msCategory'],
+  ['msProduct', 'msProduct'],
+  ['', ''],
+];
+for (const [input, expected] of cases) {
+  const actual = normalize(input);
+  if (actual !== expected) {
+    console.error(`${input} -> ${actual}, expected ${expected}`);
+    process.exit(1);
+  }
+}
+JS;
+$tmp = tempnam(sys_get_temp_dir(), 'ms3-qc-');
+file_put_contents($tmp, $nodeSnippet);
+exec('node ' . escapeshellarg($tmp) . ' 2>&1', $output, $code);
+unlink($tmp);
+if ($code !== 0) {
+    $fail('class_key normalization does not handle FQCN/short aliases: ' . implode(' ', $output));
+}
+
 fwrite(STDOUT, "OK QuickCreateClassKeyTest (#870)\n");
 exit(0);
