@@ -56,6 +56,14 @@ if ($transport->xpdo) {
                 $stmt->execute();
             }
 
+            // #865: repair the broken default date format on upgrade. Only
+            // rewrite the shipped broken value; custom formats are preserved.
+            $setting = $modx->getObject(modSystemSetting::class, ['key' => 'ms3_date_format']);
+            if ($setting && trim((string) $setting->get('value')) === 'd.m.y H:M') {
+                $setting->set('value', 'd.m.Y H:i');
+                $setting->save();
+            }
+
             $setting = $modx->getObject(modSystemSetting::class, ['key' => 'ms3_order_product_fields']);
             if ($setting) {
                 $value = $setting->get('value');
