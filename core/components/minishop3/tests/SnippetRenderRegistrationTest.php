@@ -31,8 +31,16 @@ foreach ($cases as $file => $snippetName) {
         $fail("{$file}: &return must be resolved before registerSnippet()");
     }
 
-    if (!str_contains($source, "if (\$return") || !str_contains($source, "'data'")) {
-        $fail("{$file}: registerSnippet() must be guarded by the return mode");
+    if (!str_contains($source, "getOption('return', \$scriptProperties, 'tpl', true)")) {
+        $fail("{$file}: return must resolve with skipEmpty so a cleared property renders a chunk (#823/#831)");
+    }
+    if (!str_contains($source, "if (\$return === 'tpl')")) {
+        $fail("{$file}: only tpl-rendering calls may register for re-render (#831)");
+    }
+    // The registration call must sit inside the guard, not before it.
+    $guardPos = strpos($source, "if (\$return === 'tpl')");
+    if ($guardPos === false || $registerPos < $guardPos) {
+        $fail("{$file}: registerSnippet() is outside the tpl guard (#831)");
     }
 }
 

@@ -18,8 +18,8 @@ $ms3->initialize($modx->context->key);
 // Only a chunk-rendering call is a widget that must be re-rendered after a
 // cart change. With return=data the snippet hands an array to the template;
 // registering it would make CartController inject that array into innerHTML (#831).
-$return = $modx->getOption('return', $scriptProperties, 'tpl');
-if ($return !== 'data') {
+$return = $modx->getOption('return', $scriptProperties, 'tpl', true);
+if ($return === 'tpl') {
     $ms3->registerSnippet($scriptProperties, 'msOrderTotal');
 }
 

@@ -365,13 +365,13 @@ class CartController
             // innerHTML (#831). Keep the guard at the controller as well.
             if (!is_string($html)) {
                 $this->modx->log(
-                    \MODX\Revolution\modX::LOG_LEVEL_DEBUG,
+                    \MODX\Revolution\modX::LOG_LEVEL_WARN,
                     "[MiniShop3] Snippet {$snippetName} returned a non-string result for cart re-render; skipping"
                 );
                 continue;
             }
 
-            if ($html !== '') {
+            if (!empty($html)) {
                 $rendered[$token] = $html;
             }
         }

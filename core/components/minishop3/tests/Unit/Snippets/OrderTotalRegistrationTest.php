@@ -152,6 +152,13 @@ final class OrderTotalRegistrationTest extends TestCase
                 $this->context = (object) ['key' => 'web'];
                 $this->optionOverrides = ['return' => $returnValue];
             }
+
+            public function getOption(string $key, $options = null, $default = null, $skipEmpty = false)
+            {
+                $value = parent::getOption($key, $options, $default);
+
+                return $skipEmpty && ($value === '' || $value === null) ? $default : $value;
+            }
         };
 
         return $modx;

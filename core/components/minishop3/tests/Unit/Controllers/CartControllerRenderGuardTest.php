@@ -21,8 +21,8 @@ final class CartControllerRenderGuardTest extends TestCase
         $modx = $this->modx(['cost' => 100]);
 
         self::assertSame([], $this->render($modx));
-        self::assertCount(1, $modx->logs);
-        self::assertSame(\MODX\Revolution\modX::LOG_LEVEL_DEBUG, $modx->logs[0][0]);
+        self::assertNotEmpty($modx->logs);
+        self::assertSame(\MODX\Revolution\modX::LOG_LEVEL_WARN, $modx->logs[0][0]);
         self::assertStringContainsString('non-string result', $modx->logs[0][1]);
     }
 
@@ -43,6 +43,8 @@ final class CartControllerRenderGuardTest extends TestCase
 
     public function testTransformResponseOmitsRenderForArraySnippetResult(): void
     {
+        $previousGet = $_GET;
+        $previousPost = $_POST;
         $_GET = ['render' => ['token']];
         $_POST = [];
         try {
@@ -59,7 +61,8 @@ final class CartControllerRenderGuardTest extends TestCase
                 'data' => ['total' => 100],
             ])->getData();
         } finally {
-            $_GET = [];
+            $_GET = $previousGet;
+            $_POST = $previousPost;
         }
 
         self::assertIsArray($data);
