@@ -12,6 +12,8 @@ use MiniShop3\Services\Customer\AuthManager;
 use MiniShop3\Services\Customer\CustomerAccess;
 use MiniShop3\Services\Grid\ManagerListFilterPolicy;
 use MiniShop3\Services\Grid\RelationSqlFragments;
+use MiniShop3\Utils\EventGate;
+use MODX\Revolution\modSystemEvent;
 use MODX\Revolution\modX;
 
 /**
@@ -215,9 +217,31 @@ class CustomersController
             }
         }
 
+        // Fire before event
+        $modeUpd = defined(modSystemEvent::class . '::MODE_UPD')
+            ? modSystemEvent::MODE_UPD
+            : 'upd';
+        $eventResponse = $this->invokeEvent('msOnBeforeUpdateCustomer', [
+            'mode' => $modeUpd,
+            'data' => $data,
+            'object' => $customer,
+        ]);
+        if (!$eventResponse['success']) {
+            return Response::error((string)$eventResponse['message'], HttpStatus::BAD_REQUEST)->getData();
+        }
+        // Plugins may patch payload fields via $modx->event->returnedValues.
+        $data = array_merge($data, $eventResponse['values']);
+
         if (!$customer->save()) {
             return Response::error('Failed to save customer', HttpStatus::INTERNAL_SERVER_ERROR)->getData();
         }
+
+        // Fire after event
+        $this->invokeEvent('msOnUpdateCustomer', [
+            'mode' => $modeUpd,
+            'data' => $data,
+            'object' => $customer,
+        ]);
 
         if (CustomerAccess::isAccessDenied($customer)) {
             /** @var AuthManager $authManager */
@@ -584,5 +608,26 @@ class CustomersController
             $this->modx->log(modX::LOG_LEVEL_ERROR, "[CustomersController] Error computing field with {$className}: {$e->getMessage()}");
             return null;
         }
+    }
+
+    /**
+     * Helper to invoke MODX events with normalized response.
+     */
+    protected function invokeEvent(string $eventName, array $params = []): array
+    {
+        $params['controller'] = $this;
+        EventGate::clearReturnedValues($this->modx);
+        $response = $this->modx->invokeEvent($eventName, $params);
+        $message = EventGate::normalizeMessage($response);
+        $returnedValues = EventGate::getReturnedValues($this->modx);
+
+        return [
+            // false/'cancel' from a plugin is the documented veto signal;
+            // empty plugin output must NOT be treated as a cancellation.
+            'success' => !EventGate::isCancelled($response) && $message === '',
+            'message' => $message,
+            'data' => EventGate::mergeReturnedValues($params, $returnedValues),
+            'values' => $returnedValues,
+        ];
     }
 }
