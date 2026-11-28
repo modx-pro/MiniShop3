@@ -5,6 +5,9 @@
  * snippets really read, and every declared property must have a localized
  * description in properties.inc.php (#799).
  *
+ * msCart and msOrderTotal must also declare &selector: it is consumed by
+ * MiniShop3::registerSnippet(), outside the snippet files scanned here (#805).
+ *
  * MODX shows declared properties in the snippet properties grid and pulls the
  * description from `ms3_prop_<snake_case>` (see resolver_08_snippet_properties.php).
  * A property that works but is not declared is invisible in the manager; a declared
@@ -51,12 +54,10 @@ foreach (['en', 'ru'] as $lang) {
 
 /**
  * Parameters that are read from $scriptProperties but must stay undeclared:
- * - programmatic/security values passed by other code, not by a template author;
  * - legacy aliases of a declared property;
  * - path overrides for advanced setups.
  */
 $allowlist = [
-    'msCart' => ['customer_token'],
     'msGallery' => ['extensionsDir'],
     'msProducts' => ['parent', 'category', 'includeVendor'],
     // &id must stay undeclared: ms3_get_order.php falls back to the ?msorder= query
@@ -109,6 +110,14 @@ foreach ($snippets as $snippetName => $snippet) {
                 . ' — add it to snippets.php or the allowlist (#799)'
             );
         }
+    }
+}
+
+// #805: &selector is read by MiniShop3::registerSnippet(), not by the snippet
+// files themselves, so the scan above cannot see it — guard it explicitly.
+foreach (['msCart', 'msOrderTotal'] as $cartSnippet) {
+    if (!array_key_exists('selector', $snippets[$cartSnippet]['properties'] ?? [])) {
+        $fail("{$cartSnippet} must declare &selector: registerSnippet() reads it (#805)");
     }
 }
 

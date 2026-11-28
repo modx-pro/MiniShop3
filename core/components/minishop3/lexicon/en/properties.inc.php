@@ -81,3 +81,5 @@ $_lang['ms3_prop_include_delivery_fields'] = 'Comma-separated list of msDelivery
 $_lang['ms3_prop_include_payment_fields'] = 'Comma-separated list of msPayment table fields to select. For example: "name,description,price,logo". By default all fields are selected via *.';
 $_lang['ms3_prop_format_prices'] = 'Format order prices using the site format settings.';
 $_lang['ms3_prop_hide_on_thanks'] = 'Hide the cart on the order success page.';
+$_lang['ms3_prop_selector'] = 'CSS selector of the container to redraw when the cart changes. Set it explicitly when the page has several cart widgets.';
+$_lang['ms3_prop_customer_token'] = 'Customer token to render the cart for. By default the token of the current session is used.';
