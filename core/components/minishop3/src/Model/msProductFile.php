@@ -382,11 +382,14 @@ class msProductFile extends xPDOSimpleObject
         $name = preg_replace('#\.' . $extension . '$#', '', $new_name);
         $name .= '.' . $extension;
 
-        // Process children
+        // Process children. Keep each child's own id prefix: thumbnails live in
+        // a shared {product}/{size}/ folder and two renamed originals with the
+        // same stem would otherwise overwrite each other (#942).
         if ($children = $this->getMany('Children')) {
             /** @var msProductFile $child */
             foreach ($children as $child) {
-                $child->rename($new_name, $child->get('file'));
+                $stem = preg_replace('#\.[^.]+$#', '', $new_name) ?? $new_name;
+                $child->rename($child->get('id') . '_' . $stem, $child->get('file'));
             }
         }
 

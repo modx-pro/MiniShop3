@@ -321,19 +321,38 @@ function onDeleteAll() {
 }
 
 /**
- * Handle sort by name
+ * Sort by name overwrites manual drag order — require an explicit confirmation (#942).
  */
-async function onSortByName() {
-  try {
-    await sortFilesByName(props.productId)
-    await loadImages()
-  } catch (error) {
-    toast.add({
-      severity: 'error',
-      summary: _('ms3_gallery_errors'),
-      detail: error.message,
-      life: 5000,
-    })
+function onSortByName() {
+  confirm.require({
+    group: UI_GROUP,
+    message: _('ms3_gallery_sort_by_name_confirm'),
+    header: _('ms3_gallery_sort_by_name'),
+    icon: 'pi pi-sort-alpha-down',
+    accept: async () => {
+      try {
+        const { thumb } = await sortFilesByName(props.productId)
+        if (thumb) {
+          updateProductThumb(thumb)
+        }
+        await loadImages()
+      } catch (error) {
+        toast.add({
+          severity: 'error',
+          summary: _('ms3_gallery_errors'),
+          detail: error.message,
+          life: 5000,
+        })
+      }
+    },
+  })
+}
+
+/** Refresh the product preview from an upload response (#942). */
+function onUploadSuccess({ response }) {
+  const thumb = response?.object?.thumb || response?.thumb || ''
+  if (thumb) {
+    updateProductThumb(thumb)
   }
 }
 
@@ -363,16 +382,14 @@ function onChangeSource(sourceId) {
 
 /**
  * Serialize overlapping Uppy `complete` handlers (allowMultipleUploadBatches)
- * so SortByName does not race on the same product in one tab (#616).
+ * so the gallery reloads once per batch in one tab (#616).
  */
 let uploadCompleteQueue = Promise.resolve()
 
-/**
- * After batch upload: natural-sort positions by filename (#616), then reload grid.
- */
-function onUploadComplete(result) {
+/** After an upload: keep manual order and only reload the grid (#942). */
+function onUploadComplete() {
   uploadCompleteQueue = uploadCompleteQueue
-    .then(() => runUploadComplete(result))
+    .then(() => runUploadComplete())
     .catch(() => {})
 }
 
@@ -394,24 +411,10 @@ function onUrlUploadError({ error }) {
   })
 }
 
-async function runUploadComplete(result) {
-  const hasUploads = (result?.successful?.length ?? 0) > 0
-
-  try {
-    if (hasUploads) {
-      // Thumbnails and product thumb are refreshed by the Upload processor
-      // No need to re‑sort files by name after each upload; manual order is preserved.
-    }
-  } catch (error) {
-    toast.add({
-      severity: 'error',
-      summary: _('ms3_gallery_errors'),
-      detail: error.message,
-      life: 5000,
-    })
-  } finally {
-    await loadImages()
-  }
+async function runUploadComplete() {
+  // The Upload processor refreshes thumbnails and the product image; the
+  // preview itself is updated by onUploadSuccess. Manual order is preserved.
+  await loadImages()
 }
 
 onMounted(() => {
@@ -443,6 +446,7 @@ onMounted(() => {
       :max-height="Number(mediaSource.maxUploadHeight) || 1080"
       :allowed-file-types="allowedFileTypes"
       @upload-complete="onUploadComplete"
+      @upload-success="onUploadSuccess"
       @url-upload-error="onUrlUploadError"
     />
 
