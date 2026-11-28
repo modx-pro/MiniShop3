@@ -566,13 +566,22 @@ class OptionsController
     protected function isCategoriesIdListPayload($payload): bool
     {
         if (is_string($payload)) {
-            $decoded = json_decode($payload, true);
+            $trimmed = trim($payload);
+            // "{}" is the legacy empty map, not an empty list of ids.
+            if ($trimmed === '{}') {
+                return false;
+            }
+            $decoded = json_decode($trimmed, true);
             if (!is_array($decoded)) {
                 return false;
             }
             $payload = $decoded;
         }
-        if (!is_array($payload) || $payload === []) {
+        // Non-array scalars are invalid input, not a request to detach all.
+        if (!is_array($payload)) {
+            return false;
+        }
+        if ($payload === []) {
             return true;
         }
 
