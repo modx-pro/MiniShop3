@@ -113,30 +113,30 @@ class TokenMiddleware implements MiddlewareInterface
             $resolved = $tokenService->resolveApiToken($token);
 
             if ($resolved['reason'] === 'ok') {
-                $sessionToken = $_SESSION['ms3']['customer_token'] ?? '';
-                if (!empty($sessionToken) && hash_equals($sessionToken, $token)) {
-                    $tokenService->syncSessionFromToken($resolved['token']);
-                    $_REQUEST['ms3_token'] = $token;
+                // A valid DB token is accepted regardless of its origin: Bearer,
+                // MS3TOKEN header, cookie after session loss, or session cache.
+                $tokenService->syncSessionFromToken($resolved['token']);
+                $_REQUEST['ms3_token'] = $token;
 
-                    return null;
-                }
+                return null;
             }
 
             // Lazy anonymous token (#1000): issued into session + cookie by a
             // snippet, not yet in DB. Persist that very token on its first
-            // protected API hit instead of rejecting it. Only well-formed
-            // tokens (bin2hex(32) = 64 hex chars) are eligible; forged or
-            // revoked tokens still fall through to 401 below.
+            // protected API hit instead of rejecting it. Only a token still
+            // marked as unpersisted in the session is eligible: revoked or
+            // previously persisted tokens are never recreated. Promotion is
+            // guest-only — an authenticated session must bind the customer id
+            // through the regular token minting path.
             if (
                 $resolved['reason'] === 'missing'
                 && !$isPublic
                 && !empty($sessionToken)
                 && hash_equals($sessionToken, $token)
+                && $tokenService->isSessionTokenLazy()
+                && empty($_SESSION['ms3']['customer_id'])
             ) {
-                $persisted = $tokenService->ensureTokenPersisted(
-                    $token,
-                    (int)($_SESSION['ms3']['customer_id'] ?? 0)
-                );
+                $persisted = $tokenService->ensureTokenPersisted($token, 0);
                 if ($persisted !== null) {
                     $tokenService->syncSessionFromToken($persisted);
                     $_REQUEST['ms3_token'] = $token;
@@ -205,6 +205,7 @@ class TokenMiddleware implements MiddlewareInterface
             $_REQUEST['ms3_token'],
             $_SESSION['ms3']['customer_token'],
             $_SESSION['ms3']['customer_token_expires'],
+            $_SESSION['ms3']['customer_token_lazy'],
             $_SESSION['ms3']['customer_id']
         );
     }

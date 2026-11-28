@@ -67,10 +67,15 @@ class TokenService
 
             // First real API action with a lazy session token: persist that
             // very token (#1000) instead of minting a different one (which
-            // would orphan the draft created under the lazy token).
-            if ($resolved['reason'] === 'missing' && empty($_SESSION['ms3']['customer_id'])) {
-                $customerId = (int)($_SESSION['ms3']['customer_id'] ?? 0);
-                $persisted = $this->ensureTokenPersisted($existingToken, $customerId, $ttl);
+            // would orphan the draft created under the lazy token). A token
+            // that was already persisted (marker cleared) must never be
+            // reinserted after revocation.
+            if (
+                $resolved['reason'] === 'missing'
+                && $this->isSessionTokenLazy()
+                && empty($_SESSION['ms3']['customer_id'])
+            ) {
+                $persisted = $this->ensureTokenPersisted($existingToken, 0, $ttl);
                 if ($persisted !== null) {
                     $expires = (int) strtotime((string) $persisted->get('expires_at'));
 
@@ -115,6 +120,8 @@ class TokenService
      * render snippets therefore no longer fill `ms3_customer_tokens`.
      *
      * An already persisted token behaves exactly as before (DB-validated).
+     * A freshly minted token is marked as lazy in the session; the marker is
+     * cleared as soon as a DB row exists.
      *
      * A cookie is never adopted into the session without DB validation.
      * The lazy token is minted server-side only; the cookie remains a hint
@@ -138,23 +145,41 @@ class TokenService
         if (!isset($_SESSION['ms3'])) {
             $_SESSION['ms3'] = [];
         }
+        // An authenticated session without a token keeps its customer id; the
+        // regular minting path binds it to the DB row on first use.
+        $customerId = (int)($_SESSION['ms3']['customer_id'] ?? 0);
         $_SESSION['ms3']['customer_token'] = $token;
         $_SESSION['ms3']['customer_token_expires'] = time() + $ttl;
-        $_SESSION['ms3']['customer_id'] = 0;
+        $_SESSION['ms3']['customer_token_lazy'] = true;
+        $_SESSION['ms3']['customer_id'] = $customerId;
         CookieHelper::setTokenCookie($this->modx, $token);
 
         return $token;
     }
 
     /**
+     * Whether the session token was minted lazily and has no DB row yet (#1000).
+     *
+     * Only such tokens may be persisted on first use. Once a row exists the
+     * marker is cleared by {@see applyTokenToSession()}, so a revoked token
+     * cannot be silently reinserted.
+     */
+    public function isSessionTokenLazy(): bool
+    {
+        return !empty($_SESSION['ms3']['customer_token_lazy']);
+    }
+
+    /**
      * Persist a session-only token on its first real use (#1000).
      *
-     * Returns the existing DB row when the token is already persisted,
-     * otherwise creates it with the caller-supplied token string.
+     * Returns the existing DB row when the token is already persisted (after
+     * re-checking its principal), otherwise creates it with the presented
+     * token string. Only the SHA-256 hash is stored (#927); the plaintext is
+     * kept in memory via {@see msCustomerToken::setPlainToken()}.
      *
-     * Security: only tokens that were issued by the server (present in
-     * $_SESSION['ms3']['customer_token']) are persisted. A forged token
-     * that was never issued must not be persisted.
+     * Security: only server-minted guest tokens still marked as lazy in the
+     * session are promoted. Forged tokens, revoked tokens and authenticated
+     * sessions must not create a DB row here.
      *
      * @return msCustomerToken|null
      */
@@ -164,12 +189,20 @@ class TokenService
             return null;
         }
 
-        // Defense-in-depth: reject tokens not issued by the server.
+        // Defense-in-depth: only a server-minted token that is still marked as
+        // unpersisted may be promoted. A forged token, an already persisted
+        // token that was revoked, or an authenticated session must not create
+        // a DB row here.
         $sessionToken = $_SESSION['ms3']['customer_token'] ?? '';
-        if (empty($sessionToken) || !hash_equals($sessionToken, $token)) {
+        if (
+            empty($sessionToken)
+            || !hash_equals($sessionToken, $token)
+            || !$this->isSessionTokenLazy()
+            || $customerId !== 0
+        ) {
             $this->modx->log(
                 modX::LOG_LEVEL_ERROR,
-                '[TokenService] ensureTokenPersisted: rejected forged token (session mismatch)'
+                '[TokenService] ensureTokenPersisted: rejected token (not a lazy guest session token)'
             );
             return null;
         }
@@ -178,33 +211,116 @@ class TokenService
             $ttl = (int)$this->modx->getOption('ms3_customer_token_ttl', null, 86400);
         }
 
-        $existing = $this->modx->getObject(msCustomerToken::class, [
-            'token' => $token,
-            'type' => msCustomerToken::TYPE_API,
-        ]);
+        // A concurrent first call may already have persisted this token.
+        // Return that row (hash identity, #927) instead of inserting again.
+        $existing = $this->findApiTokenByString($token);
         if ($existing instanceof msCustomerToken) {
+            if ($existing->isExpired() || !$this->apiTokenPrincipalAllowed($existing)) {
+                $this->modx->log(
+                    modX::LOG_LEVEL_ERROR,
+                    '[TokenService] ensureTokenPersisted: existing token is not promotable'
+                );
+                return null;
+            }
+            $existing->setPlainToken($token);
+            $this->syncSessionFromToken($existing);
+
             return $existing;
         }
 
         $tokenObj = $this->modx->newObject(msCustomerToken::class);
         $tokenObj->set('customer_id', $customerId);
-        $tokenObj->set('token', $token);
+        $tokenObj->set('token', '');
+        $tokenObj->set('token_hash', hash('sha256', $token));
         $tokenObj->set('type', msCustomerToken::TYPE_API);
         $tokenObj->set('expires_at', date('Y-m-d H:i:s', time() + $ttl));
         $tokenObj->set('created_at', date('Y-m-d H:i:s'));
 
-        if (!$tokenObj->save()) {
-            $this->modx->log(
-                modX::LOG_LEVEL_ERROR,
-                '[TokenService] Failed to persist session token'
-            );
-
-            return null;
+        $duplicate = false;
+        try {
+            $saved = $tokenObj->save();
+        } catch (\Throwable $e) {
+            if (!$this->isDuplicateTokenHashError($e)) {
+                $this->modx->log(
+                    modX::LOG_LEVEL_ERROR,
+                    '[TokenService] Failed to persist session token: ' . $e->getMessage()
+                );
+                return null;
+            }
+            $saved = true;
+            $duplicate = true;
+        }
+        if (!$saved) {
+            // Some drivers report duplicate keys via errorInfo() instead of
+            // throwing; the UNIQUE index on token_hash arbitrates either way.
+            $errorInfo = method_exists($this->modx, 'errorInfo') ? $this->modx->errorInfo() : null;
+            if (!$this->isDuplicateTokenHashError($errorInfo)) {
+                $this->modx->log(
+                    modX::LOG_LEVEL_ERROR,
+                    '[TokenService] Failed to persist session token'
+                );
+                return null;
+            }
+            $duplicate = true;
         }
 
+        if ($duplicate) {
+            $raced = $this->findApiTokenByString($token);
+            if ($raced instanceof msCustomerToken && !$raced->isExpired() && $this->apiTokenPrincipalAllowed($raced)) {
+                $raced->setPlainToken($token);
+                $this->syncSessionFromToken($raced);
+
+                return $raced;
+            }
+        }
+
+        $tokenObj->setPlainToken($token);
         $this->syncSessionFromToken($tokenObj);
 
         return $tokenObj;
+    }
+
+    /**
+     * Hash-first API token lookup with plaintext fallback for legacy rows (#927).
+     */
+    private function findApiTokenByString(string $token): ?msCustomerToken
+    {
+        $tokenObj = $this->modx->getObject(msCustomerToken::class, [
+            'token_hash' => hash('sha256', $token),
+            'type' => msCustomerToken::TYPE_API,
+        ]);
+        if (!$tokenObj) {
+            $tokenObj = $this->modx->getObject(msCustomerToken::class, [
+                'token' => $token,
+                'type' => msCustomerToken::TYPE_API,
+            ]);
+        }
+
+        return $tokenObj instanceof msCustomerToken ? $tokenObj : null;
+    }
+
+    /**
+     * Whether a failed insert is a UNIQUE(token_hash) collision from a racing
+     * first call. Other save failures must stay failures.
+     */
+    private function isDuplicateTokenHashError(mixed $error): bool
+    {
+        $message = match (true) {
+            $error instanceof \Throwable => $error->getMessage(),
+            is_string($error) => $error,
+            is_array($error) => implode(' ', array_map(
+                static fn($part) => is_scalar($part) ? (string) $part : '',
+                $error
+            )),
+            default => '',
+        };
+        $message = strtolower($message);
+        if ($message === '') {
+            return false;
+        }
+
+        return (str_contains($message, 'duplicate') || str_contains($message, '1062'))
+            && (str_contains($message, 'token_hash') || str_contains($message, 'unique'));
     }
 
     /**
@@ -282,8 +398,9 @@ class TokenService
      * Expired tokens are removed. Does not extend TTL and does not keep the
      * same token string alive.
      *
-     * @return array{token: ?msCustomerToken, reason: 'ok'|'missing'|'expired'}
-     *         reason missing also covers a live token whose customer is inactive or blocked
+     * @return array{token: ?msCustomerToken, reason: 'ok'|'missing'|'expired'|'denied'}
+     *         `missing` means no row exists; `denied` means the row exists but
+     *         its customer is inactive/blocked (never promote or hydrate it)
      */
     public function resolveApiToken(string $tokenString): array
     {
@@ -320,7 +437,7 @@ class TokenService
         }
 
         if (!$this->apiTokenPrincipalAllowed($tokenObj)) {
-            return ['token' => null, 'reason' => 'missing'];
+            return ['token' => null, 'reason' => 'denied'];
         }
 
         // Hold the presented plaintext in memory for cookie/session hydration (#927).
@@ -355,9 +472,13 @@ class TokenService
                 return $sessionToken;
             }
 
-            // Session-only lazy token (never persisted) — keep it.
-            // A revoked persisted token has a DB expiry in session and is discarded below.
-            if ($resolved['reason'] === 'missing' && empty($_SESSION['ms3']['customer_id'])) {
+            // Session-only lazy token (never persisted) — keep it. An already
+            // persisted token that was revoked is discarded below.
+            if (
+                $resolved['reason'] === 'missing'
+                && $this->isSessionTokenLazy()
+                && empty($_SESSION['ms3']['customer_id'])
+            ) {
                 CookieHelper::setTokenCookie($this->modx, $sessionToken);
 
                 return $sessionToken;
@@ -378,6 +499,7 @@ class TokenService
                 }
                 $_SESSION['ms3']['customer_token'] = $cookieToken;
                 $_SESSION['ms3']['customer_token_expires'] = strtotime($tokenObj->get('expires_at'));
+                unset($_SESSION['ms3']['customer_token_lazy']); // DB row exists
 
                 $customerId = (int)$tokenObj->get('customer_id');
                 if ($customerId > 0) {
@@ -389,25 +511,14 @@ class TokenService
                 return $cookieToken;
             }
 
-            // Cookie token from a lazy session that has not been persisted yet.
-            if ($resolved['reason'] === 'missing') {
-                if (!isset($_SESSION['ms3'])) {
-                    $_SESSION['ms3'] = [];
-                }
-                $ttl = (int)$this->modx->getOption('ms3_customer_token_ttl', null, 86400);
-                $_SESSION['ms3']['customer_token'] = $cookieToken;
-                $_SESSION['ms3']['customer_token_expires'] = time() + $ttl;
-                if (empty($_SESSION['ms3']['customer_id'])) {
-                    $_SESSION['ms3']['customer_id'] = 0;
-                }
-                CookieHelper::setTokenCookie($this->modx, $cookieToken);
-
-                return $cookieToken;
+            // Never adopt an unvalidated cookie value: forged, revoked and
+            // stale cookies must not be resurrected. A lazy token cannot be
+            // restored across sessions — its marker lived in the lost session.
+            if ($resolved['reason'] === 'denied') {
+                // A blocked/inactive customer must not keep an authenticated id.
+                unset($_SESSION['ms3']['customer_id']);
             }
-
-            if ($resolved['reason'] === 'expired') {
-                CookieHelper::clearTokenCookie($this->modx);
-            }
+            CookieHelper::clearTokenCookie($this->modx);
         }
 
         return $this->getOrCreateSessionToken();
@@ -662,6 +773,7 @@ class TokenService
     {
         unset($_SESSION['ms3']['customer_token']);
         unset($_SESSION['ms3']['customer_token_expires']);
+        unset($_SESSION['ms3']['customer_token_lazy']);
 
         $this->modx->log(
             modX::LOG_LEVEL_DEBUG,
@@ -1031,6 +1143,7 @@ class TokenService
 
         $_SESSION['ms3']['customer_token'] = (string)$tokenObj->get('token');
         $_SESSION['ms3']['customer_token_expires'] = strtotime($tokenObj->get('expires_at'));
+        unset($_SESSION['ms3']['customer_token_lazy']); // row now exists in DB
 
         $tokenCustomerId = (int)$tokenObj->get('customer_id');
         $_SESSION['ms3']['customer_id'] = self::sessionCustomerIdFromTokenRow($tokenCustomerId);
