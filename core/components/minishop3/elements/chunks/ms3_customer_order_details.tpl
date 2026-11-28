@@ -189,10 +189,10 @@
         </div>
         <div class="card-body">
             {if $address.comment}
-                <p class="mb-0">{$address.comment}</p>
+                <p class="mb-0"><strong>{'ms3_frontend_comment' | lexicon}:</strong> {$address.comment | e}</p>
             {/if}
             {if $order.order_comment}
-                <p class="mb-0">{$order.order_comment}</p>
+                <p class="mb-0"><strong>{'ms3_order_comment' | lexicon}:</strong> {$order.order_comment | e}</p>
             {/if}
         </div>
     </div>
