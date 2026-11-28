@@ -20,6 +20,7 @@ class ManagerOrderPresenter
      */
     public const HIDDEN_ORDER_FIELDS = [
         'token',
+        'idempotency_key',
     ];
 
     protected modX $modx;

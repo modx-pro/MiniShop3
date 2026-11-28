@@ -39,10 +39,13 @@ if (!str_contains($snippetSrc, 'DeliveryPublicFields::fromEntityOrEmpty')) {
     $fail('ms3_get_order.php must use DeliveryPublicFields::fromEntityOrEmpty for delivery (#909)');
 }
 
-// 3. Order array — убраны token и idempotency_key
+// 3. Order array — убраны token и idempotency_key (включая копию в properties)
 if (!str_contains($snippetSrc, "unset(\$orderArray['token'], \$orderArray['idempotency_key'])")
     && !str_contains($snippetSrc, "unset(\$orderArray[\"token\"], \$orderArray[\"idempotency_key\"])")) {
     $fail('ms3_get_order.php must unset token and idempotency_key from order array (#909)');
+}
+if (!str_contains($snippetSrc, "unset(\$orderArray['properties']['idempotency_key'])")) {
+    $fail('ms3_get_order.php must also unset the properties copy of idempotency_key (#909)');
 }
 
 // 4. Проверка набор полей DeliveryPublicFields покрывает штатный чанк ms3_get_order.tpl
