@@ -124,8 +124,8 @@ final class InventoryStockConcurrentMysqlTest extends TestCase
         self::assertSame(0.0, $inventoryA->getAvailable($key));
 
         $this->pdo->beginTransaction();
-        self::assertTrue($storeA->transitionReservation(7, 15, 'reserved', 'released'));
-        $storeA->increment(15, 1.0);
+        self::assertTrue($storeA->transitionReservation(7, $key, 'reserved', 'released'));
+        $storeA->increment($key, 1.0);
 
         $pdoB = MysqlTestConnection::connect();
         $pdoB->query('SET SESSION innodb_lock_wait_timeout = 1');
@@ -133,7 +133,7 @@ final class InventoryStockConcurrentMysqlTest extends TestCase
         $secondWon = true;
         $pdoB->beginTransaction();
         try {
-            $secondWon = $storeB->transitionReservation(7, 15, 'reserved', 'released');
+            $secondWon = $storeB->transitionReservation(7, $key, 'reserved', 'released');
         } catch (\PDOException) {
             $secondWon = false;
         }

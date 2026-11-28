@@ -5,7 +5,19 @@ namespace MiniShop3\Services\Inventory;
 /**
  * Persistence for available stock and per-order reservation ledger.
  *
- * @phpstan-type ReservationRow array{order_id: int, product_id: int, qty: float, state: string}
+ * BC (#1001): these int-productId signatures are unchanged, so third-party
+ * stores written before variant keys keep working. New stores implement
+ * {@see KeyedInventoryStockStoreInterface} (which extends this one) to support
+ * SKU-level keys; the core wraps stores that do not into
+ * {@see InventoryStockStoreKeyAdapter}, which drops the variant part and keeps
+ * product-level accounting. No new method is added here on purpose — adding
+ * one to a PHP interface is a hard break for every existing implementation.
+ *
+ * The core PDO store reads/writes `ms3_products.stock` by product id and
+ * ignores the variant part for stock (variant stock lives in addons — see
+ * ProductStockInventory). Ledger rows carry variant_key ('' = product-level).
+ *
+ * @phpstan-type ReservationRow array{order_id: int, product_id: int, variant_key: ?string, qty: float, state: string}
  */
 interface InventoryStockStoreInterface
 {

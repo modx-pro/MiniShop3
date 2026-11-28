@@ -4,18 +4,23 @@ declare(strict_types=1);
 
 namespace MiniShop3\Tests\Support;
 
-use MiniShop3\Services\Inventory\InventoryStockStoreInterface;
+use MiniShop3\Services\Inventory\InventoryKey;
+use MiniShop3\Services\Inventory\InventoryReservationState;
+use MiniShop3\Services\Inventory\KeyedInventoryStockStoreInterface;
 
 /**
  * In-process store for unit tests and contract fakes.
+ *
+ * Implements both the legacy int-product methods and the keyed methods used by
+ * the core (see InventoryStockStoreInterface BC notes).
  */
-final class InMemoryInventoryStockStore implements InventoryStockStoreInterface
+final class InMemoryInventoryStockStore implements KeyedInventoryStockStoreInterface
 {
     /** @var array<int, float> */
     private array $stock = [];
 
     /**
-     * @var array<string, array{order_id: int, product_id: int, qty: float, state: string}>
+     * @var array<string, array{order_id: int, product_id: int, variant_key: ?string, qty: float, state: string}>
      */
     private array $reservations = [];
 
@@ -24,45 +29,80 @@ final class InMemoryInventoryStockStore implements InventoryStockStoreInterface
         $this->stock[$productId] = round($qty, 3);
     }
 
-    public function getAvailable(int $productId): float
+    // Legacy methods deliberately accept an InventoryKey too: older tests and
+    // in-repo callers can use either form while the interface stays int-based.
+    public function getAvailable(int|InventoryKey $productId): float
     {
-        return $this->stock[$productId] ?? 0.0;
+        return $this->stock[$this->pid($productId)] ?? 0.0;
     }
 
-    public function tryDecrement(int $productId, float $qty): bool
+    public function getAvailableByKey(InventoryKey $key): float
     {
-        $available = $this->getAvailable($productId);
+        return $this->getAvailable($key->productId);
+    }
+
+    public function tryDecrement(int|InventoryKey $productId, float $qty): bool
+    {
+        $id = $this->pid($productId);
+        $available = $this->getAvailable($id);
         if ($available < $qty) {
             return false;
         }
-        $this->stock[$productId] = round($available - $qty, 3);
+        $this->stock[$id] = round($available - $qty, 3);
 
         return true;
     }
 
-    public function decrement(int $productId, float $qty): bool
+    public function tryDecrementByKey(InventoryKey $key, float $qty): bool
     {
-        if (!array_key_exists($productId, $this->stock)) {
+        return $this->tryDecrement($key->productId, $qty);
+    }
+
+    public function decrement(int|InventoryKey $productId, float $qty): bool
+    {
+        $id = $this->pid($productId);
+        if (!array_key_exists($id, $this->stock)) {
             return false;
         }
-        $this->stock[$productId] = round($this->stock[$productId] - $qty, 3);
+        $this->stock[$id] = round($this->stock[$id] - $qty, 3);
 
         return true;
     }
 
-    public function increment(int $productId, float $qty): void
+    public function decrementByKey(InventoryKey $key, float $qty): bool
     {
-        $this->stock[$productId] = round($this->getAvailable($productId) + $qty, 3);
+        return $this->decrement($key->productId, $qty);
     }
 
-    public function findReservation(int $orderId, int $productId): ?array
+    public function increment(int|InventoryKey $productId, float $qty): void
     {
-        return $this->reservations[$this->reservationKey($orderId, $productId)] ?? null;
+        $id = $this->pid($productId);
+        $this->stock[$id] = round($this->getAvailable($id) + $qty, 3);
     }
 
-    public function lockReservation(int $orderId, int $productId): ?array
+    public function incrementByKey(InventoryKey $key, float $qty): void
+    {
+        $this->increment($key->productId, $qty);
+    }
+
+    public function findReservation(int $orderId, int|InventoryKey $productId): ?array
+    {
+        return $this->findReservationByKey($orderId, $productId instanceof InventoryKey ? $productId : new InventoryKey($productId));
+    }
+
+    public function findReservationByKey(int $orderId, InventoryKey $key): ?array
+    {
+        return $this->reservations[$this->reservationKey($orderId, $key)] ?? null;
+    }
+
+    public function lockReservation(int $orderId, int|InventoryKey $productId): ?array
     {
         return $this->findReservation($orderId, $productId);
+    }
+
+    public function lockReservationByKey(int $orderId, InventoryKey $key): ?array
+    {
+        return $this->findReservationByKey($orderId, $key);
     }
 
     public function listReservations(int $orderId): array
@@ -77,36 +117,97 @@ final class InMemoryInventoryStockStore implements InventoryStockStoreInterface
         return $rows;
     }
 
-    public function saveReservation(int $orderId, int $productId, float $qty, string $state): void
+    /**
+     * Active holds keyed by identity, as expected from AdjustableInventoryInterface.
+     *
+     * @return array<string, array{qty: float, state: string, key: InventoryKey}>
+     */
+    public function heldByKey(int $orderId): array
     {
-        $this->reservations[$this->reservationKey($orderId, $productId)] = [
+        $held = [];
+        foreach ($this->listReservations($orderId) as $row) {
+            $state = (string) ($row['state'] ?? '');
+            if ($state !== InventoryReservationState::RESERVED && $state !== InventoryReservationState::COMMITTED) {
+                continue;
+            }
+            $key = new InventoryKey((int) $row['product_id'], $row['variant_key'] ?? null);
+            $held[$key->identity()] = [
+                'qty' => round((float) $row['qty'], 3),
+                'state' => $state,
+                'key' => $key,
+            ];
+        }
+
+        return $held;
+    }
+
+    public function saveReservation(int $orderId, int|InventoryKey $productId, float $qty, string $state): void
+    {
+        $this->saveReservationByKey(
+            $orderId,
+            $productId instanceof InventoryKey ? $productId : new InventoryKey($productId),
+            $qty,
+            $state
+        );
+    }
+
+    public function saveReservationByKey(int $orderId, InventoryKey $key, float $qty, string $state): void
+    {
+        $this->reservations[$this->reservationKey($orderId, $key)] = [
             'order_id' => $orderId,
-            'product_id' => $productId,
+            'product_id' => $key->productId,
+            'variant_key' => $key->variantKey,
             'qty' => round($qty, 3),
             'state' => $state,
         ];
     }
 
-    public function insertReservation(int $orderId, int $productId, float $qty, string $state): bool
+    public function insertReservation(int $orderId, int|InventoryKey $productId, float $qty, string $state): bool
     {
-        $key = $this->reservationKey($orderId, $productId);
-        if (isset($this->reservations[$key])) {
+        return $this->insertReservationByKey(
+            $orderId,
+            $productId instanceof InventoryKey ? $productId : new InventoryKey($productId),
+            $qty,
+            $state
+        );
+    }
+
+    public function insertReservationByKey(int $orderId, InventoryKey $key, float $qty, string $state): bool
+    {
+        $k = $this->reservationKey($orderId, $key);
+        if (isset($this->reservations[$k])) {
             return false;
         }
-        $this->saveReservation($orderId, $productId, $qty, $state);
+        $this->saveReservationByKey($orderId, $key, $qty, $state);
 
         return true;
     }
 
     public function transitionReservation(
         int $orderId,
-        int $productId,
+        int|InventoryKey $productId,
         string $fromState,
         string $toState,
         ?float $qty = null
     ): bool {
-        $key = $this->reservationKey($orderId, $productId);
-        $row = $this->reservations[$key] ?? null;
+        return $this->transitionReservationByKey(
+            $orderId,
+            $productId instanceof InventoryKey ? $productId : new InventoryKey($productId),
+            $fromState,
+            $toState,
+            $qty
+        );
+    }
+
+    public function transitionReservationByKey(
+        int $orderId,
+        InventoryKey $key,
+        string $fromState,
+        string $toState,
+        ?float $qty = null
+    ): bool {
+        $k = $this->reservationKey($orderId, $key);
+        $row = $this->reservations[$k] ?? null;
         if ($row === null || $row['state'] !== $fromState) {
             return false;
         }
@@ -114,14 +215,37 @@ final class InMemoryInventoryStockStore implements InventoryStockStoreInterface
         if ($qty !== null) {
             $row['qty'] = round($qty, 3);
         }
-        $this->reservations[$key] = $row;
+        $this->reservations[$k] = $row;
 
         return true;
     }
 
-    public function deleteReservation(int $orderId, int $productId): void
+    public function deleteReservation(int $orderId, int|InventoryKey $productId): void
     {
-        unset($this->reservations[$this->reservationKey($orderId, $productId)]);
+        $this->deleteReservationByKey(
+            $orderId,
+            $productId instanceof InventoryKey ? $productId : new InventoryKey($productId)
+        );
+    }
+
+    public function deleteReservationByKey(int $orderId, InventoryKey $key): void
+    {
+        unset($this->reservations[$this->reservationKey($orderId, $key)]);
+    }
+
+    public function rekeyReservation(int $orderId, InventoryKey $from, InventoryKey $to): bool
+    {
+        $legacyKey = $this->reservationKey($orderId, $from);
+        $targetKey = $this->reservationKey($orderId, $to);
+        $row = $this->reservations[$legacyKey] ?? null;
+        if ($row === null || isset($this->reservations[$targetKey])) {
+            return false;
+        }
+        unset($this->reservations[$legacyKey]);
+        $row['variant_key'] = $to->variantKey;
+        $this->reservations[$targetKey] = $row;
+
+        return true;
     }
 
     public function runInTransaction(callable $work): void
@@ -129,8 +253,13 @@ final class InMemoryInventoryStockStore implements InventoryStockStoreInterface
         $work();
     }
 
-    private function reservationKey(int $orderId, int $productId): string
+    private function pid(int|InventoryKey $productId): int
     {
-        return $orderId . ':' . $productId;
+        return $productId instanceof InventoryKey ? $productId->productId : $productId;
+    }
+
+    private function reservationKey(int $orderId, InventoryKey $key): string
+    {
+        return $orderId . ':' . $key->identity();
     }
 }

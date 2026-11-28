@@ -3,7 +3,9 @@
 namespace MiniShop3\Services\Inventory;
 
 use MiniShop3\Model\msOrder;
+use MiniShop3\Model\msOrderProduct;
 use MiniShop3\Model\msOrderStatus;
+use MiniShop3\Utils\EventGate;
 use MODX\Revolution\modX;
 
 /**
@@ -13,6 +15,17 @@ use MODX\Revolution\modX;
  */
 class OrderInventoryCoordinator
 {
+    /**
+     * Resolution cache per order line. `msOnInventoryResolveKey` must run once
+     * per line per order: reserve, availability check and later edits all ask
+     * for the same key, even when the admin UI sends a fresh object for the
+     * edited line (#1001 review). Keyed by order/line id plus the line's SKU
+     * options; new (unsaved) lines fall back to their object id.
+     *
+     * @var array<string, ?InventoryKey>
+     */
+    private array $resolvedKeys = [];
+
     public function __construct(
         private readonly modX $modx,
         private readonly InventoryServiceInterface $inventory,
@@ -37,8 +50,8 @@ class OrderInventoryCoordinator
         if (!$this->enabled()) {
             return;
         }
-        foreach ($this->qtyByProduct($order) as $productId => $qty) {
-            $this->inventory->assertAvailable(new InventoryKey($productId), $qty);
+        foreach ($this->qtyByKey($order) as $entry) {
+            $this->inventory->assertAvailable($entry['key'], $entry['qty']);
         }
     }
 
@@ -62,25 +75,25 @@ class OrderInventoryCoordinator
     /**
      * Match the ledger to the order lines the caller is about to save.
      *
-     * $qtyByProduct is the target sum per product, including the unsaved edit.
-     * Products held in the ledger but absent from the map are released.
-     * Draft and canceled orders are left alone. Returns lines written past
-     * available stock when $force is set.
+     * $qtyByKey is the target sum per stock identity (InventoryKey::identity())
+     * including the unsaved edit. Plain integer product ids are still accepted
+     * for backwards compatibility and mean a product-level target. Rows held
+     * in the ledger but absent from the map are released. Draft and canceled
+     * orders are left alone. Returns lines written past available stock when
+     * $force is set.
      *
-     * @param array<int, float> $qtyByProduct
-     * @return list<array{product_id: int, available: float, required: float}>
+     * @param array<int|string, float> $qtyByKey
+     * @return list<array{product_id: int, variant_key: ?string, available: float, required: float}>
      * @throws InventoryException
      */
-    public function reconcile(msOrder $order, array $qtyByProduct, bool $force = false, bool $notify = true): array
+    public function reconcile(msOrder $order, array $qtyByKey, bool $force = false, bool $notify = true): array
     {
         if (!$this->enabled()) {
             return [];
         }
 
         $orderId = (int) $order->get('id');
-        $held = $this->inventory instanceof AdjustableInventoryInterface
-            ? $this->inventory->heldByProduct($orderId)
-            : [];
+        $held = $this->heldForOrder($orderId);
         $mode = $this->holdMode($order, $held);
         if ($mode === null) {
             return [];
@@ -92,38 +105,47 @@ class OrderInventoryCoordinator
         }
 
         $targets = [];
-        foreach ($qtyByProduct as $productId => $qty) {
-            $productId = (int) $productId;
-            $qty = round((float) $qty, 3);
-            if ($productId <= 0 || $qty <= 0) {
+        $keys = [];
+        foreach ($qtyByKey as $rawKey => $qty) {
+            $key = $this->coerceKey($rawKey);
+            if ($key === null) {
                 continue;
             }
-            $targets[$productId] = $qty;
+            $identity = $key->identity();
+            $keys[$identity] = $key;
+            $qty = round((float) $qty, 3);
+            if ($qty <= 0) {
+                continue;
+            }
+            $targets[$identity] = round(($targets[$identity] ?? 0.0) + $qty, 3);
         }
-        $productIds = array_values(array_unique(array_merge(
+        $identities = array_values(array_unique(array_merge(
             array_keys($targets),
-            array_keys($held)
+            array_keys($held),
+            array_keys($this->qtyByKey($order))
         )));
 
         $ctx = new InventoryContext($orderId, 'order', $mode);
         $applied = [];
         $overrides = [];
         try {
-            foreach ($productIds as $productId) {
-                $target = $targets[$productId] ?? 0.0;
-                $oldQty = round((float) ($held[$productId]['qty'] ?? 0.0), 3);
+            foreach ($identities as $identity) {
+                $key = $held[$identity]['key'] ?? $keys[$identity] ?? InventoryKey::fromIdentity((string) $identity);
+                $target = $targets[$identity] ?? 0.0;
+                $oldQty = round((float) ($held[$identity]['qty'] ?? 0.0), 3);
                 $delta = round($target - $oldQty, 3);
-                $available = $this->inventory->getAvailable(new InventoryKey($productId));
+                $available = $this->inventory->getAvailable($key);
                 $override = null;
                 if ($force && $delta > 0 && $available + 0.0001 < $delta) {
                     $override = [
-                        'product_id' => $productId,
+                        'product_id' => $key->productId,
+                        'variant_key' => $key->variantKey,
                         'available' => $available,
                         'required' => $target,
                     ];
                 }
-                $this->inventory->adjust(new InventoryKey($productId), $target, $ctx, $force, $notify);
-                $applied[$productId] = $oldQty;
+                $this->inventory->adjust($key, $target, $ctx, $force, $notify);
+                $applied[$identity] = ['key' => $key, 'qty' => $oldQty];
                 if ($override !== null) {
                     $overrides[] = $override;
                 }
@@ -137,24 +159,83 @@ class OrderInventoryCoordinator
     }
 
     /**
-     * @param array<int, float> $applied product id => qty before this reconcile
+     * @param array<string, array{key: InventoryKey, qty: float}> $applied identity => qty before reconcile
      */
     private function restoreApplied(array $applied, InventoryContext $ctx): void
     {
-        if (!$this->inventory instanceof AdjustableInventoryInterface) {
-            return;
-        }
-        foreach (array_reverse($applied, true) as $productId => $oldQty) {
+        foreach (array_reverse($applied, true) as $identity => $row) {
             try {
-                $this->inventory->adjust(new InventoryKey((int) $productId), $oldQty, $ctx, true, false);
+                $this->inventory->adjust($row['key'], $row['qty'], $ctx, true, false);
             } catch (\Throwable $exception) {
                 $this->modx->log(
                     modX::LOG_LEVEL_ERROR,
-                    '[ms3] inventory reconcile rollback failed for product ' . $productId
+                    '[ms3] inventory reconcile rollback failed for ' . $identity
                     . ': ' . $exception->getMessage()
                 );
             }
         }
+    }
+
+    private function coerceKey(mixed $rawKey): ?InventoryKey
+    {
+        if ($rawKey instanceof InventoryKey) {
+            return $rawKey;
+        }
+        try {
+            if (is_int($rawKey) || (is_string($rawKey) && ctype_digit($rawKey))) {
+                return new InventoryKey((int) $rawKey);
+            }
+            if (is_string($rawKey) && $rawKey !== '') {
+                return InventoryKey::fromIdentity($rawKey);
+            }
+        } catch (\InvalidArgumentException) {
+            return null;
+        }
+
+        return null;
+    }
+
+    /**
+     * Active holds keyed by identity, using heldByKey() when the backend has
+     * variants and falling back to heldByProduct() for legacy stores.
+     *
+     * @return array<string, array{qty: float, state: string, key: InventoryKey}>
+     */
+    private function heldForOrder(int $orderId): array
+    {
+        if (!$this->inventory instanceof AdjustableInventoryInterface) {
+            return [];
+        }
+        if (method_exists($this->inventory, 'heldByKey')) {
+            return $this->inventory->heldByKey($orderId);
+        }
+        $held = [];
+        foreach ($this->inventory->heldByProduct($orderId) as $productId => $row) {
+            $key = new InventoryKey((int) $productId);
+            $held[$key->identity()] = [
+                'qty' => round((float) ($row['qty'] ?? 0), 3),
+                'state' => (string) ($row['state'] ?? ''),
+                'key' => $key,
+            ];
+        }
+
+        return $held;
+    }
+
+    /**
+     * Public snapshot for admin line edits: identity => held qty.
+     * Used to compensate a failed order-product save (#829).
+     *
+     * @return array<string, float>
+     */
+    public function heldByKeyMap(int $orderId): array
+    {
+        $snapshot = [];
+        foreach ($this->heldForOrder($orderId) as $identity => $row) {
+            $snapshot[$identity] = round((float) ($row['qty'] ?? 0), 3);
+        }
+
+        return $snapshot;
     }
 
     /**
@@ -172,21 +253,25 @@ class OrderInventoryCoordinator
 
     private function reserveAll(msOrder $order, InventoryContext $ctx, bool $notify = true): void
     {
-        $qtyByProduct = $this->qtyByProduct($order);
+        // One batch for every key: after-reserve events fire only when the
+        // whole order stuck, and rollback informs variant addons (#1001 review).
         if ($this->inventory instanceof ProductStockInventory) {
-            $this->inventory->reserveBatch($qtyByProduct, $ctx, $notify);
+            $entries = [];
+            foreach ($this->qtyByKey($order) as $entry) {
+                $entries[] = [$entry['key'], $entry['qty']];
+            }
+            $this->inventory->reserveKeys($entries, $ctx, $notify);
 
             return;
         }
 
         $done = [];
         try {
-            foreach ($qtyByProduct as $productId => $qty) {
-                $key = new InventoryKey($productId);
-                $this->inventory->reserve($key, $qty, $ctx, $notify);
-                $done[] = [$key, $qty];
+            foreach ($this->qtyByKey($order) as $entry) {
+                $this->inventory->reserve($entry['key'], $entry['qty'], $ctx, $notify);
+                $done[] = [$entry['key'], $entry['qty']];
             }
-        } catch (InventoryException $exception) {
+        } catch (\Throwable $exception) {
             foreach (array_reverse($done) as [$key, $qty]) {
                 $this->inventory->release($key, $qty, $ctx, false);
             }
@@ -196,8 +281,8 @@ class OrderInventoryCoordinator
 
     private function commitAll(msOrder $order, InventoryContext $ctx): void
     {
-        foreach ($this->qtyByProduct($order) as $productId => $qty) {
-            $this->inventory->commit(new InventoryKey($productId), $qty, $ctx);
+        foreach ($this->qtyByKey($order) as $entry) {
+            $this->inventory->commit($entry['key'], $entry['qty'], $ctx);
         }
     }
 
@@ -222,8 +307,8 @@ class OrderInventoryCoordinator
         $ctx = new InventoryContext((int) $order->get('id'));
 
         if ($attemptedStatusId === $this->statusPaidId() && $this->inventory instanceof ProductStockInventory) {
-            foreach (array_keys($this->qtyByProduct($order)) as $productId) {
-                $this->inventory->revertCommitToReserved(new InventoryKey($productId), $ctx);
+            foreach ($this->qtyByKey($order) as $entry) {
+                $this->inventory->revertCommitToReserved($entry['key'], $ctx);
             }
 
             return;
@@ -246,34 +331,144 @@ class OrderInventoryCoordinator
         if ((int) $order->get('status_id') === $this->statusPaidId()) {
             return;
         }
-        foreach ($this->qtyByProduct($order) as $productId => $qty) {
-            $this->inventory->release(new InventoryKey($productId), $qty, $ctx, $notify);
+        foreach ($this->qtyByKey($order) as $entry) {
+            $this->inventory->release($entry['key'], $entry['qty'], $ctx, $notify);
         }
     }
 
     /**
-     * @return array<int, float>
+     * Targets for an admin edit: the same resolver as reserve/status paths,
+     * so an unsaved line change lands on the same ledger row (#1001 review).
+     *
+     * @param iterable<object> $lines Order lines, with the pending edit applied
+     * @return array<string, float> identity => qty
      */
-    private function qtyByProduct(msOrder $order): array
+    public function targetByKey(msOrder $order, iterable $lines): array
+    {
+        $targets = [];
+        foreach ($this->qtyByLines($order, $lines) as $identity => $entry) {
+            $targets[$identity] = $entry['qty'];
+        }
+
+        return $targets;
+    }
+
+    /**
+     * Grouped qty by stock identity (product + variant).
+     *
+     * Two lines of the same product with different variant keys (set by an
+     * addon via `msOnInventoryResolveKey`) stay separate ledger entries.
+     * Without addons every key is product-level, behaviour unchanged.
+     *
+     * @return array<string, array{key: InventoryKey, qty: float}>
+     */
+    private function qtyByKey(msOrder $order): array
     {
         $lines = $order->getMany('Products');
         if (!is_iterable($lines)) {
             return [];
         }
-        $qtyByProduct = [];
+
+        return $this->qtyByLines($order, $lines);
+    }
+
+    /**
+     * @param iterable<object> $lines
+     * @return array<string, array{key: InventoryKey, qty: float}>
+     */
+    public function qtyByLines(msOrder $order, iterable $lines): array
+    {
+        $byKey = [];
         foreach ($lines as $line) {
             if (!is_object($line) || !method_exists($line, 'get')) {
                 continue;
             }
-            $productId = (int) $line->get('product_id');
-            $qty = round((float) $line->get('count'), 3);
-            if ($productId <= 0 || $qty <= 0) {
+            $key = $this->resolveKey($line, $order);
+            if ($key === null) {
                 continue;
             }
-            $qtyByProduct[$productId] = round(($qtyByProduct[$productId] ?? 0.0) + $qty, 3);
+            $identity = $key->identity();
+            $qty = round((float) $line->get('count'), 3);
+            if ($qty <= 0) {
+                continue;
+            }
+            $byKey[$identity] = [
+                'key' => $key,
+                'qty' => round(($byKey[$identity]['qty'] ?? 0.0) + $qty, 3),
+            ];
         }
 
-        return $qtyByProduct;
+        return $byKey;
+    }
+
+    /**
+     * Resolve the stock identity for one order line.
+     *
+     * An addon sets the variant via event `msOnInventoryResolveKey`.
+     *
+     * @event msOnInventoryResolveKey
+     * @param array $params {
+     *     @var object $orderProduct Order line
+     *     @var int $product_id Product ID
+     *     @var array<string, mixed>|null $options Product options
+     *     @var msOrder $order Order
+     *     @var string|null $variantKey Current resolved key (null by default)
+     * }
+     * @param array $returnedValues {
+     *     @var string $variantKey A stable, deterministic SKU string or options hash.
+     *     The same orderProduct must always resolve to the same variantKey.
+     *     Keys are canonicalized (case, comma-list and option order) by
+     *     InventoryKey; keys longer than 128 characters are hashed.
+     * }
+     *
+     * Without subscribers the key is product-level (variantKey = null). The
+     * result is cached per line/order, so the addon fires once even when the
+     * coordinator is asked again for availability or admin edit targets.
+     */
+    private function resolveKey(object $line, msOrder $order): ?InventoryKey
+    {
+        $orderId = (int) $order->get('id');
+        $productId = (int) $line->get('product_id');
+        $qty = round((float) $line->get('count'), 3);
+        if ($productId <= 0 || $qty <= 0) {
+            return null;
+        }
+
+        $rawOptions = $line->get('options');
+        $options = is_array($rawOptions)
+            ? $rawOptions
+            : (is_string($rawOptions) ? json_decode($rawOptions, true) : null);
+        $lineId = (int) $line->get('id');
+        $cacheKey = $orderId . ':' . ($lineId > 0 ? 'line-' . $lineId : 'obj-' . spl_object_id($line))
+            . ':' . $productId . ':' . md5(json_encode($options ?: [], JSON_UNESCAPED_UNICODE) ?: '');
+        if (array_key_exists($cacheKey, $this->resolvedKeys)) {
+            return $this->resolvedKeys[$cacheKey];
+        }
+
+        try {
+            $event = EventGate::invokeRaw($this->modx, 'msOnInventoryResolveKey', [
+                'orderProduct' => $line,
+                'product_id' => $productId,
+                'options' => $options,
+                'order' => $order,
+                'variantKey' => null,
+            ]);
+        } catch (\Throwable $e) {
+            // Log the error; fallback to product-level key
+            $this->modx->log(
+                \MODX\Revolution\modX::LOG_LEVEL_WARN,
+                '[ms3] msOnInventoryResolveKey failed: ' . $e->getMessage()
+            );
+            $key = new InventoryKey($productId);
+            $this->resolvedKeys[$cacheKey] = $key;
+
+            return $key;
+        }
+        $variant = $event['returnedValues']['variantKey'] ?? null;
+        $key = new InventoryKey($productId, is_string($variant) ? $variant : null);
+        $this->resolvedKeys[$cacheKey] = $key;
+
+        return $key;
     }
 
     private function enabled(): bool
@@ -282,7 +477,7 @@ class OrderInventoryCoordinator
     }
 
     /**
-     * @param array<int, array{qty: float, state: string}> $held
+     * @param array<string, array{qty: float, state: string, key: InventoryKey}> $held
      */
     private function holdMode(msOrder $order, array $held): ?string
     {

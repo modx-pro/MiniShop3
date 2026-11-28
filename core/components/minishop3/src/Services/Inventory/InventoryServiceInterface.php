@@ -20,6 +20,10 @@ namespace MiniShop3\Services\Inventory;
  */
 interface InventoryServiceInterface
 {
+    /**
+     * Available stock for a product or SKU key. A variant key with no addon
+     * answer is treated as zero stock (never the product-level stock).
+     */
     public function getAvailable(InventoryKey $key): float;
 
     /**

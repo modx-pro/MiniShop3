@@ -27,10 +27,10 @@ class ManagerOrderProductsService
     protected ?OrderInventoryCoordinator $inventoryCoordinator;
     protected ?CartItemManager $cartItemManager;
 
-    /** @var array<int, float> */
+    /** @var array<string, float> inventory identity => qty (product id or "id|variant") */
     private array $snapshotBeforeSync = [];
 
-    /** @var list<array{product_id: int, available: float, required: float}> */
+    /** @var list<array{product_id: int, variant_key: ?string, available: float, required: float}> */
     private array $inventoryOverrides = [];
 
     public function __construct(
@@ -544,7 +544,7 @@ class ManagerOrderProductsService
         try {
             $this->inventoryOverrides = $this->syncInventory(
                 $order,
-                $this->targetQty($orderId, $pending, $includePending),
+                $this->targetQty($order, $pending, $includePending),
                 $force
             );
         } catch (InventoryException $exception) {
@@ -555,15 +555,20 @@ class ManagerOrderProductsService
     }
 
     /**
-     * @return array<int, float>
+     * Targets keyed by stock identity, using the coordinator's resolver so an
+     * unsaved edit of a variant line updates that SKU's hold instead of the
+     * product-level row (#1001 review).
+     *
+     * @return array<string, float>
      */
-    private function targetQty(int $orderId, object $pending, bool $includePending): array
+    private function targetQty(msOrder $order, object $pending, bool $includePending): array
     {
+        $orderId = (int)$order->get('id');
         $pendingId = (int)($pending->get('id') ?? 0);
-        $sums = [];
-        $lines = $this->modx->getIterator(msOrderProduct::class, ['order_id' => $orderId]);
-        if (is_iterable($lines)) {
-            foreach ($lines as $line) {
+        $lines = [];
+        $stored = $this->modx->getIterator(msOrderProduct::class, ['order_id' => $orderId]);
+        if (is_iterable($stored)) {
+            foreach ($stored as $line) {
                 if (!is_object($line) || !method_exists($line, 'get')) {
                     continue;
                 }
@@ -571,11 +576,22 @@ class ManagerOrderProductsService
                 if ($pendingId > 0 && $lineId === $pendingId) {
                     continue;
                 }
-                $this->addQty($sums, (int)$line->get('product_id'), (float)$line->get('count'));
+                $lines[] = $line;
             }
         }
         if ($includePending) {
-            $this->addQty($sums, (int)$pending->get('product_id'), (float)$pending->get('count'));
+            $lines[] = $pending;
+        }
+
+        $coordinator = $this->inventoryCoordinator();
+        if ($coordinator !== null) {
+            return $coordinator->targetByKey($order, $lines);
+        }
+
+        // No inventory service (disabled): keep a product-level map for logging.
+        $sums = [];
+        foreach ($lines as $line) {
+            $this->addQty($sums, (int)$line->get('product_id'), (float)$line->get('count'));
         }
 
         return $sums;
@@ -612,8 +628,8 @@ class ManagerOrderProductsService
     }
 
     /**
-     * @param array<int, float> $target
-     * @return list<array{product_id: int, available: float, required: float}>
+     * @param array<string, float> $target
+     * @return list<array{product_id: int, variant_key: ?string, available: float, required: float}>
      * @throws InventoryException
      */
     private function syncInventory(msOrder $order, array $target, bool $force): array
@@ -627,24 +643,28 @@ class ManagerOrderProductsService
     }
 
     /**
-     * @return array<int, float>
+     * @return array<string, float>
      */
     private function heldSnapshot(int $orderId): array
     {
+        $coordinator = $this->inventoryCoordinator();
+        if ($coordinator !== null) {
+            return $coordinator->heldByKeyMap($orderId);
+        }
         $inventory = $this->inventoryService();
         if (!$inventory instanceof AdjustableInventoryInterface) {
             return [];
         }
         $snapshot = [];
         foreach ($inventory->heldByProduct($orderId) as $productId => $row) {
-            $snapshot[(int)$productId] = round((float)($row['qty'] ?? 0), 3);
+            $snapshot[(string)(int)$productId] = round((float)($row['qty'] ?? 0), 3);
         }
 
         return $snapshot;
     }
 
     /**
-     * @param array<int, float> $snapshot
+     * @param array<string, float> $snapshot
      */
     private function compensateInventory(msOrder $order, array $snapshot): void
     {
@@ -675,6 +695,7 @@ class ManagerOrderProductsService
                     'operation' => 'inventory_override',
                     'user_id' => $userId,
                     'product_id' => $override['product_id'],
+                    'variant_key' => $override['variant_key'] ?? null,
                     'available' => $override['available'],
                     'reserved' => $override['required'],
                 ],
