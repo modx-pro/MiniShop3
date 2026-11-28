@@ -60,7 +60,7 @@ class Upload extends ModelProcessor
         }
         // Write path: the product container must exist before the upload.
         if (!$this->mediaSource = $this->product->initializeMediaSource(true)) {
-            return $this->modx->lexicon('ms3_gallery_err_no_source');
+            return $this->modx->lexicon('ms3_err_gallery_no_source');
         }
         $this->ms3 = $this->modx->services->get('ms3');
 

@@ -15,8 +15,6 @@ $_lang['ms3_customer_key_empty'] = 'Отсутствует ключ запрос
 $_lang['ms3_err_customer_nf'] = 'Профиль покупателя не найден';
 $_lang['ms3_err_customer_required'] = 'Для выбора сохранённого адреса необходимо войти в аккаунт покупателя';
 $_lang['ms3_err_address_not_found'] = 'Сохранённый адрес не найден';
-$_lang['ms3_err_customer_create'] = 'Не удалось создать профиль покупателя';
-$_lang['ms3_order_err_address_nf'] = 'Адрес заказа не найден';
 
 $_lang['ms3_customer_comment'] = 'Комментарий';
 $_lang['ms3_customer_first_name'] = 'Имя';
