@@ -83,7 +83,7 @@ $select = [
 ];
 
 if (!empty($scriptProperties['includeVendorFields'])) {
-    $includeVendorKeys = array_map('trim', explode(',', $scriptProperties['includeVendorFields']));
+    $includeVendorKeys = \MiniShop3\Utils\CommaList::parse($scriptProperties['includeVendorFields']);
     $leftJoin['Vendor'] = ['class' => msVendor::class, 'on' => '`Data`.vendor_id=Vendor.id'];
 
     if ($includeVendorKeys[0] === '*') {

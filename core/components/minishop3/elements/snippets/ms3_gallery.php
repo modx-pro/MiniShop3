@@ -22,10 +22,11 @@
     $tpl = $modx->getOption('tpl', $scriptProperties, 'tpl.msGallery');
     $thumbnailsFilter = $modx->getOption('thumbnails', $scriptProperties, '');
 
-    // $product from snippet props may be an id (int|string), not an msProduct yet.
-    $_ms3LoadedById = !empty($product) && (int) $product !== (int) $modx->resource->id;
+    // $product from snippet props may be an id or an already loaded object.
+    $passedProductId = empty($product) ? 0 : \MiniShop3\Utils\SnippetProductResolver::resolveId($product);
+    $_ms3LoadedById = $passedProductId > 0 && $passedProductId !== (int) $modx->resource->id;
     $product = $_ms3LoadedById
-        ? $modx->getObject(msProduct::class, ['id' => (int) $product])
+        ? $modx->getObject(msProduct::class, ['id' => $passedProductId])
         : $modx->resource;
     if (!($product instanceof msProduct)) {
         $modx->log(modX::LOG_LEVEL_ERROR, "[msGallery] Resource {$product->id} is not msProduct");

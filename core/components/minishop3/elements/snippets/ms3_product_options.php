@@ -23,9 +23,12 @@ if (!empty($input) && empty($product)) {
     $product = $input;
 }
 
-// $product may arrive as an id or as an already loaded object. Casting the
-// object to int emits a PHP 8 warning, so take its id explicitly (#842 review).
-$passedProductId = empty($product) ? 0 : (is_object($product) ? (int) $product->get('id') : (int) $product);
+// $product may arrive as an id or as an already loaded object. Resolve it
+// safely: casting an arbitrary object to int is a PHP 8 warning (#842 review).
+$passedProductId = empty($product) ? 0 : \MiniShop3\Utils\SnippetProductResolver::resolveId($product);
+if (!empty($product) && $passedProductId <= 0) {
+    return $modx->lexicon('ms3_err_options_is_not_msproduct', ['id' => 0]);
+}
 $_ms3LoadedById = $passedProductId > 0 && $passedProductId !== (int) $modx->resource->id;
 $product = $_ms3LoadedById
     ? $modx->getObject(msProduct::class, ['id' => $passedProductId])

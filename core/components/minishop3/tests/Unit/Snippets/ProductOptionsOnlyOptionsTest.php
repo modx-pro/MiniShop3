@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace MiniShop3\Tests\Unit\Snippets;
 
-require_once __DIR__ . '/../../stubs/ModxStub.php';
+if (!class_exists(modX::class, false)) {
+    require_once __DIR__ . '/../../stubs/ModxStub.php';
+}
 
 use MiniShop3\Model\msProduct;
 use MODX\Revolution\modX;
