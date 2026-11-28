@@ -32,7 +32,7 @@ final class CartOldPriceTest extends TestCase
         self::assertSame(5, $calls[0][1][1] ?? null);
     }
 
-    public function testLineOldPriceFromPropertiesWins(): void
+    public function testCurrentCatalogPriceWinsOverStaleLineSnapshot(): void
     {
         $line = $this->line(5, 800);
         $line['properties']['old_price'] = 900;
@@ -42,8 +42,36 @@ final class CartOldPriceTest extends TestCase
             [[5, $this->catalogRow(5, '1000.00', '0.00')]]
         );
 
+        self::assertSame(1000.0, $data['products'][0]['old_price']);
+        self::assertSame(200.0, $data['products'][0]['discount_price']);
+    }
+
+    public function testStoredOldPriceWinsWhenCatalogPriceIsLower(): void
+    {
+        $line = $this->line(5, 800);
+        $line['properties']['old_price'] = 900;
+
+        [$data] = $this->runSnippet(
+            [$line],
+            [[5, $this->catalogRow(5, '700.00', '0.00')]]
+        );
+
         self::assertSame(900.0, $data['products'][0]['old_price']);
         self::assertSame(100.0, $data['products'][0]['discount_price']);
+    }
+
+    public function testOldPriceBelowLinePriceNeverProducesNegativeDiscount(): void
+    {
+        $line = $this->line(5, 1000);
+        $line['properties']['old_price'] = 900;
+
+        [$data] = $this->runSnippet(
+            [$line],
+            [[5, $this->catalogRow(5, '800.00', '0.00')]]
+        );
+
+        self::assertSame(0.0, $data['products'][0]['old_price']);
+        self::assertSame(0.0, $data['products'][0]['discount_price']);
     }
 
     public function testCatalogOldPriceIsKept(): void

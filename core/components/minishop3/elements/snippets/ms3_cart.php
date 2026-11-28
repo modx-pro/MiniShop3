@@ -220,7 +220,8 @@ foreach ($cart as $key => $entry) {
         // Keep product_key/cost/properties: the standard chunk uses them for
         // quantity/option change and remove forms.
         $product = $entry;
-        $product['id'] = $entry['id'] ?? $entry['product_id'];
+        // id=0 marks a stale line: the chunk must not link to a deleted resource.
+        $product['id'] = 0;
         $product['product_id'] = $entry['product_id'];
         $product['product_key'] = $entry['product_key'] ?? $key;
         $product['name'] = $entry['name'] ?? '';
@@ -237,20 +238,22 @@ foreach ($cart as $key => $entry) {
     // Real lines keep their own old price in properties, not in a top-level
     // column, and MySQL DECIMAL returns '0.00' (which empty() treats as set).
     // Compare numerically so both cases behave the same (#861 review).
+    $linePrice = (float) $entry['price'];
     $lineOldPrice = (float) ($entry['properties']['old_price'] ?? 0);
     $catalogOldPrice = (float) ($product['old_price'] ?? 0);
-    if ($lineOldPrice > 0) {
-        $old_price = $lineOldPrice;
-    } elseif ($catalogOldPrice > 0) {
-        $old_price = $catalogOldPrice;
-    } elseif ($catalogPrice > (float) $entry['price']) {
-        $old_price = $catalogPrice;
-    } else {
+    // Mirror the order view: the current catalog price wins when it is above
+    // the line price, otherwise keep the highest known old price. Never show
+    // a struck-through price below the actual line price (#861 review).
+    $candidates = [$lineOldPrice, $catalogOldPrice];
+    if ($catalogPrice > $linePrice) {
+        $candidates[] = $catalogPrice;
+    }
+    $old_price = max(0.0, ...$candidates);
+    if ($old_price <= $linePrice) {
         $old_price = 0;
     }
-    $discount_price = $old_price > 0 ? $old_price - $entry['price'] : 0;
+    $discount_price = $old_price > $linePrice ? $old_price - $linePrice : 0;
 
-    $linePrice = (float)$entry['price'];
     $lineWeight = (float)$entry['weight'];
     $oldPriceNum = (float)$old_price;
     $discountPriceNum = (float)$discount_price;

@@ -18,11 +18,11 @@
             {foreach $products as $product}
                 {var $image}
                 {if $product.thumb?}
-                    <img src="{$product.thumb}" alt="{$product.pagetitle}" title="{$product.pagetitle}"/>
+                    <img src="{$product.thumb | e}" alt="{$product.pagetitle | e}" title="{$product.pagetitle | e}"/>
                 {else}
                     <img src="{'assets_url' | option}components/minishop3/img/web/ms3_small.png"
                         srcset="{'assets_url' | option}components/minishop3/img/web/ms3_small@2x.png 2x"
-                        alt="{$product.pagetitle}" title="{$product.pagetitle}"/>
+                        alt="{$product.pagetitle | e}" title="{$product.pagetitle | e}"/>
                 {/if}
                 {/var}
                 <tr id="{$product.product_key}">
@@ -37,9 +37,9 @@
                             </div>
                             <div class="ms-title">
                                 {if $product.id?}
-                                    <a href="{$product.product_id | url}">{$product.pagetitle}</a>
+                                    <a href="{$product.product_id | url}">{$product.pagetitle | e}</a>
                                 {else}
-                                    {$product.name}
+                                    {$product.name | e}
                                 {/if}
                                 {if $product.options?}
                                     {if $product.color && $product.options.color}
