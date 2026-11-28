@@ -30,7 +30,7 @@ final class ZeroOptionValueTest extends TestCase
         ]);
 
         self::assertSame(
-            ['floor', 'string_zero', 'one', 'array_zero', 'boolean_false', 'empty_array', 'assoc_array'],
+            ['floor', 'string_zero', 'one', 'array_zero', 'assoc_array'],
             array_keys($data)
         );
         self::assertSame([0], $data['floor']);
@@ -51,7 +51,7 @@ final class ZeroOptionValueTest extends TestCase
         ]);
 
         self::assertSame(
-            ['floor', 'string_zero', 'one', 'boolean_false', 'empty_array', 'assoc_array'],
+            ['floor', 'string_zero', 'one', 'assoc_array'],
             array_keys($data)
         );
         self::assertSame(0, $data['floor']['value']);
@@ -69,7 +69,7 @@ final class ZeroOptionValueTest extends TestCase
             $scriptProperties = ['sortOptionValues' => ''];
             $options = implode(',', [
                 'floor', 'string_zero', 'one', 'blank', 'missing',
-                'array_zero', 'boolean_false', 'empty_array', 'assoc_array',
+                'array_zero', 'assoc_array',
             ]);
 
             return include $path;

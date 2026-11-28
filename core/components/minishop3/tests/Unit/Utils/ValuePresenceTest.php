@@ -13,7 +13,8 @@ final class ValuePresenceTest extends TestCase
     {
         self::assertFalse(ValuePresence::isBlank(0));
         self::assertFalse(ValuePresence::isBlank('0'));
-        self::assertFalse(ValuePresence::isBlank(false));
+        self::assertTrue(ValuePresence::isBlank(false));
+        self::assertTrue(ValuePresence::isBlank([]));
     }
 
     public function testNullAndBlankStringsAreBlank(): void

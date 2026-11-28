@@ -159,14 +159,8 @@ class CartItemManager
 
         $currentOptions = $item->get('options') ?? [];
 
-        // Merge options
-        foreach ($newOptions as $key => $value) {
-            if (!empty($value)) {
-                $currentOptions[$key] = $value;
-            } else {
-                unset($currentOptions[$key]);
-            }
-        }
+        // Only blank values clear a key; 0 and "0" are valid (#859).
+        $currentOptions = \MiniShop3\Utils\ValuePresence::merge($currentOptions, $newOptions);
 
         // Generate new key
         $product = $item->getOne('Product');

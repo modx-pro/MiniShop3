@@ -26,11 +26,9 @@ if (!empty($name) && empty($options)) {
     $options = $name;
 }
 
-// $product may be an id or an already loaded object; casting an object to int
-// emits a PHP 8 warning, so take its id explicitly.
-$passedProductId = empty($product)
-    ? 0
-    : ($product instanceof msProduct ? (int) $product->get('id') : (int) $product);
+// $product may be an id or an already loaded object; never cast an arbitrary
+// object to int (PHP 8 warning, wrong id 1) (#859 review).
+$passedProductId = empty($product) ? 0 : \MiniShop3\Utils\SnippetProductResolver::resolveId($product);
 $_ms3LoadedById = $passedProductId > 0 && $passedProductId !== (int) $modx->resource->id;
 $product = $_ms3LoadedById
     ? $modx->getObject(msProduct::class, ['id' => $passedProductId])
@@ -58,7 +56,8 @@ foreach ($names as $name) {
     if (!is_array($option)) {
         $option = [$option];
     }
-    $firstValue = reset($option);
+    // Legacy contract requires a usable first element (index 0), not just any value.
+    $firstValue = array_key_exists(0, $option) ? $option[0] : reset($option);
     if (!ValuePresence::isBlank($firstValue)) {
         $options[$name] = $option;
     }

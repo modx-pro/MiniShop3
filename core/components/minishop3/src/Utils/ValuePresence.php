@@ -3,27 +3,27 @@
 namespace MiniShop3\Utils;
 
 /**
- * Distinguishes a missing value from a legitimate zero (#862).
+ * Distinguishes a missing value from a legitimate zero (#859).
  *
  * PHP's empty() treats 0 and "0" as missing, which silently drops option
- * values in the storefront snippets (#859) and address fields in the cart
- * draft (#862).
+ * values in the storefront snippets. false/[] keep the old "clear" semantics.
  */
 final class ValuePresence
 {
-    /**
-     * Only null and blank strings clear a value. Zero, false, arrays and
-     * non-blank strings are kept as-is.
-     */
     public static function isBlank(mixed $value): bool
     {
-        return $value === null || (is_string($value) && trim($value) === '');
+        if ($value === null || $value === false) {
+            return true;
+        }
+        if (is_string($value)) {
+            return trim($value) === '';
+        }
+
+        return is_array($value) && $value === [];
     }
 
     /**
-     * Merge new values into current ones; null/blank strings remove the key.
-     *
-     * Shared by cart option mutation paths so both treat zero identically.
+     * Merge new values into current ones; blank values remove the key.
      *
      * @param array<string, mixed> $current
      * @param array<string, mixed> $new
