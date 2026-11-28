@@ -317,7 +317,7 @@ export function useOrderLoad(deps) {
         status_id: 1, // Draft status
         delivery_id: null,
         payment_id: null,
-        customer_id: 0,
+        customer_id: null,
         order_comment: '',
         cart_cost: 0,
         delivery_cost: 0,

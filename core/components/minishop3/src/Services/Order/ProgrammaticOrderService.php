@@ -126,7 +126,8 @@ class ProgrammaticOrderService
     ): msOrder {
         $order = $this->draftManager->createSessionlessDraft([
             'context' => $input['context'] ?? 'web',
-            'customer_id' => (int) ($input['customer_id'] ?? 0),
+            // NULL for guests; 0 would violate ms3_orders.customer_id FK (normalized by createSessionlessDraft).
+            'customer_id' => $input['customer_id'] ?? null,
             'delivery_id' => (int) ($input['delivery_id'] ?? 0),
             'payment_id' => (int) ($input['payment_id'] ?? 0),
             'delivery_cost' => (float) ($input['delivery_cost'] ?? 0),
