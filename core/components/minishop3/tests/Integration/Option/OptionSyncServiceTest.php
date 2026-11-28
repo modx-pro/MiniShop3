@@ -159,6 +159,25 @@ final class OptionSyncServiceTest extends TestCase
         self::assertNull($method->invoke($this->sync, ['', '  ']));
         self::assertSame(['Red', 'Blue'], array_values($method->invoke($this->sync, [' Red ', 'Blue', 'Red'])));
         self::assertSame(['solo'], array_values($method->invoke($this->sync, 'solo')));
+
+        // #1022: numeric ids must stay strings and survive a repeated save.
+        self::assertSame(
+            ['0', '01', '1'],
+            array_values($method->invoke($this->sync, ['0', '01', '1', '0', '']))
+        );
+    }
+
+    public function testNumericOptionValuesSurviveRepeatedSave(): void
+    {
+        $this->sync->saveProductOptions(10, ['size' => ['40', '41']], false);
+        $first = $this->sync->getForProduct(10);
+        self::assertSame(['size' => ['40', '41']], $first);
+
+        $this->sync->saveProductOptions(10, ['size' => ['40', '41']], false);
+        self::assertSame($first, $this->sync->getForProduct(10));
+
+        $this->sync->saveProductOptions(10, ['size' => 0], false);
+        self::assertSame(['size' => ['0']], $this->sync->getForProduct(10));
     }
 
     public function testGetForProductFiltersByKeys(): void

@@ -59,8 +59,8 @@ class GetOptions extends ModelProcessor
             $values = $search;
         }
 
-        $values = array_keys(array_flip($values));
-        $values = array_diff($values, ['']);
+        $values = array_values(array_unique($values, SORT_STRING));
+        $values = array_values(array_diff($values, ['']));
         foreach ($values as $id => $value) {
             $values[$id] = ['value' => $value];
         }

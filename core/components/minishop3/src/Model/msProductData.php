@@ -148,8 +148,8 @@ class msProductData extends xPDOSimpleObject
             $values = [$values];
         }
         $values = array_map('trim', $values);
-        $values = array_keys(array_flip($values));
-        $values = array_diff($values, ['']);
+        $values = array_values(array_unique($values, SORT_STRING));
+        $values = array_values(array_diff($values, ['']));
 
         if (empty($values)) {
             $values = null;
