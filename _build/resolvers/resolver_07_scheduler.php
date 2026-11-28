@@ -115,6 +115,23 @@ switch ($options[xPDOTransport::PACKAGE_ACTION]) {
             );
         }
 
+        // Normalize tasks created before #904 under the old 'MiniShop3' namespace.
+        // Otherwise case-sensitive DBs keep a stale scheduled task and this
+        // resolver creates a second one, duplicating background imports.
+        $legacyTasks = $modx->getCollection('sTask', [
+            'namespace' => 'MiniShop3',
+            'reference:IN' => array_column($tasks, 'reference'),
+        ]);
+        foreach ($legacyTasks as $legacyTask) {
+            $canonical = $scheduler->getTask('minishop3', $legacyTask->get('reference'));
+            if ($canonical) {
+                $legacyTask->remove();
+            } else {
+                $legacyTask->set('namespace', 'minishop3');
+                $legacyTask->save();
+            }
+        }
+
         $registered = 0;
         $updated = 0;
 
