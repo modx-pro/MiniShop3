@@ -76,6 +76,10 @@ class ProductImageService
         $sourceId = (int)$productData->get('source_id');
         if (!$sourceId) {
             $sourceId = (int)$this->modx->getOption('ms3_product_source_default', null, 1);
+            // A stored 0 is not a source: never re-select it from the setting.
+            if ($sourceId <= 0) {
+                $sourceId = 1;
+            }
         }
 
         /** @var modMediaSource $source */
