@@ -651,14 +651,33 @@ class AuthManager
     private function deleteExpiredTokensBatch(string $now, int $batchSize): int
     {
         $batchSize = max(1, $batchSize);
-        // xPDO returns names with backtick quoting — strip them for validation
-        $table = trim((string) $this->modx->getTableName(msCustomerToken::class), '\x60"[] ');
+        // xPDO returns a quoted, prefixed name. Strip quoting (double-quoted
+        // charlist: in single quotes \x60 is literal text, not a backtick).
+        $table = trim((string) $this->modx->getTableName(msCustomerToken::class), "\x60\"[] ");
         if ($table === '' || !preg_match('/^[A-Za-z0-9_]+$/', $table)) {
             return $this->deleteExpiredTokensObjects($now, $batchSize);
         }
-        // LIMIT cannot be bound; $batchSize is a validated int.
-        $sql = "DELETE FROM `{$table}` WHERE expires_at < ? LIMIT {$batchSize}";
-        $stmt = $this->modx->pdo->prepare($sql);
+
+        // LIMIT cannot be bound; $batchSize is a validated int. MySQL supports
+        // DELETE ... LIMIT directly; SQLite (used in tests) needs a rowid
+        // subquery. Other drivers fall back to the object path.
+        $driver = strtolower((string) $this->modx->pdo->getAttribute(\PDO::ATTR_DRIVER_NAME));
+        if ($driver === 'mysql') {
+            $sql = "DELETE FROM `{$table}` WHERE expires_at < ? LIMIT {$batchSize}";
+        } elseif ($driver === 'sqlite') {
+            $sql = "DELETE FROM \"{$table}\" WHERE rowid IN ("
+                . "SELECT rowid FROM \"{$table}\" WHERE expires_at < ? LIMIT {$batchSize})";
+        } else {
+            return $this->deleteExpiredTokensObjects($now, $batchSize);
+        }
+
+        try {
+            $stmt = $this->modx->pdo->prepare($sql);
+        } catch (\PDOException $exception) {
+            $this->modx->log(modX::LOG_LEVEL_ERROR, '[AuthManager] batched token cleanup unavailable: ' . $exception->getMessage());
+
+            return $this->deleteExpiredTokensObjects($now, $batchSize);
+        }
         $total = 0;
         do {
             $stmt->execute([$now]);
