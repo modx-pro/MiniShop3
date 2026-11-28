@@ -7,6 +7,7 @@ use MiniShop3\Model\msCustomer;
 use MiniShop3\Model\msCustomerAddress;
 use MiniShop3\Model\msOrder;
 use MiniShop3\Services\Customer\CustomerPublicDto;
+use MiniShop3\Utils\ValuePresence;
 use MODX\Revolution\modX;
 
 /**
@@ -98,7 +99,9 @@ class OrderAddressManager
         $addressFields = $this->getCustomerAddressFields($excludeFields);
 
         foreach ($addressFields as $key => $value) {
-            if (array_key_exists('address_' . $key, $orderData) && !empty($orderData['address_' . $key])) {
+            if (array_key_exists('address_' . $key, $orderData)
+                && !ValuePresence::isBlank($orderData['address_' . $key])
+            ) {
                 $this->fieldManager->add($draft, $orderData, $key, null);
             }
         }
@@ -179,7 +182,10 @@ class OrderAddressManager
         ];
 
         foreach ($fieldMappings as $orderField => $customerField) {
-            if (empty($orderData[$orderField]) && !empty($customerData[$customerField])) {
+            if (
+                ValuePresence::isBlank($orderData[$orderField] ?? null)
+                && !ValuePresence::isBlank($customerData[$customerField] ?? null)
+            ) {
                 $fieldKey = str_replace('address_', '', $orderField);
                 $this->fieldManager->add($draft, $orderData, $fieldKey, $customerData[$customerField]);
                 $orderData[$orderField] = $customerData[$customerField];

@@ -7,6 +7,7 @@ use MiniShop3\Model\msOrder;
 use MiniShop3\Model\msOrderLog;
 use MiniShop3\Services\Order\OrderDraftManager;
 use MiniShop3\Services\Order\OrderLogService;
+use MiniShop3\Utils\ValuePresence;
 use MODX\Revolution\modX;
 
 /**
@@ -232,13 +233,9 @@ class CartMutationHandler
         $item = $this->itemManager->getItemByKey($draft, $productKey);
         if ($item) {
             $currentOptions = $item->get('options') ?? [];
-            foreach ($options as $key => $value) {
-                if (!empty($value)) {
-                    $currentOptions[$key] = $value;
-                } else {
-                    unset($currentOptions[$key]);
-                }
-            }
+            // Only null/blank strings clear an option; 0 and "0" are valid
+            // values (floor, building, etc.) and must survive (#862).
+            $currentOptions = ValuePresence::merge($currentOptions, $options);
 
             $product = $item->getOne('Product');
             if ($product) {

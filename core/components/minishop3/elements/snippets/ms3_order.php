@@ -1,6 +1,7 @@
 <?php
 
 use MiniShop3\MiniShop3;
+use MiniShop3\Utils\ValuePresence;
 use ModxPro\PdoTools\Fetch;
 use MiniShop3\Model\msDelivery;
 use MiniShop3\Model\msPayment;
@@ -280,7 +281,7 @@ if ($syncEnabled && !empty($userFields)) {
 if ($syncEnabled) {
     // Sync enabled: use modUserProfile as source of truth
     foreach ($userProfileFields as $key => $value) {
-        if (!empty($profile) && !empty($value)) {
+        if (!ValuePresence::isBlank($profile) && !ValuePresence::isBlank($value)) {
             if (strpos($value, 'extended') !== false) {
                 $tmp = substr($value, 9, -1);
                 $value = $profile['extended'][$tmp] ?? '';
@@ -290,7 +291,7 @@ if ($syncEnabled) {
             // Ноль — законное значение адресных полей: цокольный этаж,
             // строение 0. empty() здесь молча выбрасывал его из заказа,
             // и обязательное поле приходилось вводить заново (#867, #969).
-            if ($value !== '') {
+            if (!ValuePresence::isBlank($value)) {
                 $response = $ms3->order->add($key, $value);
                 if ($response['success'] && isset($response['data'][$key])) {
                     $form[$key] = $response['data'][$key];
@@ -306,9 +307,10 @@ if ($syncEnabled) {
     // Sync disabled: use msCustomer as source of truth
     if (!empty($customerData)) {
         foreach ($defaultCustomerFields as $orderField => $customerField) {
-            if (!empty($customerData[$customerField]) && empty($form[$orderField])) {
-                $response = $ms3->order->add($orderField, $customerData[$customerField]);
-                if ($response['success'] && !empty($response['data'][$orderField])) {
+            $customerValue = $customerData[$customerField] ?? null;
+            if (!ValuePresence::isBlank($customerValue) && ValuePresence::isBlank($form[$orderField] ?? null)) {
+                $response = $ms3->order->add($orderField, $customerValue);
+                if ($response['success'] && !ValuePresence::isBlank($response['data'][$orderField] ?? null)) {
                     $form[$orderField] = $response['data'][$orderField];
                 }
             }

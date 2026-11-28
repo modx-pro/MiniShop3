@@ -149,7 +149,9 @@ class OrderSubmitHandler
         $validatedFields = $orderData['properties']['_validated'] ?? [];
         $errors = [];
         foreach ($requires as $field => $rules) {
-            if (empty($orderData[$field]) && empty($orderData['address_' . $field]) && !isset($validatedFields[$field])) {
+            if (\MiniShop3\Utils\ValuePresence::isBlank($orderData[$field] ?? null)
+                && \MiniShop3\Utils\ValuePresence::isBlank($orderData['address_' . $field] ?? null)
+                && !isset($validatedFields[$field])) {
                 $errors[] = $field;
             }
         }
