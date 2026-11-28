@@ -133,6 +133,11 @@ class OrdersPageService extends CustomerPageService
         $ordersData = [];
         foreach ($orders as $order) {
             $orderData = $order->toArray();
+            // Never expose the bearer token or integration key in list payloads (#909).
+            unset($orderData['token'], $orderData['idempotency_key']);
+            if (isset($orderData['properties']) && is_array($orderData['properties'])) {
+                unset($orderData['properties']['idempotency_key']);
+            }
 
             $orderData['createdon_formatted'] = date('d.m.Y H:i', strtotime($orderData['createdon']));
             $orderData['cost_formatted'] = $this->ms3->format->price($orderData['cost'], true);
@@ -378,6 +383,11 @@ class OrdersPageService extends CustomerPageService
         $ordersData = [];
         foreach ($orders as $order) {
             $orderData = $order->toArray();
+            // Never expose the bearer token or integration key in list payloads (#909).
+            unset($orderData['token'], $orderData['idempotency_key']);
+            if (isset($orderData['properties']) && is_array($orderData['properties'])) {
+                unset($orderData['properties']['idempotency_key']);
+            }
 
             $orderData['createdon_formatted'] = date('d.m.Y H:i', strtotime($orderData['createdon']));
             $orderData['cost_formatted'] = $this->ms3->format->price($orderData['cost'], true);

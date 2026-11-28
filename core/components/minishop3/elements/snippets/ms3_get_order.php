@@ -2,6 +2,7 @@
 
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msOrder;
+use MiniShop3\Services\Delivery\DeliveryPublicFields;
 use MiniShop3\Services\Payment\PaymentLinkResolver;
 use MiniShop3\Services\Payment\PaymentPublicFields;
 use MiniShop3\Model\msOrderProduct;
@@ -250,18 +251,52 @@ foreach ($rows as $product) {
 
 try {
     $payment = $msOrder->getOne('Payment');
+    // Order array: strip internal fields token and idempotency_key, including
+    // the copy OrderDraftManager stores in properties (#909).
+    $orderArray = $msOrder->toArray();
+    unset($orderArray['token'], $orderArray['idempotency_key']);
+    if (isset($orderArray['properties']) && is_array($orderArray['properties'])) {
+        unset($orderArray['properties']['idempotency_key']);
+    }
+
+    // Address internals (ids, timestamps, service hashes) must not reach chunks.
+    $publicAddress = static function (?object $address): array {
+        if ($address === null) {
+            return [];
+        }
+        $data = $address->toArray();
+        unset($data['id'], $data['order_id'], $data['createdon'], $data['updatedon']);
+        if (isset($data['properties']) && is_array($data['properties'])) {
+            unset($data['properties']['address_hash'], $data['properties']['idempotency_key']);
+        }
+
+        return $data;
+    };
+
+    // Product internals are not needed by the chunk and can carry service data.
+    foreach ($products as &$publicProduct) {
+        unset(
+            $publicProduct['properties'],
+            $publicProduct['class_key'],
+            $publicProduct['context_key'],
+            $publicProduct['createdby'],
+            $publicProduct['editedby'],
+            $publicProduct['publishedby'],
+            $publicProduct['deleted']
+        );
+    }
+    unset($publicProduct);
+
     $pls = array_merge($scriptProperties, [
-        'order' => $msOrder->toArray(),
+        'order' => $orderArray,
         'products' => $products,
     //    'user' => ($tmp = $msOrder->getOne('User'))
     //        ? array_merge($tmp->getOne('Profile')->toArray(), $tmp->toArray())
     //        : [],
-        'address' => ($tmp = $msOrder->getOne('Address'))
-            ? $tmp->toArray()
-            : [],
-        'delivery' => ($tmp = $msOrder->getOne('Delivery'))
-            ? $tmp->toArray()
-            : [],
+        'address' => $publicAddress($msOrder->getOne('Address')),
+        // Delivery fields via allowlist — properties holds integration keys
+        // and class/validation_rules are internals (#909).
+        'delivery' => DeliveryPublicFields::fromEntityOrEmpty($msOrder->getOne('Delivery')),
         'payment' => PaymentPublicFields::fromEntityOrEmpty($payment),
         'shipments' => $ms3->shipmentPublicForOrder((int) $id),
         'total' => [
