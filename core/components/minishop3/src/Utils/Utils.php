@@ -277,6 +277,25 @@ class Utils
         ));
     }
 
+    /**
+     * Whether an incoming vendor_id means "no vendor" (#885).
+     *
+     * Manager Select clears to null, legacy ExtJS posts ''/"0"/0; all of them
+     * must clear the column instead of creating a phantom msVendor row.
+     */
+    public static function isEmptyVendorValue(mixed $value): bool
+    {
+        if ($value === null || is_bool($value) || is_array($value) || is_object($value)) {
+            return true;
+        }
+
+        $value = trim((string) $value);
+
+        // Vendor names are non-numeric strings and must keep resolving via
+        // getVendorId(); only numeric zero-like values mean "no vendor".
+        return $value === '' || (is_numeric($value) && (float) $value === 0.0);
+    }
+
     public static function getVendorId($modx, $name)
     {
         $criteria = [

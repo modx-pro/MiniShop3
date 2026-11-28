@@ -8,6 +8,7 @@ use MiniShop3\Model\msProductOption;
 use MiniShop3\Services\ExtraFields\KeyValueFieldService;
 use MiniShop3\Services\ExtraFields\RepeaterFieldService;
 use MiniShop3\Services\Grid\ProductDataColumnPolicy;
+use MiniShop3\Utils\Utils;
 use MODX\Revolution\modX;
 
 /**
@@ -363,6 +364,13 @@ class ProductDataService
         }
 
         $filtered = $this->extractUpdatableFields($productData, $data);
+        // The manager Select clears vendor_id to null; write 0, never NULL,
+        // so readers (vendor_id > 0) and the column default stay consistent (#885).
+        if (array_key_exists('vendor_id', $filtered)) {
+            $filtered['vendor_id'] = Utils::isEmptyVendorValue($filtered['vendor_id'])
+                ? 0
+                : (int) $filtered['vendor_id'];
+        }
         $resourceData = array_intersect_key($data, array_flip(self::$allowedResourceFields));
 
         if ($filtered === [] && $resourceData === []) {

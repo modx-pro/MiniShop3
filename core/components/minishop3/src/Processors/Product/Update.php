@@ -73,10 +73,19 @@ class Update extends UpdateProcessor
             $this->setProperty('options', $options);
         }
 
-        if (!empty($properties['vendor_id'])) {
-            $vendor_id = Utils::getVendorId($this->modx, $properties['vendor_id']);
-            if ($vendor_id) {
-                $this->setProperty('vendor_id', $vendor_id);
+        if (array_key_exists('vendor_id', $properties)) {
+            $raw = $properties['vendor_id'];
+            // null/""/"0"/0/whitespace all mean "no vendor" (#885).
+            if (Utils::isEmptyVendorValue($raw)) {
+                $this->setProperty('vendor_id', 0);
+            } else {
+                $vendor_id = Utils::getVendorId($this->modx, $raw);
+                if ($vendor_id) {
+                    $this->setProperty('vendor_id', $vendor_id);
+                } else {
+                    // Never let the raw value leak into msProductData.vendor_id.
+                    $this->unsetProperty('vendor_id');
+                }
             }
         }
 

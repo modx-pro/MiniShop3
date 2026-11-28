@@ -4,6 +4,7 @@ namespace MiniShop3\Processors\Product;
 
 use MiniShop3\Model\msProduct;
 use MiniShop3\Model\msProductData;
+use MiniShop3\Utils\Utils;
 use MODX\Revolution\modX;
 
 /**
@@ -149,7 +150,16 @@ trait ProductDataPayloadTrait
             return [];
         }
 
-        return array_intersect_key($this->ms3ProductDataPayload, $allowedFields);
+        $fields = array_intersect_key($this->ms3ProductDataPayload, $allowedFields);
+        // Nested Data.vendor_id is applied after flat fields, so normalize it too
+        // or {"vendor_id":""} would overwrite the flat cleared 0 (#885).
+        if (array_key_exists('vendor_id', $fields)) {
+            $fields['vendor_id'] = Utils::isEmptyVendorValue($fields['vendor_id'])
+                ? 0
+                : (int) $fields['vendor_id'];
+        }
+
+        return $fields;
     }
 
     /**
