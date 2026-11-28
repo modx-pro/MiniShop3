@@ -25,8 +25,9 @@ class OrderDraftManager
      * Колонки msOrder, которые переживают clean() (#864).
      *
      * Это идентичность черновика: по ней findDraftByToken() находит строку после
-     * очистки, а uuid остаётся NOT NULL. Всё остальное — состояние оформления,
-     * его clean() и сбрасывает.
+     * очистки, а uuid остаётся NOT NULL. idempotency_key намеренно сбрасывается:
+     * повторный программный заказ с тем же ключом не должен подобрать очищенный
+     * черновик. Всё остальное — состояние оформления, его clean() и сбрасывает.
      *
      * Суммы сюда не входят намеренно: cost, cart_cost и weight выводятся из
      * позиций, которые clean() не удаляет, поэтому после очистки они
@@ -39,7 +40,6 @@ class OrderDraftManager
         'customer_id',
         'token',
         'uuid',
-        'idempotency_key',
         'createdon',
         'status_id',
         'context',
@@ -261,7 +261,7 @@ class OrderDraftManager
         if ($draft->Address) {
             $addressFields = array_keys($draft->Address->toArray());
             foreach ($addressFields as $key) {
-                if (!in_array($key, ['id', 'order_id', 'user_id', 'createdon'], true)) {
+                if (!in_array($key, ['id', 'order_id', 'createdon'], true)) {
                     $draft->Address->set($key, null);
                 }
             }
@@ -277,11 +277,12 @@ class OrderDraftManager
         }
 
         // Доставка сброшена — её стоимость тоже, иначе cost останется завышенным.
+        // Одно сохранение делает recalculate(): иначе плагины видят черновик с
+        // пустыми суммами и события заказа срабатывают дважды за одну очистку.
         $draft->set('delivery_cost', 0);
-        $draft->set('updatedon', time());
-        $draft->save();
 
-        // Позиции на месте: восстанавливаем cart_cost / weight / cost из них.
+        // Позиции на месте: восстанавливаем cart_cost / weight / cost из них
+        // и сохраняем итоговое состояние одним вызовом save().
         $this->recalculate($draft);
 
         $response = $this->ms3->utils->invokeEvent('msOnEmptyOrder', [

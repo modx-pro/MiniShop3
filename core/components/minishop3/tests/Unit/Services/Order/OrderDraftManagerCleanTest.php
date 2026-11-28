@@ -48,7 +48,7 @@ final class OrderDraftManagerCleanTest extends TestCase
 
         self::assertTrue($this->makeManager()->clean($draft));
 
-        foreach (['delivery_id', 'payment_id', 'order_comment', 'properties', 'num', 'total'] as $field) {
+        foreach (['delivery_id', 'payment_id', 'order_comment', 'properties', 'num', 'idempotency_key'] as $field) {
             self::assertNull($draft->get($field), "Field {$field} must be reset by clean()");
         }
     }
@@ -144,7 +144,6 @@ final class OrderDraftManagerCleanTest extends TestCase
             'cart_cost' => 1234.5,
             'delivery_cost' => 234.5,
             'weight' => 2.5,
-            'total' => 1469.0,
         ];
     }
 
@@ -247,12 +246,12 @@ final class CleanTestDraft extends msOrder
         $this->fields = $fields;
     }
 
-    public function get($key)
+    public function get($key, $format = null, $formatTemplate = null)
     {
         return $this->fields[$key] ?? null;
     }
 
-    public function set($key, $value)
+    public function set($key, $value = null, $vType = '')
     {
         $this->fields[$key] = $value;
 
@@ -262,7 +261,7 @@ final class CleanTestDraft extends msOrder
     /**
      * @return array<string, mixed>
      */
-    public function toArray($key = '', $format = '')
+    public function toArray($key = '', $format = '', $deep = false, $ignore = [])
     {
         return $this->fields;
     }
