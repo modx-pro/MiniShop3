@@ -150,7 +150,7 @@ class ManagerOrderPresenter
     {
         /** @var msExtraField|null $definition */
         $definition = $this->modx->getObject(msExtraField::class, [
-            'class' => $modelClass,
+            'class:IN' => \MiniShop3\Services\ExtraFieldsService::classFilterVariants($modelClass),
             'key' => $fieldKey,
             'active' => true,
         ]);
@@ -187,7 +187,7 @@ class ManagerOrderPresenter
 
         $query = $this->modx->newQuery(msExtraField::class);
         $query->where([
-            'class' => $modelClass,
+            'class:IN' => \MiniShop3\Services\ExtraFieldsService::classFilterVariants($modelClass),
             'active' => true,
         ]);
 

@@ -12,7 +12,9 @@ class ExtraFields
 {
     private modX $modx;
 
-    private $cacheKey = 'extra_fields_meta';
+    // v2: #866 changed fieldMeta (null flag). Bump the key so upgraded sites
+    // do not keep serving the stale cached map.
+    private $cacheKey = 'extra_fields_meta_v2';
     private $cacheOptions = [xPDO::OPT_CACHE_KEY => 'ms3'];
 
     public function __construct(modX $modx)
@@ -209,7 +211,13 @@ class ExtraFields
         }
 
         $meta = [];
-        foreach (['dbtype', 'phptype', 'null', 'precision', 'attributes'] as $k) {
+        // `null` is boolean on msExtraField (0 = NOT NULL). empty(false) is true,
+        // so the old loop dropped the key and the xPDO map disagreed with the
+        // NOT NULL column from MigrationGenerator (#866).
+        $nullFlag = $field->get('null');
+        // Legacy rows may hold NULL here; schema default is 1 (nullable).
+        $meta['null'] = $nullFlag === null ? true : (bool) $nullFlag;
+        foreach (['dbtype', 'phptype', 'precision', 'attributes'] as $k) {
             $v = $field->get($k);
             if (!empty($v)) {
                 $meta[$k] = $v;
