@@ -64,6 +64,13 @@ switch ($options[xPDOTransport::PACKAGE_ACTION] ?? null) {
                     $properties[$propName]['desc'] = $newDesc;
                     $changed = true;
                 }
+
+                // #826: status 1 is a draft, not an awaiting-payment state.
+                if ($snippet->get('name') === 'ms3_get_order' && $propName === 'payStatus'
+                    && (string) ($propDef['value'] ?? '') === '1') {
+                    $properties[$propName]['value'] = '2';
+                    $changed = true;
+                }
             }
 
             if ($changed) {

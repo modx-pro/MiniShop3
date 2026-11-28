@@ -344,7 +344,8 @@ return [
             ],
             'payStatus' => [
                 'type' => 'textfield',
-                'value' => '1',
+                // '2' = ms3_status_new (New), matching notification gating (#826).
+                'value' => '2',
             ],
         ],
     ],

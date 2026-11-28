@@ -76,5 +76,22 @@ foreach (['en', 'ru'] as $lang) {
     }
 }
 
+// The setting must actually be consumed, and the storefront snippet must use
+// it as the fallback rather than hardcoding the draft status (#826).
+$settingKey = 'ms3_payment_link_statuses';
+$resolverSrc = file_get_contents(__DIR__ . '/../src/Services/Payment/PaymentLinkResolver.php');
+if ($resolverSrc === false || !str_contains($resolverSrc, $settingKey)) {
+    $fail('PaymentLinkResolver must read ms3_payment_link_statuses');
+}
+$snippetSrc = file_get_contents(__DIR__ . '/../elements/snippets/ms3_get_order.php');
+if ($snippetSrc === false || !str_contains($snippetSrc, $settingKey)) {
+    $fail('ms3_get_order must fall back to the payment link statuses setting');
+}
+$transport = file_get_contents(__DIR__ . '/../../../../_build/elements/snippets.php');
+if ($transport === false || !str_contains($transport, "'payStatus' => [")
+    || !str_contains($transport, 'ms3_status_new')) {
+    $fail('payStatus default must be status 2, not the draft status 1');
+}
+
 fwrite(STDOUT, "OK PaymentLinkResolverTest\n");
 exit(0);
