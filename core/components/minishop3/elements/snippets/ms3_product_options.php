@@ -4,6 +4,7 @@ use MiniShop3\MiniShop3;
 use MiniShop3\Model\msProduct;
 use MiniShop3\Model\msProductData;
 use MiniShop3\Services\Catalog\CatalogResourceGroupVisibility;
+use MiniShop3\Utils\ValuePresence;
 use ModxPro\PdoTools\CoreTools;
 
 /** @var \MODX\Revolution\modX $modx */
@@ -22,9 +23,10 @@ if (!empty($input) && empty($product)) {
     $product = $input;
 }
 
-$_ms3LoadedById = !empty($product) && (int) $product !== (int) $modx->resource->id;
+$passedProductId = empty($product) ? 0 : \MiniShop3\Utils\SnippetProductResolver::resolveId($product);
+$_ms3LoadedById = $passedProductId > 0 && $passedProductId !== (int) $modx->resource->id;
 $product = $_ms3LoadedById
-    ? $modx->getObject(msProduct::class, ['id' => (int) $product])
+    ? $modx->getObject(msProduct::class, ['id' => $passedProductId])
     : $modx->resource;
 if (!($product instanceof msProduct)) {
     return $modx->lexicon('ms3_err_options_is_not_msproduct', [
@@ -76,7 +78,8 @@ foreach ($optionKeys as $key) {
 
     if (!$skip) {
         $option['value'] = $product->get($key);
-        if (!empty($option['value'])) {
+        // Only null/blank strings hide an option; 0 and "0" are valid values (#859).
+        if (!ValuePresence::isBlank($option['value'] ?? null)) {
             $options[$key] = $option;
         }
     }
@@ -123,7 +126,27 @@ if (!empty($sortOptions) && !empty($options)) {
 }
 
 $sortOptionValues = $scriptProperties['sortOptionValues'] ?? '';
-$options = $ms3->options->sortOptionValues($options, $sortOptionValues);
+if (!empty($sortOptionValues)) {
+    // Options::sortOptionValues() uses array_multisort() on ['value']; a bare
+    // scalar 0/false would throw a TypeError. Sort a normalized copy and map
+    // scalar values back so the data contract keeps its original shape (#859).
+    $sortable = $options;
+    $scalars = [];
+    foreach ($sortable as $key => $option) {
+        if (array_key_exists('value', $option) && !is_array($option['value'])) {
+            $scalars[$key] = true;
+            $sortable[$key]['value'] = [$option['value']];
+        }
+    }
+    $sorted = $ms3->options->sortOptionValues($sortable, $sortOptionValues);
+    foreach ($sorted as $key => $option) {
+        if (isset($scalars[$key])) {
+            $options[$key]['value'] = $option['value'][0] ?? $options[$key]['value'];
+        } else {
+            $options[$key] = $option;
+        }
+    }
+}
 
 $return = $scriptProperties['return'] ?? '';
 if (in_array($return, ['data', 'array'], true)) {

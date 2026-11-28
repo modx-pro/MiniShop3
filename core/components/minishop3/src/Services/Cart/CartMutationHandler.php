@@ -232,13 +232,7 @@ class CartMutationHandler
         $item = $this->itemManager->getItemByKey($draft, $productKey);
         if ($item) {
             $currentOptions = $item->get('options') ?? [];
-            foreach ($options as $key => $value) {
-                if (!empty($value)) {
-                    $currentOptions[$key] = $value;
-                } else {
-                    unset($currentOptions[$key]);
-                }
-            }
+            $currentOptions = \MiniShop3\Utils\ValuePresence::merge($currentOptions, $options);
 
             $product = $item->getOne('Product');
             if ($product) {
