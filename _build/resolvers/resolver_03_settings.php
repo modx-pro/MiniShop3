@@ -139,7 +139,7 @@ if ($transport->xpdo) {
 
         case xPDOTransport::ACTION_UNINSTALL:
             $modx->removeCollection(modSystemSetting::class, [
-                'namespace' => 'MiniShop3',
+                'namespace' => 'minishop3',
             ]);
             break;
     }
