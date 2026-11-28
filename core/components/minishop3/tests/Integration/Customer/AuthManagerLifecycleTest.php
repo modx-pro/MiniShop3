@@ -610,7 +610,7 @@ class AuthManagerLifecycleTest extends TestCase
                 return match ($name) {
                     'ms3_customer_token_ttl' => 604800,
                     'ms3_customer_max_login_attempts' => 5,
-                    'ms3_customer_block_duration' => 3600,
+                    'ms3_customer_block_duration' => 300,
                     'session_cookie_domain' => '',
                     'session_cookie_path' => '/',
                     'session_cookie_secure' => false,
