@@ -49,6 +49,9 @@ class RateLimiter
     /**
      * Check request limit and increment counter
      *
+     * Uses atomic cache->add for first attempt, then get+set for subsequent.
+     * For truly atomic increments, use Redis/Memcached store with INCR.
+     *
      * @param string $action Action type (login, register, email_send, etc.)
      * @param string $identifier Identifier (IP, email, customer_id, etc.)
      * @param int $maxAttempts Maximum number of attempts
@@ -58,6 +61,22 @@ class RateLimiter
     public function check(string $action, string $identifier, int $maxAttempts, int $windowSeconds): bool
     {
         $key = $this->getKey($action, $identifier);
+
+        // Fixed window: the reset timestamp is stored once and the counter TTL
+        // is derived from it, so repeated hits cannot slide the window (#926).
+        $resetKey = $key . '_reset';
+        $resetAt = (int) $this->modx->cacheManager->get($resetKey);
+        if ($resetAt <= 0) {
+            $resetAt = time() + $windowSeconds;
+            $this->modx->cacheManager->set($resetKey, $resetAt, $windowSeconds);
+        }
+        $ttl = max(1, $resetAt - time());
+
+        // Atomically add the first hit. add() returns false when the key exists.
+        $value = 1;
+        if ($this->modx->cacheManager->add($key, $value, $ttl) === true) {
+            return 1 < $maxAttempts;
+        }
 
         $attempts = (int)$this->modx->cacheManager->get($key);
 
@@ -69,8 +88,8 @@ class RateLimiter
             return false;
         }
 
-        $i = $attempts + 1;
-        $this->modx->cacheManager->set($key, $i, $windowSeconds);
+        $next = $attempts + 1;
+        $this->modx->cacheManager->set($key, $next, $ttl);
 
         return true;
     }
