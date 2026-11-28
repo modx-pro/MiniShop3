@@ -101,7 +101,7 @@ class ManagerOrderProductsService
         $status = $this->modx->getObject(msOrderStatus::class, $order->get('status_id'));
         if ($status && $status->get('final')) {
             if (!$this->canEditFinal()) {
-                return $this->error($this->modx->lexicon('order_cannot_add_to_finalized'), HttpStatus::FORBIDDEN);
+                return $this->error($this->modx->lexicon('ms3_err_order_final_add_denied'), HttpStatus::FORBIDDEN);
             }
         }
 
@@ -251,7 +251,7 @@ class ManagerOrderProductsService
         $status = $this->modx->getObject(msOrderStatus::class, $order->get('status_id'));
         if ($status && $status->get('final')) {
             if (!$this->canEditFinal()) {
-                return $this->error($this->modx->lexicon('order_cannot_add_to_finalized'), HttpStatus::FORBIDDEN);
+                return $this->error($this->modx->lexicon('ms3_err_order_final_update_denied'), HttpStatus::FORBIDDEN);
             }
         }
 
@@ -420,7 +420,7 @@ class ManagerOrderProductsService
         $status = $this->modx->getObject(msOrderStatus::class, $order->get('status_id'));
         if ($status && $status->get('final')) {
             if (!$this->canEditFinal()) {
-                return $this->error($this->modx->lexicon('order_cannot_add_to_finalized'), HttpStatus::FORBIDDEN);
+                return $this->error($this->modx->lexicon('ms3_err_order_final_delete_denied'), HttpStatus::FORBIDDEN);
             }
         }
 

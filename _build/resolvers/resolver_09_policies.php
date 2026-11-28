@@ -58,6 +58,27 @@ if (!$overridePermission instanceof modAccessPermission) {
     $modx->log(modX::LOG_LEVEL_INFO, '[MiniShop3] Added msorder_inventory_override to the policy template');
 }
 
+// #801: existing installations must be able to grant the new permission too.
+$finalEditPermission = $modx->getObject(modAccessPermission::class, [
+    'template' => $templateId,
+    'name' => 'msorder_edit_final',
+]);
+if (!$finalEditPermission instanceof modAccessPermission) {
+    $finalEditPermission = $modx->newObject(modAccessPermission::class);
+    $finalEditPermission->fromArray([
+        'template' => $templateId,
+        'name' => 'msorder_edit_final',
+        'description' => 'msorder_edit_final',
+        'value' => true,
+    ], '', true, true);
+    if (!$finalEditPermission->save()) {
+        $modx->log(modX::LOG_LEVEL_ERROR, '[MiniShop3] Failed to add msorder_edit_final to the policy template');
+
+        return false;
+    }
+    $modx->log(modX::LOG_LEVEL_INFO, '[MiniShop3] Added msorder_edit_final to the policy template');
+}
+
 foreach ($definitions as $name => $data) {
     /** @var modAccessPolicy|null $policy */
     $policy = $modx->getObject(modAccessPolicy::class, ['name' => $name]);
