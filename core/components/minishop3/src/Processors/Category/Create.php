@@ -4,6 +4,7 @@ namespace MiniShop3\Processors\Category;
 
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msCategory;
+use MiniShop3\Services\Category\CategoryService;
 use MODX\Revolution\modDocument;
 use MODX\Revolution\Processors\Resource\Create as CreateProcessor;
 
@@ -73,16 +74,24 @@ class Create extends CreateProcessor
         }
 
         if ($this->object->get('parent')) {
+            /** @var msCategory|null $msCategoryParent */
             $msCategoryParent = $this->modx->getObject($this->classKey, ['id' => $this->object->get('parent')]);
 
-            if ($msCategoryParent) {
-                /** @var MiniShop3 $ms3 */
-                $ms3 = $this->modx->services->get('ms3');
-                $processorConfig = [
-                    'category_to' => $this->object->get('id'),
-                    'category_from' => $this->object->get('parent')
-                ];
-                $this->modx->runProcessor('MiniShop3\\Processors\\Category\\Option\\Duplicate', $processorConfig);
+            if ($msCategoryParent instanceof msCategory && $this->object instanceof msCategory) {
+                // The service may not be registered when ms3 bootstrap has not
+                // run (CLI/import/direct processor call): mirror msCategory's
+                // lazy fallback instead of fataling on null (#881).
+                $categoryService = null;
+                if ($this->modx->services->has('ms3_category_service')) {
+                    $categoryService = $this->modx->services->get('ms3_category_service');
+                }
+                if (!$categoryService instanceof CategoryService) {
+                    $categoryService = new CategoryService($this->modx);
+                }
+                $success = $categoryService->duplicateCategoryOptions($msCategoryParent, $this->object);
+                if (!$success) {
+                    $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[MiniShop3] Failed to duplicate category options from parent');
+                }
             }
         }
 

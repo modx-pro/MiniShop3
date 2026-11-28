@@ -89,31 +89,52 @@ class CategoryService
     }
 
     /**
-     * Copy category options
+     * Copy category options from source to target category
      *
      * @param msCategory $sourceCategory
      * @param msCategory $targetCategory
      * @return bool
      */
-    protected function duplicateCategoryOptions(msCategory $sourceCategory, msCategory $targetCategory): bool
+    public function duplicateCategoryOptions(msCategory $sourceCategory, msCategory $targetCategory): bool
     {
         $options = $sourceCategory->getMany('CategoryOptions');
+        $targetId = (int) $targetCategory->get('id');
+        if ($targetId <= 0) {
+            return false;
+        }
 
+        // (option_id, category_id) is the composite PK. A repeated create or
+        // retry must skip already-linked options instead of failing mid-batch.
+        $this->modx->beginTransaction();
         /** @var msCategoryOption $option */
         foreach ($options as $option) {
+            $optionId = (int) $option->get('option_id');
+            if ($optionId <= 0) {
+                continue;
+            }
+            if ($this->modx->getObject(msCategoryOption::class, [
+                'category_id' => $targetId,
+                'option_id' => $optionId,
+            ])) {
+                continue;
+            }
+
             /** @var msCategoryOption $newOption */
             $newOption = $this->modx->newObject(msCategoryOption::class);
             $newOption->fromArray($option->toArray(), '', true, true);
-            $newOption->set('category_id', $targetCategory->get('id'));
+            $newOption->set('category_id', $targetId);
 
             if (!$newOption->save()) {
                 $this->modx->log(
                     modX::LOG_LEVEL_ERROR,
                     '[CategoryService] Failed to duplicate category option: ' . print_r($option->toArray(), true)
                 );
+                $this->modx->rollBack();
+
                 return false;
             }
         }
+        $this->modx->commit();
 
         return true;
     }
