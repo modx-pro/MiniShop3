@@ -187,16 +187,70 @@ abstract class CustomerPageService
             'tpl.msCustomer.unauthorized'
         );
 
-        $chunk = $this->pdoFetch->getChunk($tpl, [
-            'login_url' => $this->modx->makeUrl(
-                $this->modx->getOption('ms3_customer_login_page_id', null, 1)
-            ),
-            'register_url' => $this->modx->makeUrl(
-                $this->modx->getOption('ms3_customer_register_page_id', null, 1)
-            ),
-        ]);
+        $chunk = $this->pdoFetch->getChunk($tpl, $this->getUnauthorizedUrls());
 
         return is_string($chunk) ? $chunk : '';
+    }
+
+    /**
+     * URLs of the login and registration pages for the unauthorized chunk (#820, #887).
+     *
+     * A page that is not configured yields an empty string in the placeholder;
+     * templates may use `{if $login_url}` / `{if $register_url}` to hide links.
+     * The shipped chunk renders its own forms and does not consume these URLs.
+     *
+     * @return array{login_url: string, register_url: string}
+     */
+    public function getUnauthorizedUrls(): array
+    {
+        return [
+            'login_url' => self::resolvePageUrl($this->modx, 'ms3_customer_login_page_id'),
+            'register_url' => self::resolvePageUrl($this->modx, 'ms3_customer_register_page_id'),
+        ];
+    }
+
+    /**
+     * Build a URL for a customer page system setting.
+     *
+     * These helpers are intentionally static: the logout branch of the snippet runs
+     * before any page service is constructed, and the URL rules do not depend on
+     * service state.
+     *
+     * The shipped value of ms3_customer_login_page_id / ms3_customer_register_page_id
+     * is 0, so getOption()'s fallback never fires: the setting exists and holds a
+     * "present" value. makeUrl(0) then returns '' and logs "not a valid integer",
+     * which produced empty links in tpl.msCustomer.unauthorized. Page id <= 0 means
+     * "not configured" and yields ''.
+     */
+    public static function resolvePageUrl(modX $modx, string $settingKey): string
+    {
+        $pageId = (int) $modx->getOption($settingKey, null, 0);
+        if ($pageId <= 0) {
+            return '';
+        }
+
+        $url = $modx->makeUrl($pageId);
+
+        return is_string($url) ? $url : '';
+    }
+
+    /**
+     * Where to send the customer after logout: the login page, or the site start
+     * page while no login page is configured. Prevents sendRedirect(''), which
+     * logs an error and leaves the visitor on a blank page.
+     */
+    public static function resolveLogoutUrl(modX $modx): string
+    {
+        $loginUrl = self::resolvePageUrl($modx, 'ms3_customer_login_page_id');
+        if ($loginUrl !== '') {
+            return $loginUrl;
+        }
+
+        $siteStart = (int) $modx->getOption('site_start', null, 1);
+        $url = $modx->makeUrl($siteStart);
+
+        // A malformed site_start must not leave the visitor on an empty page.
+        return is_string($url) && $url !== '' ? $url : '/';
     }
 
     /**
