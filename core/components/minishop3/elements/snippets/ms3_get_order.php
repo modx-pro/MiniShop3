@@ -28,6 +28,7 @@ $ms3->initialize($modx->context->key);
 // Load lexicons for template
 $modx->lexicon->load('minishop3:default');
 $modx->lexicon->load('minishop3:cart');
+$modx->lexicon->load('minishop3:manager'); // order status names are lexicon keys
 
 /** @var Fetch $pdoFetch */
 $pdoFetch = $modx->services->get(Fetch::class);
@@ -250,8 +251,21 @@ foreach ($rows as $product) {
 
 try {
     $payment = $msOrder->getOne('Payment');
+
+    $orderArray = $msOrder->toArray();
+    // xPDO toArray() excludes relations, so expose the status name explicitly.
+    // Seeded names are lexicon keys; translate them for the storefront chunk.
+    $orderStatus = $msOrder->getOne('Status');
+    $statusName = $orderStatus ? (string) $orderStatus->get('name') : '';
+    if ($statusName !== '') {
+        $translated = $modx->lexicon($statusName);
+        $orderArray['status_name'] = $translated !== $statusName ? $translated : $statusName;
+    } else {
+        $orderArray['status_name'] = '';
+    }
+
     $pls = array_merge($scriptProperties, [
-        'order' => $msOrder->toArray(),
+        'order' => $orderArray,
         'products' => $products,
     //    'user' => ($tmp = $msOrder->getOne('User'))
     //        ? array_merge($tmp->getOne('Profile')->toArray(), $tmp->toArray())

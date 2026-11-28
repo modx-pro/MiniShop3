@@ -8,7 +8,7 @@
                 </svg>
                 Заказ №{$order.num}
             </h5>
-            <span class="badge bg-light text-dark">{$order.status_name ?: 'Новый'}</span>
+            <span class="badge bg-light text-dark">{if $order.status_name}{$order.status_name | e}{else}Новый{/if}</span>
         </div>
     </div>
     <div class="card-body">
@@ -155,7 +155,7 @@
 </div>
 
 {* Customer and Address Info *}
-{if $address.receiver || $address.phone || $address.email || $address.street}
+{if $address.first_name || $address.last_name || $address.phone || $address.email || $address.street}
     <div class="card border-0 bg-light">
         <div class="card-body">
             <h6 class="card-title mb-3">
@@ -165,45 +165,56 @@
                 Контактные данные
             </h6>
             <div class="row g-3">
-                {if $address.receiver?}
+                {if $address.first_name || $address.last_name}
                     <div class="col-md-6">
                         <div class="small text-muted">Получатель</div>
-                        <div class="fw-semibold">{$address.receiver}</div>
+                        <div class="fw-semibold">{$address.first_name | e} {$address.last_name | e}</div>
                     </div>
                 {/if}
                 {if $address.phone?}
                     <div class="col-md-6">
                         <div class="small text-muted">Телефон</div>
-                        <div class="fw-semibold">{$address.phone}</div>
+                        <div class="fw-semibold">{$address.phone | e}</div>
                     </div>
                 {/if}
                 {if $address.email?}
                     <div class="col-md-6">
                         <div class="small text-muted">Email</div>
-                        <div class="fw-semibold">{$address.email}</div>
+                        <div class="fw-semibold">{$address.email | e}</div>
                     </div>
                 {/if}
                 {if $address.street?}
                     <div class="col-12">
                         <div class="small text-muted">Адрес доставки</div>
                         <div class="fw-semibold">
-                            {if $address.index?}{$address.index}, {/if}
-                            {if $address.country?}{$address.country}, {/if}
-                            {if $address.region?}{$address.region}, {/if}
-                            {if $address.city?}{$address.city}, {/if}
-                            {$address.street}
-                            {if $address.building?}, д. {$address.building}{/if}
-                            {if $address.room?}, кв. {$address.room}{/if}
+                            {if $address.index?}{$address.index | e}, {/if}
+                            {if $address.country?}{$address.country | e}, {/if}
+                            {if $address.region?}{$address.region | e}, {/if}
+                            {if $address.city?}{$address.city | e}, {/if}
+                            {$address.street | e}
+                            {if $address.building?}, д. {$address.building | e}{/if}
+                            {if $address.room?}, кв. {$address.room | e}{/if}
                         </div>
                     </div>
                 {/if}
-                {if $order.comment?}
-                    <div class="col-12">
-                        <div class="small text-muted">Комментарий к заказу</div>
-                        <div class="fw-semibold">{$order.comment}</div>
-                    </div>
-                {/if}
             </div>
+        </div>
+    </div>
+{/if}
+
+{* Комментарий к заказу — показывается и без адреса (#879) *}
+{if $address.comment || $order.order_comment}
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light">
+            <h6 class="mb-0">{'ms3_frontend_comment' | lexicon}</h6>
+        </div>
+        <div class="card-body">
+            {if $address.comment}
+                <p class="mb-0"><strong>{'ms3_frontend_comment' | lexicon}:</strong> {$address.comment | e}</p>
+            {/if}
+            {if $order.order_comment}
+                <p class="mb-0"><strong>{'ms3_order_comment' | lexicon}:</strong> {$order.order_comment | e}</p>
+            {/if}
         </div>
     </div>
 {/if}
