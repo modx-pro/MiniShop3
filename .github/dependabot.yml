@@ -13,6 +13,8 @@ updates:
       actions:
         patterns:
           - "actions/*"
+          - "shivammathur/*"
+          - "softprops/*"
         update-types:
           - minor
           - patch
