@@ -6,109 +6,102 @@ namespace MiniShop3\Tests\Integration\Settings;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Tests for resolver_03_settings.php logic — ensure that user edits are preserved on upgrade (#883).
- *
- * We test the core logic (editedon checks) without executing the full resolver file.
+ * Resolver_03 upgrade logic (#883): package defaults must be appended without
+ * overwriting admin edits. The real resolver needs a full MODX/xPDO runtime, so
+ * these tests combine source-level guards with the extracted decision helpers.
  */
 class Resolver03SettingsTest extends TestCase
 {
-    /**
-     * Simulate the address fields logic from resolver_03_settings.php.
-     */
-    private function applyAddressFieldsLogic(string $currentValue, ?string $editedon): string
+    /** Known package fields before the #883 additions. */
+    private const KNOWN_PACKAGE_FIELDS = [
+        'first_name', 'last_name', 'phone', 'email', 'country', 'index',
+        'region', 'city', 'metro', 'street', 'building', 'room',
+        'comment', 'text_address',
+    ];
+
+    /** @param list<string> $currentFields */
+    private function applyAddressFields(array $currentFields): string
     {
-        // This mirrors the logic in resolver_03_settings.php lines ~66-75
-        if ($editedon) {
-            // User edited — preserve changes
-            return $currentValue;
+        $custom = array_diff($currentFields, self::KNOWN_PACKAGE_FIELDS);
+        if ($custom !== []) {
+            return implode(',', $currentFields);
         }
-        // Not edited — add defaults
-        $fields = explode(',', $currentValue);
-        $fields = array_unique(array_merge($fields, ['entrance', 'floor', 'text_address']));
-        return implode(',', $fields);
+
+        return implode(',', array_unique(array_merge(
+            $currentFields,
+            ['entrance', 'floor', 'text_address']
+        )));
     }
 
-    /**
-     * Simulate the snippet properties logic from resolver_03_settings.php.
-     */
-    private function applySnippetPropertiesLogic(?string $editedon, array $currentProperties): array
+    /** @param array<string, array{value: mixed}> $properties */
+    private function applySnippetProperties(array $properties): array
     {
-        // This mirrors the logic in resolver_03_settings.php lines ~125-140
-        if ($editedon) {
-            // User edited — preserve changes
-            return $currentProperties;
+        $shippedDefaults = ['tpl' => 'tpl.msOrderTotal', 'return' => 'tpl'];
+        foreach ($shippedDefaults as $key => $defaultValue) {
+            $current = $properties[$key]['value'] ?? null;
+            if ($current === null || $current === $defaultValue) {
+                $properties[$key] = ['name' => $key, 'type' => 'textfield', 'value' => $defaultValue];
+            }
         }
-        // Not edited — set defaults
-        $defaults = [
-            'tpl' => ['name' => 'tpl', 'type' => 'textfield', 'value' => 'tpl.msOrderTotal'],
-            'return' => ['name' => 'return', 'type' => 'textfield', 'value' => 'tpl'],
-        ];
-        return array_merge($currentProperties, $defaults);
+
+        return $properties;
     }
 
-    public function testAddressFieldsNotEditedAddsDefaults(): void
+    public function testAddressDefaultsAreAppendedWhenNoCustomFields(): void
     {
-        $result = $this->applyAddressFieldsLogic('city,street,zip', null);
-        
-        $this->assertStringContainsString('entrance', $result);
-        $this->assertStringContainsString('floor', $result);
-        $this->assertStringContainsString('text_address', $result);
-        $this->assertStringContainsString('city', $result);
-        $this->assertStringContainsString('street', $result);
+        $result = $this->applyAddressFields(['city', 'street', 'zip']);
+        // 'zip' is not a known package field, so the whole value is preserved.
+        self::assertSame('city,street,zip', $result);
+
+        $result = $this->applyAddressFields(['city', 'street']);
+        self::assertStringContainsString('entrance', $result);
+        self::assertStringContainsString('floor', $result);
+        self::assertStringContainsString('text_address', $result);
+        self::assertStringContainsString('city', $result);
     }
 
-    public function testAddressFieldsEditedKeepsOriginal(): void
+    public function testCustomAddressFieldsArePreserved(): void
     {
-        $original = 'city,street,zip';
-        $result = $this->applyAddressFieldsLogic($original, '2023-01-01 00:00:00');
-        
-        $this->assertSame($original, $result);
-        $this->assertStringNotContainsString('entrance', $result);
-        $this->assertStringNotContainsString('floor', $result);
-        $this->assertStringNotContainsString('text_address', $result);
+        self::assertSame(
+            'city,street,custom_field',
+            $this->applyAddressFields(['city', 'street', 'custom_field'])
+        );
     }
 
-    public function testAddressFieldsEditedWithCustomFields(): void
+    public function testSnippetDefaultsAreSetWhenAbsentOrUnchanged(): void
     {
-        $original = 'city,street,custom_field';
-        $result = $this->applyAddressFieldsLogic($original, '2023-01-01 00:00:00');
-        
-        $this->assertSame($original, $result);
-        $this->assertStringContainsString('custom_field', $result);
+        $result = $this->applySnippetProperties([]);
+        self::assertSame('tpl.msOrderTotal', $result['tpl']['value']);
+        self::assertSame('tpl', $result['return']['value']);
+
+        $result = $this->applySnippetProperties([
+            'tpl' => ['value' => 'tpl.msOrderTotal'],
+            'return' => ['value' => 'raw'],
+        ]);
+        self::assertSame('tpl.msOrderTotal', $result['tpl']['value']);
+        // 'raw' is an admin value: the shipped default must not overwrite it.
+        self::assertSame('raw', $result['return']['value']);
     }
 
-    public function testSnippetNotEditedSetsDefaults(): void
-    {
-        $result = $this->applySnippetPropertiesLogic(null, []);
-        
-        $this->assertArrayHasKey('tpl', $result);
-        $this->assertEquals('tpl.msOrderTotal', $result['tpl']['value']);
-        $this->assertArrayHasKey('return', $result);
-        $this->assertEquals('tpl', $result['return']['value']);
-    }
-
-    public function testSnippetEditedKeepsOriginalProperties(): void
+    public function testSnippetCustomPropertiesArePreserved(): void
     {
         $original = [
             'tpl' => ['value' => 'custom.tpl'],
             'return' => ['value' => 'raw'],
             'custom' => ['value' => 'something'],
         ];
-        $result = $this->applySnippetPropertiesLogic('2023-01-01 00:00:00', $original);
-        
-        $this->assertSame($original, $result);
-        $this->assertEquals('custom.tpl', $result['tpl']['value']);
-        $this->assertEquals('raw', $result['return']['value']);
+        self::assertSame($original, $this->applySnippetProperties($original));
     }
 
-    public function testSnippetNotEditedMergesWithExisting(): void
+    public function testResolverDoesNotUseUnreliableEditedOnGuards(): void
     {
-        $existing = ['custom' => ['value' => 'keep_me']];
-        $result = $this->applySnippetPropertiesLogic(null, $existing);
-        
-        $this->assertArrayHasKey('tpl', $result);
-        $this->assertArrayHasKey('return', $result);
-        $this->assertArrayHasKey('custom', $result);
-        $this->assertEquals('keep_me', $result['custom']['value']);
+        $path = dirname(__DIR__, 6) . '/_build/resolvers/resolver_03_settings.php';
+        $source = (string) file_get_contents($path);
+
+        self::assertStringContainsString('$customFields', $source);
+        self::assertStringContainsString('$shippedDefaults', $source);
+        self::assertStringNotContainsString("\$snippet->get('editedon')", $source);
+        // Only the pre-existing ms3_chunks_categories guard may use editedon.
+        self::assertSame(1, substr_count($source, "get('editedon')"));
     }
 }
