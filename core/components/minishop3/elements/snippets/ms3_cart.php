@@ -76,6 +76,8 @@ $pdoFetch->addTime('pdoTools loaded.');
 
 $tpl = $modx->getOption('tpl', $scriptProperties, 'tpl.msCart');
 $return = $modx->getOption('return', $scriptProperties, 'tpl');
+$toPlaceholder = $modx->getOption('toPlaceholder', $scriptProperties, '');
+$showLog = $modx->getOption('showLog', $scriptProperties, false);
 $response = $ms3->cart->get();
 $cart = $response['data']['cart'];
 $status = $response['data']['status'];
@@ -110,21 +112,46 @@ $formatTotalForDisplay = static function (array &$total, MiniShop3 $ms3): void {
     $total['weight_formatted'] = $ms3->format->weightWithUnit($total['weight']);
 };
 
-if (empty($status['total_count'])) {
+/**
+ * Single output tail for every path (#803): return=data, chunk render,
+ * manager-only showLog and toPlaceholder. The empty-cart branches used to
+ * return the chunk directly, so an empty cart never reached toPlaceholder
+ * or showLog — the placeholder stayed empty and the HTML leaked into the
+ * call site.
+ */
+$renderOutput = static function (array $outputData) use ($modx, $pdoFetch, $tpl, $return, $toPlaceholder, $showLog): array|string|null {
+    // Non-tpl returns (including data and legacy custom modes) stay arrays.
+    // toPlaceholder is still honored so the placeholder is never left empty.
+    if ($return !== 'tpl') {
+        if (!empty($toPlaceholder)) {
+            $modx->setPlaceholder($toPlaceholder, $outputData);
+        }
+
+        return $outputData;
+    }
+
+    $output = $pdoFetch->getChunk($tpl, $outputData);
+
+    if (isset($modx->user) && $modx->user->hasSessionContext('mgr') && !empty($showLog)) {
+        $output .= '<pre class="msCartLog">' . print_r($pdoFetch->getTime(), true) . '</pre>';
+    }
+
+    if (!empty($toPlaceholder)) {
+        $modx->setPlaceholder($toPlaceholder, $output);
+
+        return null;
+    }
+
+    return $output;
+};
+
+if (empty($status['total_count']) || empty($cart)) {
+    // Empty cart: skip the product query, but still go through the common
+    // output tail so toPlaceholder/showLog/return keep working (#803).
     $applyStatusToTotal($total, $status);
     $formatTotalForDisplay($total, $ms3);
-    if ($return === 'tpl') {
-        return $pdoFetch->getChunk($tpl, compact('total', 'products', 'status'));
-    }
-    return compact('total', 'products', 'status');
-}
-if (empty($cart)) {
-    $applyStatusToTotal($total, $status);
-    $formatTotalForDisplay($total, $ms3);
-    if ($return === 'tpl') {
-        return $pdoFetch->getChunk($tpl, compact('total', 'products', 'status'));
-    }
-    return compact('total', 'products', 'status');
+
+    return $renderOutput(compact('total', 'products', 'status'));
 }
 
 // Select cart products.
@@ -273,18 +300,4 @@ $outputData = [
     'status' => $status,
 ];
 
-if ($return === 'data') {
-    return $outputData;
-}
-
-$output = $pdoFetch->getChunk($tpl, $outputData);
-
-if ($modx->user->hasSessionContext('mgr') && !empty($showLog)) {
-    $output .= '<pre class="msCartLog">' . print_r($pdoFetch->getTime(), true) . '</pre>';
-}
-
-if (!empty($toPlaceholder)) {
-    $modx->setPlaceholder($toPlaceholder, $output);
-} else {
-    return $output;
-}
+return $renderOutput($outputData);
