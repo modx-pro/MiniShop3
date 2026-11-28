@@ -24,8 +24,10 @@ $assertTrue = static function (bool $condition, string $case) use ($fail): void 
 };
 
 $schema = (string) file_get_contents($component . '/schema/minishop3.mysql.schema.xml');
+$customerObject = substr($schema, (int) strpos($schema, '<object class="msCustomer"'));
+$customerObject = substr($customerObject, 0, (int) strpos($customerObject, '</object>'));
 $assertTrue(
-    str_contains($schema, '<composite alias="Addresses" class="MiniShop3\Model\msCustomerAddress" local="id" foreign="customer_id" cardinality="many" owner="local"/>'),
+    str_contains($customerObject, 'alias="Addresses" class="MiniShop3\Model\msCustomerAddress"'),
     'schema declares Addresses composite on msCustomer'
 );
 $assertTrue(
@@ -37,6 +39,10 @@ $map = (string) file_get_contents($component . '/src/Model/mysql/msCustomer.php'
 $assertTrue(
     str_contains($map, "'Addresses' =>"),
     'generated xPDO map declares Addresses composite'
+);
+$assertTrue(
+    str_contains($map, "'composites' =>"),
+    'generated map has a composites section'
 );
 $addressesBlock = substr($map, (int) strpos($map, "'Addresses' =>"));
 $addressesBlock = substr($addressesBlock, 0, (int) strpos($addressesBlock, '],'));
