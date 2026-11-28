@@ -3,6 +3,13 @@
  *
  * Manages order forms: auto-save fields, validation, submission.
  */
+
+// Module scope on purpose: ms3.init() constructs a fresh OrderUI on every call
+// (SPA/modal), so instance-level tracking would rebind listeners each time (#832).
+const initializedForms = new WeakSet()
+let cartListenerRegistered = false
+let activeOrderUI = null
+
 class OrderUI {
   /**
    * @param {OrderAPI} orderAPI - Order API instance
@@ -15,6 +22,7 @@ class OrderUI {
     this.hooks = hooks
     this.message = message
     this.config = config
+    activeOrderUI = this
   }
 
   get selectors () {
@@ -24,16 +32,45 @@ class OrderUI {
   /**
    * Initialize UI handlers
    */
-  init () {
+  /**
+   * All forms that represent an editable order draft (#832).
+   * Other order actions (order/clean, order/address/*) must not receive
+   * auto-save handlers or be reset by handleClean().
+   *
+   * @return {Array<HTMLFormElement>}
+   */
+  orderForms () {
+    const forms = []
+    const seen = new WeakSet()
     document.querySelectorAll(this.selectors.formOrder).forEach(form => {
+      if (!seen.has(form)) {
+        seen.add(form)
+        forms.push(form)
+      }
+    })
+    document.querySelectorAll(this.selectors.form).forEach(form => {
+      const action = form.querySelector('[name="ms3_action"]')?.value || ''
+      if (action === 'order/submit' && !seen.has(form)) {
+        seen.add(form)
+        forms.push(form)
+      }
+    })
+
+    return forms
+  }
+
+  init () {
+    this.orderForms().forEach(form => {
       this.initForm(form)
     })
 
-    // Listen for cart updates to recalculate delivery cost
-    // (e.g., free delivery threshold may be reached)
-    document.addEventListener('ms3:cart:updated', () => {
-      this.updateOrderCosts()
-    })
+    // Register once across repeated ms3.init() calls.
+    if (!cartListenerRegistered) {
+      cartListenerRegistered = true
+      document.addEventListener('ms3:cart:updated', () => {
+        activeOrderUI?.updateOrderCosts()
+      })
+    }
   }
 
   /**
@@ -42,9 +79,18 @@ class OrderUI {
    * @param {HTMLFormElement} form - Order form
    */
   initForm (form) {
+    if (initializedForms.has(form)) {
+      return
+    }
+    initializedForms.add(form)
     const inputs = form.querySelectorAll('input, textarea, select')
 
     inputs.forEach(input => {
+      // Hidden service fields are not customer-editable; autosaving ms3_action
+      // would send a bogus order/add field.
+      if (input.type === 'hidden' || input.name === 'ms3_action') {
+        return
+      }
       if (input.name === 'address_hash') {
         this.initAddressInput(input)
       } else {
@@ -288,7 +334,7 @@ class OrderUI {
       }
 
       if (response.success) {
-        document.querySelectorAll(this.selectors.formOrder).forEach(form => {
+        this.orderForms().forEach(form => {
           form.reset()
         })
         document.dispatchEvent(new CustomEvent('ms3:cart:updated'))
