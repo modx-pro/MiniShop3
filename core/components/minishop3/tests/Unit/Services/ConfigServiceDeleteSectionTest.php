@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace MiniShop3\Tests\Unit\Services;
 
-require_once __DIR__ . '/../../stubs/ModxStub.php';
+if (!class_exists(modX::class, false)) {
+    require_once __DIR__ . '/../../stubs/ModxStub.php';
+}
 
 use MiniShop3\Services\ConfigService;
 use MODX\Revolution\modX;
@@ -136,6 +138,63 @@ final class ConfigServiceDeleteSectionTest extends TestCase
         self::assertNull($result['sections']['default']['sort_order']);
     }
 
+    public function testDefaultSectionCannotBeDeleted(): void
+    {
+        $section = new FakeSectionForDelete(7);
+        $section->is_default = true;
+        $modx = $this->modx($section, [new FakeFieldForDelete(7)]);
+
+        self::assertFalse((new ConfigService($modx))->deleteSection('product_data', 'main'));
+        self::assertFalse($section->removed);
+        self::assertSame([], $modx->iteratorCriteria);
+    }
+
+    public function testCallerOwnedTransactionIsNotCommitted(): void
+    {
+        $section = new FakeSectionForDelete(7);
+        $field = new FakeFieldForDelete(7);
+        $modx = new class ($section, [$field]) extends modX {
+            public int $begins = 0;
+            public int $commits = 0;
+
+            public function __construct(
+                private FakeSectionForDelete $section,
+                private array $fields,
+            ) {
+                parent::__construct();
+            }
+
+            public function inTransaction(): bool
+            {
+                return true;
+            }
+
+            public function getObject($className, $criteria = null)
+            {
+                return $this->section;
+            }
+
+            public function getIterator($className, $criteria = null)
+            {
+                return new \ArrayIterator($this->fields);
+            }
+
+            public function beginTransaction()
+            {
+                $this->begins++;
+            }
+
+            public function commit()
+            {
+                $this->commits++;
+            }
+        };
+
+        self::assertTrue((new ConfigService($modx))->deleteSection('product_data', 'pricing'));
+        self::assertSame(0, $modx->begins);
+        self::assertSame(0, $modx->commits);
+    }
+
     public function testMissingSectionIsNoop(): void
     {
         $modx = new class extends modX {
@@ -235,6 +294,7 @@ final class ConfigServiceDeleteSectionTest extends TestCase
 final class FakeSectionForDelete
 {
     public bool $removed = false;
+    public bool $is_default = false;
 
     public function __construct(private int $id, private bool $removeResult = true)
     {
@@ -242,7 +302,11 @@ final class FakeSectionForDelete
 
     public function get($key)
     {
-        return $key === 'id' ? $this->id : null;
+        if ($key === 'id') {
+            return $this->id;
+        }
+
+        return $key === 'is_default' ? (int) $this->is_default : null;
     }
 
     public function remove(): bool

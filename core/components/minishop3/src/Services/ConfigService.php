@@ -411,6 +411,10 @@ class ConfigService
             if (!$section) {
                 return true;
             }
+            if ((bool) $section->get('is_default')) {
+                // Base section: deleting it would break the manager config UI (#827).
+                return false;
+            }
 
             // ms3_product_fields.section is a FK to ms3_page_sections.id with
             // ON DELETE RESTRICT. Move its fields to the reserved "no section"
@@ -425,14 +429,29 @@ class ConfigService
             }
 
             $ownsTransaction = $this->beginOwnedTransaction();
+            $detached = [];
+            $sectionId = (int) $section->get('id');
             foreach ($toDetach as $field) {
+                // All rows came from the section-scoped query, so this is their
+                // original section id (fakes need not implement get()).
+                $originalSection = $sectionId;
                 $field->set('section', null);
                 if (!$field->save()) {
+                    $field->set('section', $originalSection);
+                    // In a caller-owned transaction we cannot roll back; restore
+                    // the already-detached fields explicitly (#827 review).
+                    if (!$ownsTransaction) {
+                        foreach ($detached as [$restoredField, $originalSectionId]) {
+                            $restoredField->set('section', $originalSectionId);
+                            $restoredField->save();
+                        }
+                    }
                     $this->endOwnedTransaction($ownsTransaction, false);
                     $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR,
                         "[ConfigService] Failed to detach field from section: {$sectionKey}");
                     return false;
                 }
+                $detached[] = [$field, $originalSection];
             }
 
             $removed = $section->remove();
@@ -460,8 +479,7 @@ class ConfigService
             return false;
         }
 
-        $pdo = $this->modx->pdo;
-        if ($pdo instanceof \PDO && $pdo->inTransaction()) {
+        if ($this->hasOpenTransaction()) {
             return false;
         }
 
@@ -470,14 +488,21 @@ class ConfigService
         return true;
     }
 
+    /** Test doubles may define inTransaction(); production uses $modx->pdo. */
+    private function hasOpenTransaction(): bool
+    {
+        if (method_exists($this->modx, 'inTransaction')) {
+            return (bool) $this->modx->inTransaction();
+        }
+
+        $pdo = isset($this->modx->pdo) ? $this->modx->pdo : null;
+
+        return $pdo instanceof \PDO && $pdo->inTransaction();
+    }
+
     private function endOwnedTransaction(bool $ownsTransaction, bool $success): void
     {
         if (!$ownsTransaction) {
-            return;
-        }
-
-        $pdo = $this->modx->pdo;
-        if ($pdo instanceof \PDO && !$pdo->inTransaction()) {
             return;
         }
 
