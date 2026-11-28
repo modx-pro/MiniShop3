@@ -18,6 +18,7 @@
  * - Hooks: Extensibility
  * - Message: Notifications
  */
+/* global resolveCartRenderRoot */
 class CartUI {
   /**
    * @param {CartAPI} cartAPI - Cart API instance
@@ -329,6 +330,9 @@ class CartUI {
    * Map tokens to selectors from ms3Config.render.cart:
    * [{token: "token1", selector: "#headerMiniCart"}, ...]
    *
+   * Without a configured selector the shared fallback resolver picks a root,
+   * and logs why it skipped rendering when the root is ambiguous (#804).
+   *
    * Note: After rendering, ms3:cart:updated event is dispatched.
    * QuantityUI listens to this event and reinitializes controls.
    *
@@ -345,36 +349,14 @@ class CartUI {
 
     const cartRenderConfig = this.config.render.cart
 
+    // One root per token within a batch: two unconfigured snippets must not
+    // overwrite each other's HTML in the same fallback container (#804).
+    const claimedRoots = new Set()
     for (const token in renderData) {
       const html = renderData[token]
       const config = cartRenderConfig.find(item => item.token === token)
       const configuredSelector = config && config.selector ? String(config.selector) : ''
-      const fallbackSelectors = [
-        '#ms3oc-cart-live',
-        '#msb-test-cart',
-        '#msCart',
-        '[data-ms-cart]',
-        '.msCart',
-      ]
-
-      let element = null
-      if (configuredSelector !== '') {
-        element = document.querySelector(configuredSelector)
-      }
-      if (!element) {
-        const found = []
-        fallbackSelectors.forEach((selector) => {
-          document.querySelectorAll(selector).forEach((node) => {
-            if (!found.includes(node)) {
-              found.push(node)
-            }
-          })
-        })
-        // Avoid writing one cart HTML into another when several roots exist.
-        if (found.length === 1) {
-          element = found[0]
-        }
-      }
+      const element = resolveCartRenderRoot(configuredSelector, token, claimedRoots)
 
       if (element) {
         element.innerHTML = html
