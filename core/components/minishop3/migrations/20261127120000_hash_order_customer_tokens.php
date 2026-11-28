@@ -9,9 +9,10 @@ use Phinx\Migration\AbstractMigration;
  *
  * Both columns historically stored the same plaintext token that is accepted
  * by the public API, so a database dump contained working credentials. Only
- * only bare 64-hex API tokens are converted: integration order tokens are
+ * bare 64-hex API tokens are converted: integration order tokens are
  * md5-based, and values already written by StoredTokenHash carry a `sha256$`
  * prefix, so a re-run or a code-first rolling deploy cannot double-hash.
+ * The written value uses the same `sha256$<hex>` format as StoredTokenHash.
  *
  * PHP resolves both columns through StoredTokenHash with a plaintext fallback,
  * so legacy rows keep working before the migration runs.
@@ -29,7 +30,7 @@ final class HashOrderCustomerTokens extends AbstractMigration
 
             $fullName = $prefix . $table;
             $this->execute(
-                "UPDATE `{$fullName}` SET `token` = SHA2(`token`, 256)"
+                "UPDATE `{$fullName}` SET `token` = CONCAT('sha256$', SHA2(`token`, 256))"
                 . " WHERE `token` REGEXP '^[0-9a-f]{64}$'"
             );
         }

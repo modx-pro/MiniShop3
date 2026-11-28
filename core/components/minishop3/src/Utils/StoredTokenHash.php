@@ -44,7 +44,8 @@ final class StoredTokenHash
         array $criteria = [],
         string $field = 'token'
     ): ?object {
-        if ($token === '') {
+        if ($token === '' || str_starts_with($token, self::PREFIX)) {
+            // A leaked hash from a dump must not be replayable as a bearer token.
             return null;
         }
 

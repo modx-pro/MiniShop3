@@ -78,6 +78,25 @@ final class StoredTokenHashTest extends TestCase
         );
     }
 
+    public function testPrefixedHashIsNotAcceptedAsBearerToken(): void
+    {
+        $modx = new class extends modX {
+            public int $lookups = 0;
+
+            public function getObject($className, $criteria = null, $cacheFlag = true)
+            {
+                $this->lookups++;
+
+                return null;
+            }
+        };
+
+        self::assertNull(
+            StoredTokenHash::find($modx, \stdClass::class, 'sha256$' . str_repeat('a', 64))
+        );
+        self::assertSame(0, $modx->lookups);
+    }
+
     public function testEmptyTokenIsNeverLookedUp(): void
     {
         $modx = $this->modx([]);

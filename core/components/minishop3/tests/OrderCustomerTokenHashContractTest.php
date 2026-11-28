@@ -26,6 +26,9 @@ foreach (['ms3_orders', 'ms3_customers'] as $table) {
 if (!str_contains($migration, "REGEXP '^[0-9a-f]{64}$'")) {
     $fail('migration must hash only 64-hex API tokens');
 }
+if (!str_contains($migration, "CONCAT('sha256$', SHA2(`token`, 256))")) {
+    $fail('migration must write the same sha256$ prefix as StoredTokenHash (#1058)');
+}
 
 $files = [
     'src/Services/Order/OrderDraftManager.php',
@@ -33,6 +36,7 @@ $files = [
     'src/Services/Customer/CustomerFieldManager.php',
     'src/Services/Customer/CustomerOrderResolver.php',
     'src/Controllers/Customer/Customer.php',
+    'elements/plugins/minishop3.php',
 ];
 foreach ($files as $file) {
     $source = (string) file_get_contents($root . '/' . $file);
