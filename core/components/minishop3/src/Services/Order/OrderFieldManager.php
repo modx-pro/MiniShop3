@@ -66,8 +66,11 @@ class OrderFieldManager
     protected OrderDraftManager $draftManager;
 
     protected array $validationRules = [];
+    /** Custom rules set via setValidationRules(); always win over defaults/delivery. */
+    protected array $customValidationRules = [];
     protected array $validationMessages = [];
     protected ?array $deliveryValidationRules = null;
+    protected ?int $deliveryValidationRulesId = null;
     protected ?OrderLogService $log = null;
 
     public function __construct(modX $modx, MiniShop3 $ms3, OrderDraftManager $draftManager)
@@ -264,37 +267,44 @@ class OrderFieldManager
      */
     public function validate(array $orderData, string $key, mixed $value): array
     {
-        // Default validation rules
         $defaultRules = [
             'delivery_id' => 'required|numeric',
             'payment_id' => 'required|numeric',
         ];
-        // Merge defaults with any custom rules that may have been set via setValidationRules()
+        // Keep the property as the accumulated map for introspection/plugins,
+        // but never lose custom rules set via setValidationRules() (#950).
         $this->validationRules = array_merge($defaultRules, $this->validationRules);
 
-        $this->validationMessages = [
+        $defaultMessages = [
             'required' => 'Required',
             'numeric' => 'Must be a number',
             'min' => 'Minimum :min characters',
             'email' => 'Invalid email'
         ];
+        $this->validationMessages = array_merge($defaultMessages, $this->validationMessages);
 
-        // Load delivery-specific validation rules
-        if (!empty($orderData['delivery_id']) && empty($this->deliveryValidationRules)) {
-            $response = $this->getDeliveryValidationRules($orderData['delivery_id']);
+        // Load delivery-specific rules, re-resolving when delivery changes.
+        $deliveryId = (int) ($orderData['delivery_id'] ?? 0);
+        if ($deliveryId > 0 && $deliveryId !== $this->deliveryValidationRulesId) {
+            $response = $this->getDeliveryValidationRules($deliveryId);
             if (!empty($response['success'])) {
                 $this->deliveryValidationRules = $response['data']['validation_rules'];
-                // Набор правил — карта «поле => строка правил» (#949). array_unique()
-                // здесь сравнивает значения и оставлял по одному полю на каждую
-                // повторяющуюся строку: из шести полей с 'required' выживало одно.
-                // Дубликаты ключей и так разрешает array_merge() — побеждают правила
-                // способа доставки.
-                $this->validationRules = array_merge(
-                    $this->validationRules,
-                    $this->deliveryValidationRules
-                );
+                $this->deliveryValidationRulesId = $deliveryId;
             }
         }
+
+        if ($this->deliveryValidationRules !== null) {
+            $this->validationRules = array_merge($this->validationRules, $this->deliveryValidationRules);
+        }
+
+        // Набор правил — карта «поле => строка правил» (#949). array_unique()
+        // сравнивает значения и оставлял по одному полю на каждую повторяющуюся
+        // строку: из шести полей с 'required' выживало одно. array_merge() по
+        // ключам корректно разрешает дубликаты. Порядок: defaults → delivery →
+        // custom, чтобы пользовательские правила всегда побеждали (#950).
+        $rules = array_merge($defaultRules, $this->deliveryValidationRules ?? [], $this->customValidationRules);
+        $rules = array_filter($rules, static fn ($rule): bool => is_string($rule) && trim($rule) !== '');
+        $messages = array_merge($defaultMessages, $this->validationMessages);
 
         // Event: before validation
         $eventParams = [
@@ -306,15 +316,15 @@ class OrderFieldManager
         $value = $response['data']['value'];
 
         // No validation rule for this field = pass through
-        if (!isset($this->validationRules[$key])) {
+        if (!isset($rules[$key])) {
             return $this->success('', ['value' => $response['data']['value']]);
         }
 
         // Run validation
         $validation = $this->getValidationService()->validate(
             [$key => $value],
-            [$key => $this->validationRules[$key]],
-            $this->validationMessages
+            [$key => $rules[$key]],
+            $messages
         );
 
         if ($validation->fails()) {
@@ -410,6 +420,8 @@ class OrderFieldManager
      */
     public function setValidationRules(array $rules): void
     {
+        // Replace, like CustomerFieldManager: repeated calls must not leak rules.
+        $this->customValidationRules = $rules;
         $this->validationRules = array_merge($this->validationRules, $rules);
     }
 
