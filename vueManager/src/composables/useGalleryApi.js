@@ -140,7 +140,7 @@ export function useGalleryApi() {
    * @param {number} productId
    * @param {string} url
    * @param {number|string} sourceId
-   * @returns {Promise<{id: number, file: string}>}
+   * @returns {Promise<{id: number, file: string, thumb: string}>}
    */
   async function uploadByUrl(productId, url, sourceId) {
     const data = await connectorRequest('MiniShop3\\Processors\\Gallery\\Upload', {
@@ -148,7 +148,11 @@ export function useGalleryApi() {
       url,
       source: sourceId,
     })
-    return { id: Number(data.object?.id) || 0, file: data.object?.file || '' }
+    return {
+      id: Number(data.object?.id) || 0,
+      file: data.object?.file || '',
+      thumb: data.object?.thumb || '',
+    }
   }
 
   /**

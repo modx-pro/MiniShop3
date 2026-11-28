@@ -192,6 +192,7 @@ class Upload extends ModelProcessor
                 );
             }
 
+            $thumb = '';
             $productData = $this->product->getOne('Data');
             if ($productData) {
                 /** @var \MiniShop3\Services\Product\ProductImageService $imageService */
@@ -199,9 +200,19 @@ class Upload extends ModelProcessor
                 if ($imageService) {
                     $imageService->updateProductImage($productData);
                 }
+                $thumb = (string) $productData->get('thumb');
+            }
+            if ($thumb === '') {
+                $thumb = (string) ($this->ms3->config['defaultThumb'] ?? '');
             }
 
-            return $this->success('', $uploaded_file);
+            // Return the refreshed product preview so the manager can update it
+            // without a second SortByName request (which would destroy manual order).
+            return $this->success('', [
+                'id' => $uploaded_file->get('id'),
+                'file' => $uploaded_file->get('file'),
+                'thumb' => $thumb,
+            ]);
         } else {
             return $this->failure($this->modx->lexicon('ms3_err_gallery_save') . ': ' .
                 print_r($this->mediaSource->getErrors(), true));
