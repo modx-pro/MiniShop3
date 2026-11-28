@@ -4,6 +4,7 @@ namespace MiniShop3\Services\Customer;
 
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msCustomer;
+use MiniShop3\Utils\StoredTokenHash;
 use MODX\Revolution\modX;
 
 /**
@@ -169,6 +170,6 @@ class CustomerOrderResolver
             return null;
         }
 
-        return $this->modx->getObject(msCustomer::class, ['token' => $token]) ?: null;
+        return StoredTokenHash::find($this->modx, msCustomer::class, $token);
     }
 }

@@ -4,6 +4,7 @@ namespace MiniShop3\Services\Customer;
 
 use MiniShop3\Controllers\Auth\PasswordAuthProvider;
 use MiniShop3\Model\msCustomer;
+use MiniShop3\Utils\StoredTokenHash;
 use MODX\Revolution\modX;
 use MODX\Revolution\Mail\modMail;
 
@@ -161,8 +162,9 @@ class RegisterService
         $customer->set('phone', $phone);
         $customer->set('is_active', true);
 
-        // Use provided token (from checkout auto-register) or generate new one
-        $customer->set('token', !empty($data['token']) ? $data['token'] : bin2hex(random_bytes(32)));
+        // Store only a hash of the bearer token (#1058).
+        $token = !empty($data['token']) ? (string) $data['token'] : bin2hex(random_bytes(32));
+        StoredTokenHash::set($customer, $token);
 
         if (!empty($data['privacy_accepted'])) {
             $customer->set('privacy_accepted_at', date('Y-m-d H:i:s'));

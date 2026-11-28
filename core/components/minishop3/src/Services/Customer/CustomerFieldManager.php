@@ -5,6 +5,7 @@ namespace MiniShop3\Services\Customer;
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msCustomer;
 use MiniShop3\Services\Validation\ValidationService;
+use MiniShop3\Utils\StoredTokenHash;
 use MODX\Revolution\modX;
 
 /**
@@ -66,9 +67,7 @@ class CustomerFieldManager
         $validated = $response;
 
         $isNew = false;
-        $msCustomer = $this->modx->getObject(msCustomer::class, [
-            'token' => $token,
-        ]);
+        $msCustomer = StoredTokenHash::find($this->modx, msCustomer::class, $token);
         if ($msCustomer) {
             $msCustomer->set($key, $validated);
         } else {
@@ -79,7 +78,7 @@ class CustomerFieldManager
                 $userId = $this->modx->user->get('id');
             }
             $msCustomer = $this->modx->newObject(msCustomer::class, [
-                'token' => $token,
+                'token' => StoredTokenHash::hash($token),
                 $key => $validated,
                 'user_id' => $userId,
             ]);
@@ -178,6 +177,12 @@ class CustomerFieldManager
             return null;
         }
         $customerData = $response['data']['customerData'];
+
+        // The facade and resolver may pass a session bearer token here; never
+        // persist it in plain text (#1058).
+        if (!empty($customerData['token']) && is_string($customerData['token'])) {
+            $customerData['token'] = StoredTokenHash::hash($customerData['token']);
+        }
 
         $msCustomer = $this->modx->newObject(msCustomer::class, $customerData);
         $save = $msCustomer->save();

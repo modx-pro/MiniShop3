@@ -257,7 +257,9 @@ switch ($modx->event->name) {
             $customer->set('user_id', $userId);
             $customer->set('email', $email);
             $customer->set('is_active', $user->get('active'));
-            $customer->set('token', bin2hex(random_bytes(32)));
+            // Store only a hash: a plain 64-hex token here would be a working
+            // credential in every database dump (#1058).
+            \MiniShop3\Utils\StoredTokenHash::set($customer, bin2hex(random_bytes(32)));
 
             $modx->log(
                 modX::LOG_LEVEL_INFO,
