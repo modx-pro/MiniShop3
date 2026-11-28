@@ -78,12 +78,27 @@ if ($transport->xpdo) {
                 }
             }
 
+            // ms3_order_address_fields: append package defaults without wiping
+            // admin-added fields (#883). `editedon` is unreliable here: this
+            // resolver saves the row on every upgrade, stamping it even when no
+            // human edited it. Compare against the known package field set.
             $setting = $modx->getObject(modSystemSetting::class, ['key' => 'ms3_order_address_fields']);
             if ($setting) {
-                $fields = explode(',', $setting->get('value'));
-                $fields = array_unique(array_merge($fields, ['entrance', 'floor', 'text_address']));
-                $setting->set('value', implode(',', $fields));
-                $setting->save();
+                $knownPackageFields = [
+                    'first_name', 'last_name', 'phone', 'email', 'country', 'index',
+                    'region', 'city', 'metro', 'street', 'building', 'room',
+                    'comment', 'text_address',
+                ];
+                $fields = array_values(array_filter(
+                    array_map('trim', explode(',', (string) $setting->get('value'))),
+                    static fn (string $field): bool => $field !== ''
+                ));
+                $customFields = array_diff($fields, $knownPackageFields);
+                if ($customFields === []) {
+                    $fields = array_unique(array_merge($fields, ['entrance', 'floor', 'text_address']));
+                    $setting->set('value', implode(',', $fields));
+                    $setting->save();
+                }
             }
 
             $chunks_descriptions = [
@@ -117,21 +132,26 @@ if ($transport->xpdo) {
                 }
             }
 
-            // Update msOrderTotal snippet default properties
+            // msOrderTotal snippet: modSnippet has no `editedon` field, so
+            // compare values against the shipped defaults instead (#883).
             /** @var modSnippet $snippet */
             $snippet = $modx->getObject(modSnippet::class, ['name' => 'msOrderTotal']);
             if ($snippet) {
                 $properties = $snippet->get('properties') ?: [];
-                $properties['tpl'] = [
-                    'name' => 'tpl',
-                    'type' => 'textfield',
-                    'value' => 'tpl.msOrderTotal',
+                $shippedDefaults = [
+                    'tpl' => 'tpl.msOrderTotal',
+                    'return' => 'tpl',
                 ];
-                $properties['return'] = [
-                    'name' => 'return',
-                    'type' => 'textfield',
-                    'value' => 'tpl',
-                ];
+                foreach ($shippedDefaults as $key => $defaultValue) {
+                    $current = $properties[$key]['value'] ?? null;
+                    if ($current === null || $current === $defaultValue) {
+                        $properties[$key] = [
+                            'name' => $key,
+                            'type' => 'textfield',
+                            'value' => $defaultValue,
+                        ];
+                    }
+                }
                 $snippet->set('properties', $properties);
                 $snippet->save();
             }
