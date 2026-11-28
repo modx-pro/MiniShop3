@@ -60,12 +60,9 @@ class ServiceRegistryFactories
             'ms3_vendor_service' => $modxOnly(),
             'ms3_delivery_service' => $modxOnly(),
             'ms3_shipment_lifecycle' => static function (modX $modx, object $services, string $class): object {
-                if (!$modx->pdo instanceof \PDO) {
-                    throw new \RuntimeException('ms3_shipment_lifecycle requires MODX PDO');
-                }
                 $prefix = (string) $modx->getOption('table_prefix', null, '');
                 $store = new PdoShipmentStore(
-                    $modx->pdo,
+                    self::pdo($modx, 'ms3_shipment_lifecycle'),
                     $prefix . 'ms3_shipments',
                     $prefix . 'ms3_shipment_events'
                 );
@@ -75,12 +72,9 @@ class ServiceRegistryFactories
             'ms3_payment_service' => $modxOnly(),
             'ms3_payment_link_resolver' => $modxOnly(),
             'ms3_payment_lifecycle' => static function (modX $modx, object $services, string $class): object {
-                if (!$modx->pdo instanceof \PDO) {
-                    throw new \RuntimeException('ms3_payment_lifecycle requires MODX PDO');
-                }
                 $prefix = (string) $modx->getOption('table_prefix', null, '');
                 $store = new PdoPaymentAttemptStore(
-                    $modx->pdo,
+                    self::pdo($modx, 'ms3_payment_lifecycle'),
                     $prefix . 'ms3_payment_attempts',
                     $prefix . 'ms3_payment_attempt_events'
                 );
@@ -223,17 +217,14 @@ class ServiceRegistryFactories
             },
 
             'ms3_inventory' => static function (modX $modx, object $services, string $class): object {
-                if (!$modx->pdo instanceof \PDO) {
-                    throw new \RuntimeException('ms3_inventory requires MODX PDO');
-                }
                 $prefix = (string) $modx->getOption('table_prefix', null, '');
                 $productsTable = $modx->getTableName(\MiniShop3\Model\msProductData::class);
                 if (!is_string($productsTable) || $productsTable === '') {
                     $productsTable = $prefix . 'ms3_products';
                 }
-                // $modx->pdo, not $modx: xPDO has beginTransaction() but no inTransaction() (#603 review).
+                // Real PDO, not $modx: xPDO has beginTransaction() but no inTransaction() (#603 review).
                 $store = new \MiniShop3\Services\Inventory\PdoInventoryStockStore(
-                    $modx->pdo,
+                    self::pdo($modx, 'ms3_inventory'),
                     $productsTable,
                     $prefix . 'ms3_inventory_reservations'
                 );
@@ -296,5 +287,38 @@ class ServiceRegistryFactories
         $ms3 = $modx->services->get('ms3');
 
         return $ms3;
+    }
+
+    /**
+     * Resolve a real PDO, establishing the connection if needed.
+     *
+     * `$modx->pdo` is a reference to the xPDO connection's PDO and can still
+     * be null when a service is resolved early in the request lifecycle.
+     * `xPDO::getConnection()` only selects a pooled connection — it does not
+     * establish it — so connect() must run before reading `->pdo`.
+     * Only a real PDO is accepted: stores call PDO::inTransaction(), which a
+     * profiler wrapper (composition, not inheritance) cannot provide.
+     */
+    private static function pdo(modX $modx, string $service = 'MiniShop3'): \PDO
+    {
+        if ($modx->pdo instanceof \PDO) {
+            return $modx->pdo;
+        }
+
+        // Cheap no-op when the connection is already live.
+        if (method_exists($modx, 'connect')) {
+            $modx->connect();
+        }
+
+        if ($modx->pdo instanceof \PDO) {
+            return $modx->pdo;
+        }
+
+        $connection = $modx->getConnection();
+        if ($connection instanceof \xPDO\xPDOConnection && $connection->pdo instanceof \PDO) {
+            return $connection->pdo;
+        }
+
+        throw new \RuntimeException($service . ' requires MODX PDO');
     }
 }

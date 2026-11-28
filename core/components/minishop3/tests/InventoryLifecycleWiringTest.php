@@ -58,8 +58,8 @@ $factories = file_get_contents($srcRoot . '/ServiceRegistryFactories.php');
 if ($factories === false || !str_contains($factories, "'ms3_inventory'")) {
     $fail('ServiceRegistryFactories must wire ms3_inventory');
 }
-if (!preg_match("/'ms3_inventory'\\s*=>[\\s\\S]*\\\$modx->pdo/s", $factories)) {
-    $fail('ms3_inventory factory must pass $modx->pdo, not $modx');
+if (!preg_match("/'ms3_inventory'\\s*=>[\\s\\S]*self::pdo\(\\\$modx, 'ms3_inventory'\)/s", $factories)) {
+    $fail('ms3_inventory factory must pass a real PDO, not $modx');
 }
 
 fwrite(STDOUT, "OK InventoryLifecycleWiringTest\n");
