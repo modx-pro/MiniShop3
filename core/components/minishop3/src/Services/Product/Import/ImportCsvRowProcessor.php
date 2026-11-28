@@ -74,11 +74,22 @@ final class ImportCsvRowProcessor
             $data['class_key'] = msProduct::class;
         }
 
+        $key = $this->ctx->params['key'];
+        $rawKeyValue = $data[$key] ?? null;
+        if ($rawKeyValue === null || (is_scalar($rawKeyValue) && trim((string) $rawKeyValue) === '')) {
+            $this->ctx->modx->log(
+                \MODX\Revolution\modX::LOG_LEVEL_ERROR,
+                "[Import] Row {$this->ctx->rows}: Empty unique key '{$key}'"
+            );
+            $this->ctx->errors++;
+
+            return false;
+        }
+
         // Resolve the product first: pagetitle/parent are creation-only fields
         // and must not be required when updating by the unique key (#853).
         $exists = $this->upserter->findExistingProduct($data);
-        $key = $this->ctx->params['key'];
-        $keyValue = $data[$key] ?? 'N/A';
+        $keyValue = $rawKeyValue;
 
         if ($exists) {
             if (!$this->ctx->params['update']) {
@@ -92,7 +103,7 @@ final class ImportCsvRowProcessor
             }
 
             $this->ctx->modx->log(modX::LOG_LEVEL_INFO, "Key $key = $keyValue has duplicate.");
-            $data['id'] = $exists->id;
+            $data['id'] = (int) $exists->get('id');
             $action = 'Update';
 
             // A blank creation field in an update file must not wipe the value
@@ -100,7 +111,8 @@ final class ImportCsvRowProcessor
             foreach (['pagetitle', 'parent'] as $creationField) {
                 if (
                     array_key_exists($creationField, $data)
-                    && ($data[$creationField] === null || trim((string) $data[$creationField]) === '')
+                    && ($data[$creationField] === null
+                        || (is_string($data[$creationField]) && trim($data[$creationField]) === ''))
                 ) {
                     unset($data[$creationField]);
                 }
@@ -119,7 +131,9 @@ final class ImportCsvRowProcessor
                     return false;
                 }
                 $data['parent'] = $parentId;
-                $data['context_key'] = $parent->get('context_key');
+                if (empty($data['context_key'])) {
+                    $data['context_key'] = $parent->get('context_key');
+                }
             } elseif (empty($data['context_key'])) {
                 $data['context_key'] = $exists->get('context_key');
             }

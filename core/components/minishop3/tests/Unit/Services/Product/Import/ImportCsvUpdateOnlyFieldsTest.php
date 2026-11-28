@@ -42,6 +42,32 @@ final class ImportCsvUpdateOnlyFieldsTest extends TestCase
         ])));
     }
 
+    public function testCreateModeDoesNotRequireUniqueKeyColumn(): void
+    {
+        $validator = new ImportCsvRunValidator($this->modx(null), $this->ms3());
+
+        // Create mode with pagetitle+parent mapped and no `article` column used
+        // to work and must keep working (#853 review).
+        self::assertNull($validator->validateParams($this->context(null, [
+            'update' => 0,
+            'key' => 'article',
+            'keys' => ['pagetitle', 'parent', 'price'],
+        ])));
+    }
+
+    public function testBlankUniqueKeyIsRejectedBeforeLookup(): void
+    {
+        $modx = $this->modx($this->resource(42));
+        $ctx = $this->context($modx, [
+            'update' => 1,
+            'keys' => ['article', 'price', 'pagetitle', 'parent'],
+        ]);
+
+        self::assertFalse($this->processor($ctx, $modx)->process(['', '800', 'Title', '42']));
+        self::assertSame(1, $ctx->errors);
+        self::assertSame([], $modx->processorCalls);
+    }
+
     public function testBlankCreationCellsDoNotEraseStoredValues(): void
     {
         $existing = $this->resource(42);
@@ -169,7 +195,11 @@ final class ImportCsvUpdateOnlyFieldsTest extends TestCase
 
             public function get($k, $format = null, $formatTemplate = null)
             {
-                return $k === 'context_key' ? $this->contextKey : null;
+                return match ($k) {
+                    'id' => $this->id,
+                    'context_key' => $this->contextKey,
+                    default => null,
+                };
             }
         };
         $resource->id = $id;

@@ -34,17 +34,18 @@ final class ImportCsvRunValidator
             return $this->ms3->utils->error($error);
         }
 
-        // The identifier column must be mapped, otherwise an update-only job
-        // degrades into a per-row error after some rows were already written (#853).
-        $keyColumn = (string) $ctx->params['key'];
-        $aliasTargets = ['remains' => 'stock', 'vendor' => 'vendor_id'];
-        if (
-            !in_array($keyColumn, $ctx->params['keys'], true)
-            && !in_array($keyColumn, $aliasTargets, true)
-        ) {
-            $error = $this->modx->lexicon('ms3_utilities_import_required_field', ['field' => $keyColumn]);
+        // In update mode the identifier column must be a real (non-aliased)
+        // mapped field, otherwise rows fall into Create and duplicate products
+        // after earlier rows were already written (#853 review).
+        if (!empty($ctx->params['update'])) {
+            $keyColumn = (string) $ctx->params['key'];
+            $nonIdentifierFields = ['remains', 'vendor', 'gallery', 'stock', 'vendor_id'];
+            if (!in_array($keyColumn, $ctx->params['keys'], true)
+                || in_array($keyColumn, $nonIdentifierFields, true)) {
+                $error = $this->modx->lexicon('ms3_utilities_import_required_field', ['field' => $keyColumn]);
 
-            return $this->ms3->utils->error($error);
+                return $this->ms3->utils->error($error);
+            }
         }
 
         // With update enabled an existing product is identified by &key alone;
