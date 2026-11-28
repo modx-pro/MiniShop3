@@ -169,8 +169,10 @@ class RegisterService
             $customer->set('privacy_ip', $_SERVER['REMOTE_ADDR'] ?? null);
         }
 
-        $requireEmailVerification = (bool)$this->modx->getOption('ms3_customer_require_email_verification', null, true);
-        $customer->set('email_verified_at', null);
+        $requireEmailVerification = (bool)$this->modx->getOption('ms3_customer_require_email_verification', null, false);
+        // Without verification the address is implicitly confirmed; leave the
+        // flag null only when a confirmation link is actually required.
+        $customer->set('email_verified_at', $requireEmailVerification ? null : date('Y-m-d H:i:s'));
 
         if (!$customer->save()) {
             return [
