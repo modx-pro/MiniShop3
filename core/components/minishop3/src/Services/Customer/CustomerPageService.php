@@ -187,16 +187,99 @@ abstract class CustomerPageService
             'tpl.msCustomer.unauthorized'
         );
 
-        $chunk = $this->pdoFetch->getChunk($tpl, [
-            'login_url' => $this->modx->makeUrl(
-                $this->modx->getOption('ms3_customer_login_page_id', null, 1)
-            ),
-            'register_url' => $this->modx->makeUrl(
-                $this->modx->getOption('ms3_customer_register_page_id', null, 1)
-            ),
-        ]);
+        $chunk = $this->pdoFetch->getChunk($tpl, self::getUnauthorizedUrls($this->modx));
 
         return is_string($chunk) ? $chunk : '';
+    }
+
+    /**
+     * URLs of the login and registration pages for the unauthorized chunk (#820).
+     *
+     * @return array{login_url: string, register_url: string}
+     */
+    public static function getUnauthorizedUrls(modX $modx): array
+    {
+        return [
+            'login_url' => self::resolvePageUrl($modx, 'ms3_customer_login_page_id'),
+            'register_url' => self::resolvePageUrl($modx, 'ms3_customer_register_page_id'),
+        ];
+    }
+
+    /**
+     * Resolve a customer page id into a URL, with a usable fallback for 0 (#820).
+     *
+     * The shipped settings hold 0, so getOption()'s default is never used: the
+     * option is present and "0" is a valid value for it. Passing 0 to makeUrl()
+     * returns an empty string and writes "not a valid integer" to the log.
+     * A non-positive id therefore means "page not selected" — fall back to the
+     * site start page (1 in a default install) and warn the administrator.
+     */
+    public static function resolvePageUrl(modX $modx, string $settingKey): string
+    {
+        $pageId = (int)$modx->getOption($settingKey, null, 0);
+        if ($pageId > 0) {
+            $url = $modx->makeUrl($pageId);
+            if (is_string($url) && $url !== '') {
+                return $url;
+            }
+
+            self::warnOnce($modx, "page {$pageId} from {$settingKey} resolves to an empty URL");
+        } else {
+            self::warnOnce($modx, "{$settingKey} is not configured ({$pageId})");
+        }
+
+        return self::siteStartUrl($modx);
+    }
+
+    /** Last-resort redirect target for logout: never leave a blank page (#820). */
+    public static function resolveLogoutUrl(modX $modx): string
+    {
+        $loginUrl = self::resolvePageUrl($modx, 'ms3_customer_login_page_id');
+
+        return $loginUrl !== '' ? $loginUrl : (self::siteStartUrl($modx) ?: '/');
+    }
+
+    private static function siteStartUrl(modX $modx): string
+    {
+        $fallbackId = (int)$modx->getOption('site_start', null, 1);
+        if ($fallbackId <= 0) {
+            return '';
+        }
+        $url = $modx->makeUrl($fallbackId);
+
+        return is_string($url) && $url !== '' ? $url : '';
+    }
+
+    /** @var array<string, true> Warnings already emitted, scoped per modX instance + context. */
+    private static array $warnedAbout = [];
+
+    /** Test hook: dedup state is otherwise keyed by instance/context. */
+    public static function resetWarningCache(): void
+    {
+        self::$warnedAbout = [];
+    }
+
+    /**
+     * Both page settings ship as 0, so warn once per reason instead of on every
+     * render/redirect (#820).
+     */
+    private static function warnOnce(modX $modx, string $reason): void
+    {
+        $fallbackId = (int)$modx->getOption('site_start', null, 1);
+        $outcome = $fallbackId > 0
+            ? "using site start page {$fallbackId}"
+            : 'site start page is not configured';
+        $message = "[CustomerPageService] {$reason}; {$outcome}";
+        $contextKey = isset($modx->context) && is_object($modx->context)
+            ? (string) ($modx->context->key ?? '')
+            : '';
+        $key = spl_object_id($modx) . ':' . $contextKey . ':' . $message;
+        if (isset(self::$warnedAbout[$key])) {
+            return;
+        }
+
+        self::$warnedAbout[$key] = true;
+        $modx->log(modX::LOG_LEVEL_WARN, $message);
     }
 
     /**

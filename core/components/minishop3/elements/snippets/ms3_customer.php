@@ -1,6 +1,7 @@
 <?php
 
 use MiniShop3\MiniShop3;
+use MiniShop3\Services\Customer\CustomerPageService;
 use MiniShop3\Services\Customer\ProfilePageService;
 use MiniShop3\Services\Customer\AddressesPageService;
 use MiniShop3\Services\Customer\OrdersPageService;
@@ -40,8 +41,8 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
         }
     }
 
-    $loginPageId = $modx->getOption('ms3_customer_login_page_id', null, 1);
-    $modx->sendRedirect($modx->makeUrl($loginPageId));
+    // Always redirect: an empty target would leave the visitor on a blank page.
+    $modx->sendRedirect(CustomerPageService::resolveLogoutUrl($modx));
     exit;
 }
 
@@ -63,15 +64,10 @@ try {
 
     if (!$pageService->checkAuth()) {
         if ($return === 'data') {
-            return [
-                'authorized' => false,
-                'login_url' => $modx->makeUrl(
-                    $modx->getOption('ms3_customer_login_page_id', null, 1)
-                ),
-                'register_url' => $modx->makeUrl(
-                    $modx->getOption('ms3_customer_register_page_id', null, 1)
-                ),
-            ];
+            return array_merge(
+                ['authorized' => false],
+                CustomerPageService::getUnauthorizedUrls($modx)
+            );
         }
         return $pageService->renderUnauthorized();
     }
