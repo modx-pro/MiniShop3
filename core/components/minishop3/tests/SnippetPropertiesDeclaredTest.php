@@ -120,12 +120,9 @@ foreach ($snippets as $snippetName => $snippet) {
     // withCurrency were dead declarations left from before the #242 refactor
     // (float fields + always-formatted *_formatted) and must not come back.
     if ($snippetName === 'msOrderTotal') {
+        $reads = array_flip(array_unique($read));
         foreach (array_keys($properties) as $propName) {
-            // &selector is consumed by MiniShop3::registerSnippet() (#805).
-            if ($propName === 'selector') {
-                continue;
-            }
-            if (!str_contains($source, "'" . $propName . "'") && !str_contains($source, '$' . $propName)) {
+            if (!isset($reads[$propName])) {
                 $fail("msOrderTotal declares &{$propName} but the snippet never reads it (#825)");
             }
         }

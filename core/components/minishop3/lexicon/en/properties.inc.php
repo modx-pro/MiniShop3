@@ -80,3 +80,5 @@ $_lang['ms3_prop_tpl_wrapper'] = 'Wrapper chunk around the whole snippet output.
 $_lang['ms3_prop_include_delivery_fields'] = 'Comma-separated list of msDelivery table fields to select. For example: "name,price,free_delivery_amount". By default all fields are selected via *.';
 $_lang['ms3_prop_include_payment_fields'] = 'Comma-separated list of msPayment table fields to select. For example: "name,description,price,logo". By default all fields are selected via *.';
 $_lang['ms3_prop_hide_on_thanks'] = 'Hide the cart on the order success page.';
+// Kept for upgraded sites that still store the removed msOrderTotal property.
+$_lang['ms3_prop_format_prices'] = 'Format order prices using the site format settings.';

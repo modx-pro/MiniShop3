@@ -80,3 +80,5 @@ $_lang['ms3_prop_tpl_wrapper'] = 'Чанк-обертка вокруг всег�
 $_lang['ms3_prop_include_delivery_fields'] = 'Список полей таблицы msDelivery для выборки, через запятую. Например: "name,price,free_delivery_amount". По умолчанию выбираются все поля через *.';
 $_lang['ms3_prop_include_payment_fields'] = 'Список полей таблицы msPayment для выборки, через запятую. Например: "name,description,price,logo". По умолчанию выбираются все поля через *.';
 $_lang['ms3_prop_hide_on_thanks'] = 'Скрывать корзину на странице успешного заказа.';
+// Оставлено для обновлённых сайтов, где ещё хранится удалённое свойство msOrderTotal.
+$_lang['ms3_prop_format_prices'] = 'Форматировать цены заказа по настройкам формата сайта.';
