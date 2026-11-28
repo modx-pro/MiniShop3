@@ -336,3 +336,10 @@ $_lang['ms3_err_customer_group_detach'] = 'Не удалось отвязать 
 $_lang['ms3_customer_group_created'] = 'Группа покупателей создана';
 $_lang['ms3_customer_group_updated'] = 'Группа покупателей обновлена';
 $_lang['ms3_customer_group_deleted'] = 'Группа покупателей удалена';
+
+// Сообщения API для нативных SEO-переопределений (#790)
+$_lang['ms3_err_seo_save_failed'] = 'Не удалось сохранить SEO-данные';
+$_lang['ms3_err_seo_class_key_mismatch'] = 'SEO-переопределения доступны только для товаров и категорий';
+$_lang['ms3_err_resource_not_found'] = 'Ресурс не найден';
+$_lang['ms3_err_resource_id_required'] = 'Не указан id ресурса';
+$_lang['ms3_err_seo_service_unavailable'] = 'Сервис SEO недоступен';

@@ -113,6 +113,10 @@ Ext.extend(ms3.panel.UpdateCategory, ms3.panel.Category, {
                 const tabs = [
                     this.getProducts(config)
                 ];
+                // Read-only managers must not see an editable SEO form (#790).
+                if (config.canSave !== 0 && config.canSave !== false) {
+                    tabs.push(this.getSeo(config));
+                }
                 let pageSettingsTab, accessPermissionsTab;
                 for (const i2 in item.items) {
                     if (!item.items.hasOwnProperty(i2)) {
@@ -164,6 +168,21 @@ Ext.extend(ms3.panel.UpdateCategory, ms3.panel.Category, {
                     // }
                 }
             }
+        };
+    },
+
+    getSeo: function (config) {
+        var categoryId = config['record'] ? config['record']['id'] : 0;
+        return {
+            title: _('ms3_tab_category_seo'),
+            id: 'modx-ms3-category-seo',
+            layout: 'fit',
+            border: false,
+            items: [{
+                xtype: 'container',
+                cls: 'main-wrapper',
+                html: '<div id="ms3-vue-category-seo" class="vueApp" data-category-id="' + categoryId + '"></div>'
+            }]
         };
     },
 

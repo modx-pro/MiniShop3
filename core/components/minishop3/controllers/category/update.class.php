@@ -62,8 +62,10 @@ class msCategoryUpdateManagerController extends msResourceUpdateController
         $this->addCss($assetsUrl . 'css/mgr/vue-dist/primeicons.min.css');
         $this->addCss($assetsUrl . 'css/mgr/vue-dist/category-products.min.css');
         $this->addCss($assetsUrl . 'css/mgr/vue-dist/category-options.min.css');
+        $this->addCss($assetsUrl . 'css/mgr/vue-dist/category-seo.min.css');
         $this->addVueModule($assetsUrl . 'js/mgr/vue-dist/category-products.min.js');
         $this->addVueModule($assetsUrl . 'js/mgr/vue-dist/category-options.min.js');
+        $this->addVueModule($assetsUrl . 'js/mgr/vue-dist/category-seo.min.js');
 
         $config = array(
             'assets_url' => $this->ms3->config['assetsUrl'],
