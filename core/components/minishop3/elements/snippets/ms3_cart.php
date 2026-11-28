@@ -120,13 +120,19 @@ $formatTotalForDisplay = static function (array &$total, MiniShop3 $ms3): void {
  * call site.
  */
 $renderOutput = static function (array $outputData) use ($modx, $pdoFetch, $tpl, $return, $toPlaceholder, $showLog): array|string|null {
-    if ($return === 'data') {
+    // Non-tpl returns (including data and legacy custom modes) stay arrays.
+    // toPlaceholder is still honored so the placeholder is never left empty.
+    if ($return !== 'tpl') {
+        if (!empty($toPlaceholder)) {
+            $modx->setPlaceholder($toPlaceholder, $outputData);
+        }
+
         return $outputData;
     }
 
     $output = $pdoFetch->getChunk($tpl, $outputData);
 
-    if ($modx->user->hasSessionContext('mgr') && !empty($showLog)) {
+    if (isset($modx->user) && $modx->user->hasSessionContext('mgr') && !empty($showLog)) {
         $output .= '<pre class="msCartLog">' . print_r($pdoFetch->getTime(), true) . '</pre>';
     }
 

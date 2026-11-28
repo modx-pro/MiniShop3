@@ -38,8 +38,14 @@ if (str_contains($source, 'return compact(')) {
 if (substr_count($source, '$pdoFetch->getChunk(') !== 1) {
     $fail('the chunk must be rendered exactly once, in the shared output tail (#803)');
 }
-if (substr_count($source, 'setPlaceholder($toPlaceholder') !== 1) {
-    $fail('toPlaceholder must be applied exactly once, in the shared output tail (#803)');
+if (substr_count($source, 'setPlaceholder($toPlaceholder') !== 2) {
+    $fail('toPlaceholder must be applied in both data and tpl branches of the shared tail (#803)');
+}
+if (!str_contains($source, "if (\$return !== 'tpl')")) {
+    $fail('Non-tpl returns must keep returning data instead of rendering a chunk (#803)');
+}
+if (!str_contains($source, 'isset($modx->user)')) {
+    $fail('showLog must guard an uninitialized modX user (#803)');
 }
 if (substr_count($source, 'msCartLog') !== 1) {
     $fail('showLog must be appended exactly once, in the shared output tail (#803)');
@@ -47,7 +53,7 @@ if (substr_count($source, 'msCartLog') !== 1) {
 
 // The empty-cart branch skips the query but routes through the shared tail.
 if (!preg_match(
-    '/if \(empty\(\$status\[\'total_count\'\]\) \|\| empty\(\$cart\)\) \{[^}]*return \$renderOutput\(compact\(\'total\', \'products\', \'status\'\)\);/s',
+    '/if \(empty\(\$status\[\'total_count\'\]\) \|\| empty\(\$cart\)\) \{[\s\S]*?return \$renderOutput\(compact\(\'total\', \'products\', \'status\'\)\);/s',
     $source
 )) {
     $fail('the empty-cart branch must return through the shared output closure (#803)');
