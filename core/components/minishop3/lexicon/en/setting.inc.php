@@ -247,6 +247,10 @@ $_lang['setting_ms3_customer_max_login_attempts'] = 'Maximum login attempts';
 $_lang['setting_ms3_customer_max_login_attempts_desc'] = 'Maximum number of failed login attempts before blocking. Default is 5.';
 $_lang['setting_ms3_customer_block_duration'] = 'Block duration (seconds)';
 $_lang['setting_ms3_customer_block_duration_desc'] = 'Block duration in seconds after exceeding login attempt limit. Default is 300 (5 minutes).';
+$_lang['setting_ms3_customer_login_rate_limit_attempts'] = 'Customer auth rate limit attempts';
+$_lang['setting_ms3_customer_login_rate_limit_attempts_desc'] = 'Maximum requests per IP within the customer auth rate-limit window. Default is 5. Independent of the account lockout.';
+$_lang['setting_ms3_customer_login_rate_limit_window'] = 'Customer auth rate limit window (seconds)';
+$_lang['setting_ms3_customer_login_rate_limit_window_desc'] = 'Length of the per-IP rate-limit window for login, registration and password reset. Default is 300 (5 minutes).';
 
 // Password Requirements
 $_lang['setting_ms3_password_min_length'] = 'Minimum password length';

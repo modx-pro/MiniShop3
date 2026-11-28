@@ -54,11 +54,14 @@ class ResetPassword extends Processor
 
         $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
 
-        if (!$rateLimiter->check('reset_password_ip', $ip, self::MAX_ATTEMPTS, self::WINDOW_SECONDS)) {
+        $maxAttempts = max(1, (int)$this->modx->getOption('ms3_customer_login_rate_limit_attempts', null, self::MAX_ATTEMPTS));
+        $windowSeconds = max(1, (int)$this->modx->getOption('ms3_customer_login_rate_limit_window', null, self::WINDOW_SECONDS));
+
+        if (!$rateLimiter->check('reset_password_ip', $ip, $maxAttempts, $windowSeconds)) {
             return $this->rateLimitFailure($rateLimiter, 'reset_password_ip', $ip);
         }
 
-        if (!$rateLimiter->check('reset_password_token', $token, self::MAX_ATTEMPTS, self::WINDOW_SECONDS)) {
+        if (!$rateLimiter->check('reset_password_token', $token, $maxAttempts, $windowSeconds)) {
             return $this->rateLimitFailure($rateLimiter, 'reset_password_token', $token);
         }
 

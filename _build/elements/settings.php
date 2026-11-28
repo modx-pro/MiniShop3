@@ -509,6 +509,18 @@ return [
         'xtype' => 'numberfield',
         'area' => 'ms3_security',
     ],
+    // Per-IP rate limit for customer auth endpoints (#902). Independent of the
+    // account lockout above, which controls blocked_until for one customer.
+    'ms3_customer_login_rate_limit_attempts' => [
+        'value' => 5,
+        'xtype' => 'numberfield',
+        'area' => 'ms3_security',
+    ],
+    'ms3_customer_login_rate_limit_window' => [
+        'value' => 300,
+        'xtype' => 'numberfield',
+        'area' => 'ms3_security',
+    ],
 
     // Password Requirements
     'ms3_password_min_length' => [

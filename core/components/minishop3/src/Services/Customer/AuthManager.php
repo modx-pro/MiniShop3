@@ -670,7 +670,8 @@ class AuthManager
         }
 
         $maxAttempts = (int)$this->modx->getOption('ms3_customer_max_login_attempts', null, 5);
-        $blockDuration = (int)$this->modx->getOption('ms3_customer_block_duration', null, 3600);
+        // 300 matches the installer/lexicon default (#902).
+        $blockDuration = max(1, (int)$this->modx->getOption('ms3_customer_block_duration', null, 300));
 
         $attempts = $customer->get('failed_login_attempts') + 1;
         $customer->set('failed_login_attempts', $attempts);
