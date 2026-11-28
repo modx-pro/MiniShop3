@@ -33,7 +33,10 @@ $pdoFetch->addTime('pdoTools loaded.');
 
 $tpl = $modx->getOption('tpl', $scriptProperties, 'tpl.msOrder');
 $return = $modx->getOption('return', $scriptProperties, 'tpl');
-$includeDeliveryFields = $modx->getOption('includeDeliveryFields', $scriptProperties, 'id');
+// Default must match the transport value in _build/elements/snippets.php (#824):
+// tpl.msOrder renders name/logo/description, so a fresh install and a
+// property-less call must both select all delivery fields.
+$includeDeliveryFields = $modx->getOption('includeDeliveryFields', $scriptProperties, '*');
 $includeDeliveryKeys = array_map('trim', explode(',', $includeDeliveryFields));
 $includeDeliveryKeys = array_unique(array_merge($includeDeliveryKeys, ['id']));
 $includePaymentFields = $modx->getOption('includePaymentFields', $scriptProperties, '*');

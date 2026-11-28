@@ -5,6 +5,10 @@
  * snippets really read, and every declared property must have a localized
  * description in properties.inc.php (#799).
  *
+ * The transport default of a property must also equal the getOption() fallback
+ * in the snippet source, so a fresh install and a property-less call behave the
+ * same (#824).
+ *
  * MODX shows declared properties in the snippet properties grid and pulls the
  * description from `ms3_prop_<snake_case>` (see resolver_08_snippet_properties.php).
  * A property that works but is not declared is invisible in the manager; a declared
@@ -38,6 +42,18 @@ $toSnake = static function (string $name): string {
     }
 
     return strtolower((string)preg_replace('/([A-Z])/', '_$1', $name));
+};
+
+/** Scalar default to a comparable string: bool/null literals and unquoted scalars. */
+$normalizeDefault = static function ($value): string {
+    if (is_bool($value)) {
+        return $value ? 'true' : 'false';
+    }
+    if ($value === null) {
+        return 'null';
+    }
+
+    return trim((string)$value, "'\"");
 };
 
 $lexicons = [];
@@ -107,6 +123,33 @@ foreach ($snippets as $snippetName => $snippet) {
             $fail(
                 "{$file} reads &{$name} but {$snippetName} does not declare it"
                 . ' — add it to snippets.php or the allowlist (#799)'
+            );
+        }
+    }
+
+    // #824: transport default vs getOption() fallback. Only simple scalar
+    // literals are compared; anything else (arrays, expressions) is skipped.
+    foreach ($properties as $propertyName => $definition) {
+        if (!is_array($definition) || !array_key_exists('value', $definition)) {
+            continue;
+        }
+        $transportValue = $definition['value'];
+        if (!is_scalar($transportValue) && $transportValue !== null) {
+            continue;
+        }
+        $pattern = '/getOption\(\s*\'' . preg_quote((string)$propertyName, '/')
+            . '\'\s*,\s*\$scriptProperties\s*,\s*([^)]+)\)/';
+        if (!preg_match($pattern, $source, $found)) {
+            continue;
+        }
+        $fallback = trim($found[1]);
+        if (!preg_match('/^(true|false|null|\'[^\']*\'|"[^"]*"|-?\d+)$/', $fallback)) {
+            continue;
+        }
+        if ($normalizeDefault($transportValue) !== $normalizeDefault($fallback)) {
+            $fail(
+                "{$file} &{$propertyName}: transport default " . var_export($transportValue, true)
+                . " differs from getOption() fallback {$fallback} (#824)"
             );
         }
     }
