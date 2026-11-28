@@ -5,7 +5,7 @@
 
         {* Изображение товара с hover эффектом *}
         <div class="position-relative overflow-hidden d-flex align-items-center justify-content-center product-image-wrapper">
-            <a href="{$id | url}" class="d-block product-image-link w-100 h-100 d-flex align-items-center justify-content-center">
+            <a href="{$id | url : ['scheme' => 'abs']}" class="d-block product-image-link w-100 h-100 d-flex align-items-center justify-content-center">
                 {if $thumb?}
                     <img src="{$thumb | e}" class="product-image" alt="{$pagetitle | e}" title="{$pagetitle | e}" itemprop="image"/>
                 {else}
@@ -78,7 +78,7 @@
 
             {* Название товара *}
             <h6 class="card-title mb-2 flex-grow-1">
-                <a href="{$id | url}" class="text-decoration-none text-dark product-title">
+                <a href="{$id | url : ['scheme' => 'abs']}" class="text-decoration-none text-dark product-title">
                     {$pagetitle | e}
                 </a>
             </h6>

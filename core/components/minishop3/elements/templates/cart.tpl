@@ -46,7 +46,7 @@
                         </div>
                         {if $order_page_id > 0}
                         <div class="col-md-6">
-                            <a href="{$order_page_id | url}" class="btn btn-primary btn-lg w-100">
+                            <a href="{$order_page_id | url : ['scheme' => 'abs']}" class="btn btn-primary btn-lg w-100">
                                 <i class="bi bi-check-lg me-2"></i>
                                 {'ms3_frontend_checkout' | lexicon}
                             </a>

@@ -1,6 +1,6 @@
 <tr>
     <td>
-        <a href="{'ms3_customer_orders_page_id' | option | url}?order={$uuid}" class="fw-semibold text-decoration-none">
+        <a href="{'ms3_customer_orders_page_id' | option | url : ['scheme' => 'abs']}?order={$uuid}" class="fw-semibold text-decoration-none">
             №{$num}
         </a>
     </td>
@@ -17,7 +17,7 @@
     </td>
     <td class="text-end">
         <div class="d-flex gap-2 justify-content-end" role="group">
-            <a href="{'ms3_customer_orders_page_id' | option | url}?order={$uuid}"
+            <a href="{'ms3_customer_orders_page_id' | option | url : ['scheme' => 'abs']}?order={$uuid}"
                class="btn btn-sm btn-outline-primary"
                title="{'ms3_customer_order_view' | lexicon}"
                aria-label="{'ms3_customer_order_view' | lexicon}">

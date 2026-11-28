@@ -18,12 +18,12 @@
                     {/var}
                     <div class="d-flex">
                         <div class="col-12 col-md-3">
-                            <a href="{$product.product_id | url}">{$image}</a>
+                            <a href="{$product.product_id | url : ['scheme' => 'abs']}">{$image}</a>
                         </div>
                         <div class="col-12 col-md-9">
                             <div class="d-flex">
                                 <div class="col-12 col-md-6 d-flex flex-column justify-content-around justify-content-md-start">
-                                    <a href="{$product.product_id | url}" class="font-weight-bold">{$product.pagetitle}</a>
+                                    <a href="{$product.product_id | url : ['scheme' => 'abs']}" class="font-weight-bold">{$product.pagetitle}</a>
                                     <span class="price ml-md-3">{$product.price_formatted} x {$product.count} = {$product.cost_formatted}</span>
                                     {if $product.old_price_formatted?}
                                         <span class="old_price ml-md-3 text-decoration-line-through">{$product.old_price_formatted} x {$product.count} = {$product.old_cost_formatted}</span>
@@ -96,7 +96,7 @@
             {set $cart_page_id = 'ms3_cart_page_id' | option}
             {if $cart_page_id > 0}
                 <div class="mt-3 text-center">
-                    <a href="{$cart_page_id | url}" class="btn btn-primary">
+                    <a href="{$cart_page_id | url : ['scheme' => 'abs']}" class="btn btn-primary">
                         {'ms3_frontend_go_to_cart' | lexicon}
                     </a>
                 </div>

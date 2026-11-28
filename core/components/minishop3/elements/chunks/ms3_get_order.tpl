@@ -46,7 +46,7 @@
                                     </div>
                                     <div class="flex-grow-1">
                                         {if $product.id?}
-                                            <a href="{$product.id | url}" class="text-decoration-none fw-semibold">
+                                            <a href="{$product.id | url : ['scheme' => 'abs']}" class="text-decoration-none fw-semibold">
                                                 {$product.pagetitle}
                                             </a>
                                         {else}
