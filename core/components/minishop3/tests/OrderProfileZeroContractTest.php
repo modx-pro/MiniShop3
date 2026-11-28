@@ -29,8 +29,11 @@ if (str_contains($source, '!empty($customerData[$customerField])')) {
     $fail('customer profile values must not be filtered with empty()');
 }
 
-if (str_contains($source, 'if (!empty($value))')) {
+if (str_contains($source, '!empty($profile) && !empty($value)')) {
     $fail('resolved profile values must not be filtered with empty()');
+}
+if (!str_contains($source, 'ValuePresence::isBlank($value)')) {
+    $fail('sync-enabled address branch must use the shared blank check');
 }
 
 fwrite(STDOUT, "OK OrderProfileZeroContractTest\n");

@@ -40,7 +40,8 @@ final class ChangeOptionZeroTest extends TestCase
             ['floor' => 0, 'room' => '0'],
             $itemManager->mergedForKey
         );
-        self::assertSame($itemManager->mergedForKey, $itemManager->mergedForSave);
+        // The handler must pass the same normalized options to persistence.
+        self::assertSame(['old-key', ['floor' => 0, 'room' => '0', 'comment' => '  ']], $itemManager->updateArgs);
     }
 
     private function handler(FakeChangeItemManager $itemManager): CartMutationHandler
@@ -83,8 +84,8 @@ final class FakeChangeItemManager extends CartItemManager
 {
     /** @var array<string, mixed> */
     public array $mergedForKey = [];
-    /** @var array<string, mixed> */
-    public array $mergedForSave = [];
+    /** @var array{0: string, 1: array<string, mixed>}|null */
+    public ?array $updateArgs = null;
 
     /** @param array<string, mixed> $options */
     public function __construct(private array $options)
@@ -93,7 +94,7 @@ final class FakeChangeItemManager extends CartItemManager
 
     public function getItemByKey(msOrder $draft, string $productKey): ?msOrderProduct
     {
-        return new FakeChangeItem($this->options);
+        return new FakeChangeItem(['options' => $this->options]);
     }
 
     public function generateProductKey(array $product, array $options = []): string
@@ -105,7 +106,7 @@ final class FakeChangeItemManager extends CartItemManager
 
     public function updateItemOptions(msOrder $draft, string $productKey, array $newOptions): ?string
     {
-        $this->mergedForSave = \MiniShop3\Utils\ValuePresence::merge($this->options, $newOptions);
+        $this->updateArgs = [$productKey, $newOptions];
 
         return 'new-key';
     }

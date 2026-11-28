@@ -99,7 +99,9 @@ class OrderAddressManager
         $addressFields = $this->getCustomerAddressFields($excludeFields);
 
         foreach ($addressFields as $key => $value) {
-            if (array_key_exists('address_' . $key, $orderData) && !empty($orderData['address_' . $key])) {
+            if (array_key_exists('address_' . $key, $orderData)
+                && !ValuePresence::isBlank($orderData['address_' . $key])
+            ) {
                 $this->fieldManager->add($draft, $orderData, $key, null);
             }
         }

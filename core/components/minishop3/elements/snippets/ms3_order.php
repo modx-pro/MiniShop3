@@ -281,7 +281,7 @@ if ($syncEnabled && !empty($userFields)) {
 if ($syncEnabled) {
     // Sync enabled: use modUserProfile as source of truth
     foreach ($userProfileFields as $key => $value) {
-        if (!empty($profile) && !empty($value)) {
+        if (!ValuePresence::isBlank($profile) && !ValuePresence::isBlank($value)) {
             if (strpos($value, 'extended') !== false) {
                 $tmp = substr($value, 9, -1);
                 $value = $profile['extended'][$tmp] ?? '';

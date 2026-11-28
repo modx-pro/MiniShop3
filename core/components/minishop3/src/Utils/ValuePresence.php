@@ -16,7 +16,15 @@ final class ValuePresence
      */
     public static function isBlank(mixed $value): bool
     {
-        return $value === null || (is_string($value) && trim($value) === '');
+        if ($value === null || $value === false) {
+            return true;
+        }
+        if (is_string($value)) {
+            return trim($value) === '';
+        }
+
+        // Empty arrays used to clear an option via empty(); keep that contract.
+        return is_array($value) && $value === [];
     }
 
     /**

@@ -13,7 +13,9 @@ final class ValuePresenceTest extends TestCase
     {
         self::assertFalse(ValuePresence::isBlank(0));
         self::assertFalse(ValuePresence::isBlank('0'));
-        self::assertFalse(ValuePresence::isBlank(false));
+        // false/[] were cleared by the old empty() checks; keep that contract.
+        self::assertTrue(ValuePresence::isBlank(false));
+        self::assertTrue(ValuePresence::isBlank([]));
     }
 
     public function testNullAndBlankStringsAreBlank(): void
