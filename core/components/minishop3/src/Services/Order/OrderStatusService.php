@@ -455,28 +455,25 @@ class OrderStatusService implements OrderStatusChanger
         $this->modx->setOption('cultureKey', $lang);
         $this->modx->lexicon->load($lang . ':minishop3:default', $lang . ':minishop3:cart');
 
-        // Create notification
-        $notification = new StatusChangedNotification(
-            $this->modx,
-            $msOrder,
-            $newStatus,
-            $oldStatus
-        );
-
-        $this->dispatchNotification($notification, $msOrder);
-
         // The order left the draft state — the order itself was created (#811).
-        // The event is dispatched here, because both creation paths (checkout
-        // and finalizing a draft) go through this gate.
+        // Send only the order_created notification on this transition: firing
+        // both events would duplicate customer/manager messages.
         if ($this->isCreatedFromDraft($oldStatus)) {
-            $createdNotification = new OrderCreatedNotification(
+            $notification = new OrderCreatedNotification(
                 $this->modx,
                 $msOrder,
                 $newStatus
             );
-
-            $this->dispatchNotification($createdNotification, $msOrder);
+        } else {
+            $notification = new StatusChangedNotification(
+                $this->modx,
+                $msOrder,
+                $newStatus,
+                $oldStatus
+            );
         }
+
+        $this->dispatchNotification($notification, $msOrder);
     }
 
     /**
