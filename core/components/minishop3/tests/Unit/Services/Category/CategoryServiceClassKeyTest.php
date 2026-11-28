@@ -34,6 +34,15 @@ final class CategoryServiceClassKeyTest extends TestCase
         self::assertFalse(CategoryService::shouldResetOnSave('msCategory', 'msCategory'));
         self::assertFalse(CategoryService::shouldResetOnSave('modDocument', msCategory::class, true));
         self::assertFalse(CategoryService::shouldResetOnSave(msCategory::class, 'modDocument'));
+        // Unknown stored key is not a conversion.
+        self::assertFalse(CategoryService::shouldResetOnSave('', msCategory::class));
+    }
+
+    public function testConversionMarkerIsConsumedOnce(): void
+    {
+        CategoryService::rememberConversion(42, 'modDocument');
+        self::assertSame('modDocument', CategoryService::consumeConversion(42));
+        self::assertSame('', CategoryService::consumeConversion(42));
     }
 
     public function testHandleCategorySaveOnlyForRealTypeChange(): void

@@ -27,6 +27,26 @@ class CategoryService
         $this->modx = $modx;
     }
 
+    /** @var array<int, string> Original class_key of resources converted before the object was loaded (#855 review). */
+    private static array $convertedFrom = [];
+
+    /** Remember the pre-conversion class_key set by the manager processor. */
+    public static function rememberConversion(int $resourceId, string $oldClassKey): void
+    {
+        if ($resourceId > 0 && $oldClassKey !== '') {
+            self::$convertedFrom[$resourceId] = $oldClassKey;
+        }
+    }
+
+    /** Consume (once) the remembered pre-conversion class_key. */
+    public static function consumeConversion(int $resourceId): string
+    {
+        $old = self::$convertedFrom[$resourceId] ?? '';
+        unset(self::$convertedFrom[$resourceId]);
+
+        return $old;
+    }
+
     /**
      * MODX 3 keeps FQCN in class_key; older installs used short names (#855).
      */
@@ -48,7 +68,9 @@ class CategoryService
         string $newClassKey,
         bool $isNew = false
     ): bool {
+        // An unknown/empty stored key is not proof of a type conversion.
         return !$isNew
+            && $storedClassKey !== ''
             && !self::isCategoryClassKey($storedClassKey)
             && self::isCategoryClassKey($newClassKey);
     }

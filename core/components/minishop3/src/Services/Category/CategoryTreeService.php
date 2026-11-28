@@ -45,7 +45,7 @@ final class CategoryTreeService
         $children = $this->modx->getIterator(msCategory::class, [
             'parent' => $parentId,
             'deleted' => 0,
-            'class_key' => msCategory::class,
+            'class_key:IN' => [msCategory::class, 'msCategory'],
         ]);
 
         foreach ($children as $child) {

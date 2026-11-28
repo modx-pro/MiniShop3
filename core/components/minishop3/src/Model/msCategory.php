@@ -158,7 +158,9 @@ class msCategory extends modResource
             return '';
         }
 
-        $stored = $this->xpdo->getObject(modResource::class, $id);
+        // Bypass the shared modResource object cache: it stores derivative
+        // snapshots and can return a stale class_key (#855 review).
+        $stored = $this->xpdo->getObject(modResource::class, $id, false);
 
         return $stored ? (string) $stored->get('class_key') : '';
     }
@@ -170,9 +172,14 @@ class msCategory extends modResource
      */
     public function save($cacheFlag = null)
     {
-        // Both parent::get() and $this->get() read the same field, so the
-        // original class_key must come from the stored row (#855 review).
-        $storedClassKey = $this->getStoredClassKey();
+        // Both parent::get() and $this->get() read the same field. The manager
+        // processor may have converted the stored row before loading this
+        // object, so its remembered original wins; otherwise query only when
+        // class_key is dirty (#855 review).
+        $storedClassKey = CategoryService::consumeConversion((int) $this->get('id'));
+        if ($storedClassKey === '' && $this->isDirty('class_key')) {
+            $storedClassKey = $this->getStoredClassKey();
+        }
         if (
             CategoryService::shouldResetOnSave(
                 $storedClassKey,
