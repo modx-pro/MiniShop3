@@ -25,7 +25,7 @@ $pdoFetch = $modx->services->get(Fetch::class);
 $pdoFetch->addTime('pdoTools loaded.');
 
 $tpl = $modx->getOption('tpl', $scriptProperties, 'tpl.msOrderTotal');
-$return = $modx->getOption('return', $scriptProperties, 'tpl');
+$return = $modx->getOption('return', $scriptProperties, 'tpl', true);
 
 $ms3->order->initialize($token);
 $response = $ms3->order->getCost();
