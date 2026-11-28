@@ -122,6 +122,36 @@ final class OrderFieldManagerValidationRulesTest extends TestCase
     /**
      * @return array<string, string>
      */
+    /**
+     * #950: custom rules must override defaults and survive repeated validate()
+     * calls on a shared DI manager.
+     */
+    public function testCustomRulesOverrideDefaultsAndSurviveRepeatCalls(): void
+    {
+        $manager = $this->makeManager();
+        $manager->setValidationRules(['custom_field' => 'required|min:5']);
+
+        self::assertFalse($manager->validate([], 'custom_field', 'ab')['success']);
+        self::assertTrue($manager->validate([], 'custom_field', 'abcdef')['success']);
+        self::assertTrue($manager->validate([], 'custom_field', 'ab')['success'] === false);
+
+        $property = new \ReflectionProperty(OrderFieldManager::class, 'customValidationRules');
+        self::assertSame(['custom_field' => 'required|min:5'], $property->getValue($manager));
+    }
+
+    /**
+     * #950: setValidationMessages() values are no longer discarded by validate().
+     */
+    public function testCustomMessagesSurviveValidate(): void
+    {
+        $manager = $this->makeManager();
+        $manager->setValidationMessages(['required' => 'CUSTOM REQUIRED']);
+
+        $response = $manager->validate(['delivery_id' => 1], 'receiver', '');
+        self::assertFalse($response['success']);
+        self::assertStringContainsString('CUSTOM REQUIRED', json_encode($response['data']));
+    }
+
     private function readValidationRules(OrderFieldManager $manager): array
     {
         $property = new \ReflectionProperty(OrderFieldManager::class, 'validationRules');
